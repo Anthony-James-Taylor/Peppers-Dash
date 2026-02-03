@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V7</title>
+    <title>Pepper's Doo-Doo Dash V8</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     
@@ -28,7 +28,7 @@
             position: absolute; top: 20px; right: 20px; width: 45px; height: 45px;
             background: rgba(0,0,0,0.6); border-radius: 12px; border: 2px solid rgba(255,255,255,0.3);
             display: flex; justify-content: center; align-items: center; cursor: pointer;
-            pointer-events: auto; z-index: 150; font-size: 24px; color: white;
+            pointer-events: auto; z-index: 300; font-size: 24px; color: white; /* High Z-Index to work on start screen */
             backdrop-filter: blur(5px);
         }
         
@@ -36,7 +36,7 @@
             position: absolute; top: 75px; right: 20px; width: 220px;
             background: rgba(45, 52, 54, 0.95); border: 1px solid rgba(255,255,255,0.2);
             border-radius: 16px; padding: 10px; display: none; flex-direction: column; gap: 10px;
-            pointer-events: auto; z-index: 150; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            pointer-events: auto; z-index: 300; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .menu-item {
@@ -84,18 +84,19 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
             display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            z-index: 200; text-align: center; /* Increased Z-Index */
+            z-index: 200; text-align: center; 
         }
         #game-over, #level-screen, #how-to-screen, #info-modal { display: none; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); }
-        #start-screen { background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.8) 100%); backdrop-filter: none; z-index: 50; }
+        
+        /* Clear background for start screen to see zoomed dog */
+        #start-screen { background: none; backdrop-filter: none; z-index: 50; }
 
-        .title-box { margin-bottom: 250px; animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2; position: relative; }
+        .title-box { position: absolute; top: 15%; width: 100%; animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2; }
         h1 { 
             color: #fff; font-size: 55px; margin: 0; line-height: 0.9; font-weight: 900; 
             letter-spacing: -3px; text-transform: uppercase;
             text-shadow: 0 4px 0 #2d3436, 0 0 20px rgba(0, 251, 255, 0.5);
         }
-        .subtitle { font-size: 16px; color: #00fbff; font-weight: 700; letter-spacing: 4px; margin-top: 10px; text-transform: uppercase; }
 
         /* MINI CANVAS FOR VISUAL EXAMPLES */
         .visual-example {
@@ -158,7 +159,6 @@
     <div id="start-screen">
         <div class="title-box">
             <h1>PEPPER'S<br>DOO-DOO DASH</h1>
-            <div class="subtitle">HUSKY EDITION</div>
         </div>
         <button class="btn" id="start-btn" style="position: absolute; bottom: 15%;">TAP TO START</button>
     </div>
@@ -194,7 +194,6 @@
 
     <div id="game-over">
         <h1 id="go-title" style="color:#ff7675; font-size:50px;">GAME OVER!</h1>
-        
         <canvas id="go-canvas" class="visual-example" width="150" height="100" style="display:none; margin:10px 0;"></canvas>
         <div id="go-msg" style="color:#ffeaa7; font-weight:700; font-size:14px; max-width:80%; margin-bottom:10px;"></div>
 
@@ -273,7 +272,7 @@
     let speed = 9;
     let groundY = 0; 
     let shakeAmount = 0;
-    let zoomLevel = 1;
+    let zoomLevel = 3.5; // Start Zoomed In
     let currentLevel = 1;
     let levelDistance = 0;
     let levelMaxDistance = 2000; 
@@ -319,17 +318,20 @@
     
     function initAudio() { if (!audioCtx && AudioContext) audioCtx = new AudioContext(); if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }
 
-    // --- INPUT & MENU ---
-    menuBtn.onclick = (e) => { e.stopPropagation(); menuOpen = !menuOpen; menuContent.style.display = menuOpen ? "flex" : "none"; menuBtn.innerText = menuOpen ? "✕" : "☰"; };
-    menuMute.onclick = (e) => { e.stopPropagation(); isMuted = !isMuted; menuMute.innerText = isMuted ? "🔇 SOUND: OFF" : "🔊 SOUND: ON"; if(isMuted) stopMusic(); else if(gameActive && !isPaused) startMusic(); };
-    menuHelp.onclick = (e) => { e.stopPropagation(); menuContent.style.display = 'none'; menuOpen = false; menuBtn.innerText = "☰"; howToScreen.style.display = 'flex'; };
-    closeHelpBtn.onclick = (e) => { e.stopPropagation(); howToScreen.style.display = 'none'; };
-    
-    // --- MAIN BUTTONS ---
-    startBtn.onclick = (e) => { e.stopPropagation(); startGame(); };
-    retryBtn.onclick = (e) => { e.stopPropagation(); resetGame(); };
-    nextLevelBtn.onclick = (e) => { e.stopPropagation(); goToNextLevel(); };
-    modalBtn.onclick = (e) => { e.stopPropagation(); closeModal(); };
+    // --- INPUT HANDLERS (UPDATED TO FIX TOUCH) ---
+    function attachFastClick(element, action) {
+        element.addEventListener('touchstart', (e) => { e.stopPropagation(); e.preventDefault(); action(); }, {passive:false});
+        element.addEventListener('mousedown', (e) => { e.stopPropagation(); action(); });
+    }
+
+    attachFastClick(menuBtn, () => { menuOpen = !menuOpen; menuContent.style.display = menuOpen ? "flex" : "none"; menuBtn.innerText = menuOpen ? "✕" : "☰"; });
+    attachFastClick(menuMute, () => { isMuted = !isMuted; menuMute.innerText = isMuted ? "🔇 SOUND: OFF" : "🔊 SOUND: ON"; if(isMuted) stopMusic(); else if(gameActive && !isPaused) startMusic(); });
+    attachFastClick(menuHelp, () => { menuContent.style.display = 'none'; menuOpen = false; menuBtn.innerText = "☰"; howToScreen.style.display = 'flex'; });
+    attachFastClick(closeHelpBtn, () => { howToScreen.style.display = 'none'; });
+    attachFastClick(startBtn, () => { startGame(); });
+    attachFastClick(retryBtn, () => { resetGame(); });
+    attachFastClick(nextLevelBtn, () => { goToNextLevel(); });
+    attachFastClick(modalBtn, () => { closeModal(); });
 
     function closeModal() {
         infoModal.style.display = 'none';
@@ -386,78 +388,64 @@
         ctx.save(); ctx.translate(x, y);
         let s = isMega ? 1.4 : 1; ctx.scale(s, s);
         
-        // Animation Frame
         pepper.runFrame = (pepper.runFrame || 0) + 0.3;
         let legOffset = Math.sin(pepper.runFrame);
 
         if(!pepper.grounded && !pepper.canDoubleJump) ctx.rotate(legOffset * 0.2); 
         else if(!pepper.grounded) ctx.rotate(pepper.dy * 0.04);
 
-        // HUSKY COLORS
         let grey = "#636e72"; let white = "#ffffff";
         if(isMega) {
             let hue = (Date.now() / 5) % 360;
             grey = `hsl(${hue}, 80%, 40%)`; white = `hsl(${(hue+180)%360}, 90%, 80%)`;
         }
 
-        // --- BODY ---
-        ctx.fillStyle = white;
-        ctx.beginPath(); ctx.ellipse(-5, -15, 25, 14, 0, 0, Math.PI*2); ctx.fill(); // Underbelly
-        ctx.fillStyle = grey;
-        ctx.beginPath(); ctx.ellipse(-5, -20, 25, 12, 0, 0, Math.PI*2); ctx.fill(); // Back
+        ctx.fillStyle = white; ctx.beginPath(); ctx.ellipse(-5, -15, 25, 14, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = grey; ctx.beginPath(); ctx.ellipse(-5, -20, 25, 12, 0, 0, Math.PI*2); ctx.fill();
 
-        // --- LEGS (Animated) ---
         ctx.lineWidth = 4; ctx.strokeStyle = white; ctx.lineCap = "round";
         let l1 = pepper.grounded ? Math.sin(pepper.runFrame)*10 : -10;
         let l2 = pepper.grounded ? Math.sin(pepper.runFrame + Math.PI)*10 : 5;
+        ctx.beginPath(); ctx.moveTo(-15, -10); ctx.lineTo(-15 + l1, 10); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(10, -10); ctx.lineTo(10 + l2, 10); ctx.stroke();
         
-        ctx.beginPath(); ctx.moveTo(-15, -10); ctx.lineTo(-15 + l1, 10); ctx.stroke(); // Back Left
-        ctx.beginPath(); ctx.moveTo(10, -10); ctx.lineTo(10 + l2, 10); ctx.stroke(); // Front Left
-
-        // --- TAIL ---
+        // Tail (Wag Faster if Idle)
+        let tailSpeed = gameActive ? 1 : 2;
+        let tailWag = Math.sin(Date.now()/100 * tailSpeed) * 5;
         ctx.strokeStyle = white; ctx.lineWidth = 6;
-        ctx.beginPath(); ctx.moveTo(-25, -20); ctx.quadraticCurveTo(-35, -35, -20, -35); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-25, -20); ctx.quadraticCurveTo(-35+tailWag, -35, -20+tailWag, -35); ctx.stroke();
 
-        // --- HEAD ---
         ctx.save(); ctx.translate(20, -30);
-        // Ears
-        ctx.fillStyle = grey; 
-        ctx.beginPath(); ctx.moveTo(-5, -5); ctx.lineTo(-8, -18); ctx.lineTo(0, -8); ctx.fill();
+        ctx.fillStyle = grey; ctx.beginPath(); ctx.moveTo(-5, -5); ctx.lineTo(-8, -18); ctx.lineTo(0, -8); ctx.fill();
         ctx.beginPath(); ctx.moveTo(5, -5); ctx.lineTo(8, -18); ctx.lineTo(0, -8); ctx.fill();
-        // Head Shape
-        ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill(); // Grey Top
-        ctx.fillStyle = white;
-        ctx.beginPath(); ctx.arc(0, 4, 10, 0, Math.PI*2); ctx.fill(); // White Snout area
-        ctx.beginPath(); ctx.ellipse(8, 4, 6, 4, 0, 0, Math.PI*2); ctx.fill(); // Snout tip
-        // Nose
+        ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI*2); ctx.fill(); 
+        ctx.fillStyle = white; ctx.beginPath(); ctx.arc(0, 4, 10, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(8, 4, 6, 4, 0, 0, Math.PI*2); ctx.fill();
         ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(12, 2, 2.5, 0, Math.PI*2); ctx.fill();
-        // Eye
         ctx.fillStyle = "#00fbff"; ctx.beginPath(); ctx.arc(2, -2, 3, 0, Math.PI*2); ctx.fill();
         
-        // --- STICK (SHIELD) ---
+        // Smile if Idle
+        if(!gameActive) {
+             ctx.strokeStyle = "black"; ctx.lineWidth = 1.5;
+             ctx.beginPath(); ctx.arc(5, 6, 4, 0, Math.PI); ctx.stroke();
+        }
+
         if(hasShield) {
             ctx.strokeStyle = "#8B4513"; ctx.lineWidth = 4;
             ctx.beginPath(); ctx.moveTo(5, 5); ctx.lineTo(25, 2); ctx.stroke();
-            // Tiny leaves
-            ctx.fillStyle = "#00b894";
-            ctx.beginPath(); ctx.arc(25, 2, 3, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "#00b894"; ctx.beginPath(); ctx.arc(25, 2, 3, 0, Math.PI*2); ctx.fill();
         }
 
-        ctx.restore();
-        ctx.restore();
+        ctx.restore(); ctx.restore();
     }
 
     function drawStick(ctx, x, y) {
         ctx.save(); ctx.translate(x, y + Math.sin(frame*0.1)*5);
         ctx.strokeStyle = "#8B4513"; ctx.lineWidth = 5; ctx.lineCap = "round";
         ctx.beginPath(); ctx.moveTo(-10, 5); ctx.lineTo(10, -5); ctx.stroke();
-        // Branch
         ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(5, 5); ctx.stroke();
-        // Leaf
         ctx.fillStyle = "#00b894"; ctx.beginPath(); ctx.arc(10, -5, 3, 0, Math.PI*2); ctx.fill();
         ctx.restore();
     }
-
     function drawHydrant(ctx, x, y) {
         ctx.fillStyle = "#d63031"; ctx.fillRect(x-15, y-40, 30, 40); ctx.fillRect(x-20, y-10, 40, 10); ctx.fillRect(x-20, y-35, 10, 10); ctx.fillRect(x+10, y-35, 10, 10);
         ctx.beginPath(); ctx.arc(x, y-40, 15, Math.PI, 0); ctx.fill(); ctx.fillStyle = "#b2bec3"; ctx.fillRect(x-5, y-45, 10, 5);
@@ -493,12 +481,9 @@
         modalCtx.fillStyle = "#00b894"; modalCtx.fillRect(0, ground, 280, 5);
 
         if(type === 'level2') {
-            // Draw Proper Husky
             drawHusky(modalCtx, 60, 60, false, false);
-            // Draw Stinky Stack
             drawPoo(modalCtx, 200, ground, 2);
             drawFlies(modalCtx, 200, ground);
-            // Text
             modalCtx.fillStyle = "white"; modalCtx.font = "900 14px Montserrat"; modalCtx.fillText("DOUBLE JUMP!", 25, 110);
         }
         
@@ -519,8 +504,20 @@
         if(gameActive) { if(!isPaused) frame++; } else { frame++; }
         groundY = canvas.height - GROUND_H;
         ctx.save();
-        let targetZoom = pepper.isMega ? 1.05 : 1.0; zoomLevel += (targetZoom - zoomLevel) * 0.05;
+        
+        // ZOOM LOGIC
+        let targetZoom = gameActive ? (pepper.isMega ? 1.05 : 1.0) : 3.5;
+        // Faster zoom reset when game starts
+        let zoomSpeed = gameActive ? 0.05 : 0.05;
+        zoomLevel += (targetZoom - zoomLevel) * zoomSpeed;
+        
         ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(zoomLevel, zoomLevel); ctx.translate(-canvas.width/2, -canvas.height/2);
+        
+        // Center camera on Pepper if zoomed
+        if(!gameActive) {
+            ctx.translate(canvas.width/2 - 150, canvas.height/2 - (groundY - 50));
+        }
+
         if(shakeAmount > 0) { ctx.translate((Math.random()-0.5)*shakeAmount, (Math.random()-0.5)*shakeAmount); shakeAmount*=0.9; }
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -678,701 +675,19 @@
     function handleInput() { if(!gameActive || isPaused) return; initAudio(); if(pepper.grounded) { pepper.dy = JUMP_FORCE; pepper.grounded = false; playSfx('jump'); if(pepper.doubleJumpUnlocked) pepper.canDoubleJump = true; } else if (pepper.canDoubleJump) { pepper.dy = DOUBLE_JUMP_FORCE; pepper.canDoubleJump = false; playSfx('doublejump'); spawnParticles(150, pepper.y, "white", 5); } }
 
     highScoreEl.innerText = "BEST: " + highScore;
-    window.addEventListener('touchstart', (e) => { if(e.target.className.includes('btn') || e.target.className.includes('menu') || menuOpen) return; if(e.target !== menuBtn) { e.preventDefault(); handleInput(); } }, {passive: false});
-    window.addEventListener('mousedown', (e) => { if(e.target.className.includes('btn') || e.target.className.includes('menu') || menuOpen) return; if(e.target !== menuBtn) handleInput(); });
+    
+    // Global inputs for game control (Backup)
+    window.addEventListener('touchstart', (e) => { 
+        if(e.target.className.includes('btn') || e.target.className.includes('menu') || menuOpen) return; 
+        if(e.target !== menuBtn) { e.preventDefault(); handleInput(); } 
+    }, {passive: false});
+    window.addEventListener('mousedown', (e) => { 
+        if(e.target.className.includes('btn') || e.target.className.includes('menu') || menuOpen) return; 
+        if(e.target !== menuBtn) handleInput(); 
+    });
 
     resize(); ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0,0,canvas.width,canvas.height);
     for(let i=0; i<3; i++) bgObjects.push({x:Math.random()*canvas.width}); for(let i=0; i<5; i++) midObjects.push({x:Math.random()*canvas.width}); loop(); 
-</script>
-</body>
-</html>
-            background: rgba(0,0,0,0.5); border-radius: 4px; overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-        #progress-fill { height: 100%; width: 0%; background: #00fbff; box-shadow: 0 0 10px #00fbff; transition: width 0.1s linear; }
-        #finish-icon { position: absolute; right: -10px; top: -8px; font-size: 20px; }
-
-        #power-wrapper { position: absolute; bottom: 40px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        #streak-label { color: white; font-size: 12px; font-weight: 900; letter-spacing: 3px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); text-transform: uppercase;}
-        #streak-container { width: 80%; max-width: 300px; height: 12px; background: rgba(0,0,0,0.6); border-radius: 6px; overflow: hidden; position: relative; }
-        #streak-fill { position: absolute; top: 0; left: 0; height: 100%; background: #ff00ff; width: 0%; transition: width 0.2s cubic-bezier(0.4, 2, 0.5, 1); box-shadow: 0 0 10px #ff00ff; }
-        #mega-fill { position: absolute; top: 0; left: 0; height: 100%; width: 0%; display: block; background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff); background-size: 200%; animation: rainbow 0.5s linear infinite; transition: none; }
-        @keyframes rainbow { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
-
-        /* MODALS & SCREENS */
-        #start-screen, #game-over, #level-screen, #how-to-screen, #info-modal { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
-            display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            z-index: 50; text-align: center;
-        }
-        #game-over, #level-screen, #how-to-screen, #info-modal { display: none; background: rgba(0,0,0,0.9); backdrop-filter: blur(15px); }
-        #start-screen { background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.8) 100%); backdrop-filter: none; }
-
-        .title-box { margin-bottom: 250px; animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2; position: relative; }
-        h1 { 
-            color: #fff; font-size: 55px; margin: 0; line-height: 0.9; font-weight: 900; 
-            letter-spacing: -3px; text-transform: uppercase;
-            text-shadow: 0 4px 0 #2d3436, 0 0 20px rgba(0, 251, 255, 0.5);
-        }
-        .subtitle { font-size: 16px; color: #00fbff; font-weight: 700; letter-spacing: 4px; margin-top: 10px; text-transform: uppercase; }
-
-        /* MINI CANVAS FOR VISUAL EXAMPLES */
-        .visual-example {
-            margin: 20px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.2);
-            background: rgba(0,0,0,0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .btn { 
-            background: white; color: #2d3436; padding: 20px 60px; border-radius: 16px; 
-            font-size: 22px; font-weight: 900; margin-top: 20px; z-index: 100; pointer-events: auto;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.4); border: none;
-            cursor: pointer; animation: breathe 2s infinite ease-in-out;
-        }
-        .btn:active { transform: scale(0.95); background: #dfe6e9; animation: none; }
-
-        @keyframes slideUp { 0% { transform: translateY(50px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
-        @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-    </style>
-</head>
-<body>
-
-    <canvas id="gameCanvas"></canvas>
-    <div id="flash-overlay"></div>
-    
-    <div id="menu-btn">☰</div>
-    <div id="menu-content">
-        <div class="menu-item" id="menu-mute">🔊 SOUND: ON</div>
-        <div class="menu-item" id="menu-help">❓ HOW TO PLAY</div>
-    </div>
-
-    <div id="ui-layer">
-        <div class="hud-top">
-            <div class="glass-pill" id="score-box">
-                <div id="level-indicator">LEVEL 1</div>
-                <span id="score">0 PTS</span>
-                <div id="high-score-box">BEST: 0</div>
-            </div>
-            
-            <div class="glass-pill" id="bone-box">
-                <span style="font-size:18px;">🦴</span>
-                <span id="bone-text">0/5</span>
-            </div>
-        </div>
-
-        <div id="progress-wrapper">
-            <div id="progress-fill"></div>
-            <div id="finish-icon">🏁</div>
-        </div>
-        
-        <div id="power-wrapper">
-            <div id="streak-label">MEGA MODE! DODGE 50 DOO-DOOS TO UNLOCK</div>
-            <div id="streak-container">
-                <div id="streak-fill"></div>
-                <div id="mega-fill"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="start-screen">
-        <div class="title-box">
-            <h1>PEPPER'S<br>DOO-DOO DASH</h1>
-            <div class="subtitle">TURBO EDITION</div>
-        </div>
-        <button class="btn" id="start-btn" style="position: absolute; bottom: 15%;">TAP TO START</button>
-    </div>
-
-    <div id="info-modal">
-        <h2 id="modal-title" style="color:#00fbff; font-size:35px; margin:0; text-transform:uppercase;">TITLE</h2>
-        <div id="modal-text" style="color:white; font-size:16px; width:80%; margin-top:10px;">Description</div>
-        <canvas id="modal-canvas" class="visual-example" width="280" height="150"></canvas>
-        <button class="btn" id="modal-btn">LET'S GO!</button>
-    </div>
-
-    <div id="how-to-screen">
-        <h2 style="color:#00fbff; font-size:30px; margin-bottom:20px;">HOW TO PLAY</h2>
-        <div style="color:white; text-align:left; font-size:14px; line-height:1.8; width:85%; background:rgba(0,0,0,0.5); padding:15px; border-radius:10px;">
-            👆 <b>TAP</b> to Jump. <br>
-            💩 <b>AVOID</b> Poo & Fire Hydrants.<br>
-            🦴 <b>COLLECT</b> 5 Bones for Shield (+5pts).<br>
-            🌈 <b>MEGA MODE</b> = Invincible Speed!<br>
-            <hr style="border:0; border-top:1px solid rgba(255,255,255,0.3); margin:10px 0;">
-            🚀 <b>LEVEL 2:</b> Unlocks <b>DOUBLE JUMP</b>.<br>
-            🪰 <b>STINKY STACK:</b> Too tall! Double Jump it!<br>
-        </div>
-        <div class="btn" id="close-help-btn" style="margin-top:20px;">GOT IT</div>
-    </div>
-
-    <div id="level-screen">
-        <h1 style="color:#00fbff; font-size:40px;">LEVEL COMPLETE!</h1>
-        <div class="glass-pill" style="margin: 20px 0;">
-            <span id="score-label">NEXT CHALLENGE AWAITS</span>
-        </div>
-        <div class="btn" id="next-level-btn">NEXT LEVEL >></div>
-    </div>
-
-    <div id="game-over">
-        <h1 id="go-title" style="color:#ff7675; font-size:50px;">GAME OVER!</h1>
-        
-        <canvas id="go-canvas" class="visual-example" width="150" height="100" style="display:none; margin:10px 0;"></canvas>
-        <div id="go-msg" style="color:#ffeaa7; font-weight:700; font-size:14px; max-width:80%; margin-bottom:10px;"></div>
-
-        <div class="glass-pill" style="margin: 10px 0;">
-            <span id="score-label">FINAL SCORE</span>
-            <span id="end-score" style="font-size: 40px; font-weight: 900;">0</span>
-        </div>
-        <div class="btn" id="retry-btn">TRY AGAIN</div>
-    </div>
-
-<script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    // UI Elements
-    const scoreEl = document.getElementById('score');
-    const levelInd = document.getElementById('level-indicator');
-    const boneText = document.getElementById('bone-text');
-    const streakFill = document.getElementById('streak-fill');
-    const megaFill = document.getElementById('mega-fill');
-    const streakLabel = document.getElementById('streak-label');
-    const progressFill = document.getElementById('progress-fill');
-    const highScoreEl = document.getElementById('high-score-box');
-    const menuBtn = document.getElementById('menu-btn');
-    const menuContent = document.getElementById('menu-content');
-    const menuMute = document.getElementById('menu-mute');
-    const menuHelp = document.getElementById('menu-help');
-    
-    const startScreen = document.getElementById('start-screen');
-    const gameOverScreen = document.getElementById('game-over');
-    const levelScreen = document.getElementById('level-screen');
-    const howToScreen = document.getElementById('how-to-screen');
-    const infoModal = document.getElementById('info-modal');
-    
-    // Buttons
-    const startBtn = document.getElementById('start-btn');
-    const retryBtn = document.getElementById('retry-btn');
-    const nextLevelBtn = document.getElementById('next-level-btn');
-    const closeHelpBtn = document.getElementById('close-help-btn');
-    const modalBtn = document.getElementById('modal-btn');
-
-    // Game Over Elements
-    const endScoreEl = document.getElementById('end-score');
-    const goTitle = document.getElementById('go-title');
-    const goMsg = document.getElementById('go-msg');
-    const goCanvas = document.getElementById('go-canvas');
-    const flashOverlay = document.getElementById('flash-overlay');
-    
-    // Modal Canvas
-    const modalCanvas = document.getElementById('modal-canvas');
-    const modalCtx = modalCanvas.getContext('2d');
-
-    function resize() { 
-        canvas.width = window.innerWidth; 
-        canvas.height = window.innerHeight; 
-        groundY = canvas.height - GROUND_H;
-        if(!gameActive && !frame) pepper.y = groundY;
-    }
-    window.addEventListener('resize', resize);
-
-    // --- PHYSICS & CONSTANTS ---
-    const GRAVITY = 1.1; 
-    const JUMP_FORCE = -19; 
-    const DOUBLE_JUMP_FORCE = -15; 
-    const GROUND_H = 140; 
-    const MEGA_MAX_TIME = 900; // Longer Mega Mode
-    const MEGA_TRIGGER = 50; 
-    const LEVEL_FOR_DOUBLE_JUMP = 2; 
-    
-    // Game State
-    let gameActive = false;
-    let isPaused = false;
-    let frame = 0;
-    let score = 0;
-    let highScore = localStorage.getItem('pepperHighScore') || 0;
-    let speed = 9;
-    let groundY = 0; 
-    let shakeAmount = 0;
-    let zoomLevel = 1;
-    let currentLevel = 1;
-    let levelDistance = 0;
-    let levelMaxDistance = 2000; 
-    let levelFinished = false; 
-    let isMuted = false;
-    let menuOpen = false;
-    let megaUnlockedOnce = false;
-
-    let envStyles = [
-        { c1: "#81ecec", c2: "#74b9ff", grass: "#00b894", track: "#2d3436" }, 
-        { c1: "#ff9f43", c2: "#ee5253", grass: "#e17055", track: "#2d3436" }, 
-        { c1: "#2c3e50", c2: "#000000", grass: "#192a56", track: "#576574" }  
-    ];
-    let curStyle = envStyles[0];
-
-    let pepper = {
-        x: 100, y: 0, dy: 0,
-        grounded: true, canDoubleJump: false, isMega: false,
-        streak: 0, megaTimer: 0, bones: 0, hasShield: false, size: 1,
-        doubleJumpUnlocked: false
-    };
-
-    let obstacles = [];
-    let bones = [];
-    let speedLines = [];
-    let particles = [];
-    let bgObjects = []; 
-    let midObjects = []; 
-    let floatTexts = [];
-    let nextObstacleTimer = 0;
-    let finishLine = null; 
-
-    // --- AUDIO ---
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    let audioCtx;
-    let musicInterval;
-    let step = 0;
-    const tracks = {
-        1: { bass: [82, null, 82, 98, null, 82, 110, null, 82, null, 123, 110, 98, 82, null, 146], tempo: 142 },
-        2: { bass: [98, 98, 196, 98, 110, 110, 220, 110, 123, 123, 246, 123, 130, 130, 261, 130], tempo: 120 },
-        3: { bass: [82, 82, 87, 87, 92, 92, 98, 98, 110, 110, 98, 98, 92, 92, 87, 87], tempo: 110 }
-    };
-    
-    function initAudio() { if (!audioCtx && AudioContext) audioCtx = new AudioContext(); if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }
-
-    // --- INPUT & MENU ---
-    menuBtn.onclick = (e) => { e.stopPropagation(); menuOpen = !menuOpen; menuContent.style.display = menuOpen ? "flex" : "none"; menuBtn.innerText = menuOpen ? "✕" : "☰"; };
-    menuMute.onclick = (e) => { e.stopPropagation(); isMuted = !isMuted; menuMute.innerText = isMuted ? "🔇 SOUND: OFF" : "🔊 SOUND: ON"; if(isMuted) stopMusic(); else if(gameActive && !isPaused) startMusic(); };
-    menuHelp.onclick = (e) => { e.stopPropagation(); menuContent.style.display = 'none'; menuOpen = false; menuBtn.innerText = "☰"; howToScreen.style.display = 'flex'; };
-    closeHelpBtn.onclick = (e) => { e.stopPropagation(); howToScreen.style.display = 'none'; };
-    
-    // --- MAIN BUTTONS ---
-    startBtn.onclick = (e) => { e.stopPropagation(); startGame(); };
-    retryBtn.onclick = (e) => { e.stopPropagation(); resetGame(); };
-    nextLevelBtn.onclick = (e) => { e.stopPropagation(); goToNextLevel(); };
-    modalBtn.onclick = (e) => { e.stopPropagation(); closeModal(); };
-
-    function closeModal() {
-        infoModal.style.display = 'none';
-        isPaused = false;
-        startMusic();
-    }
-
-    // --- AUDIO FUNCTIONS ---
-    function synth(freq, type, vol, decay, wah=false) {
-        if (!audioCtx || isMuted) return;
-        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); const filter = audioCtx.createBiquadFilter();
-        osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        if (wah) { filter.type = 'lowpass'; filter.Q.value = 8; filter.frequency.setValueAtTime(300, audioCtx.currentTime); filter.frequency.linearRampToValueAtTime(1200, audioCtx.currentTime + 0.05); filter.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + decay); } 
-        else { filter.type = 'allpass'; }
-        const now = audioCtx.currentTime; gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(vol, now + 0.01); gain.gain.exponentialRampToValueAtTime(0.001, now + decay);
-        osc.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + decay + 0.1);
-    }
-    function playSnare() {
-        if (!audioCtx || isMuted) return;
-        const b = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.1, audioCtx.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-        const n = audioCtx.createBufferSource(); n.buffer = b; const f = audioCtx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 1500; const g = audioCtx.createGain(); g.gain.setValueAtTime(0.3, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
-        n.connect(f); f.connect(g); g.connect(audioCtx.destination); n.start();
-    }
-    function startMusic() {
-        if (musicInterval || isMuted) return;
-        let track = tracks[currentLevel] || tracks[3]; let seq = track.bass; let ms = track.tempo; step=0;
-        musicInterval = setInterval(() => {
-            if (!gameActive || isPaused) return;
-            let tick = step % 16;
-            if (pepper.isMega) { let arp = [523, 659, 783, 1046]; synth(arp[step % 4], 'square', 0.08, 0.1); if(step % 2 === 0) synth(130, 'sawtooth', 0.15, 0.1); if(tick % 4 === 2) playSnare(); } 
-            else { let b = seq[tick]; if (b) synth(b, 'sawtooth', 0.25, 0.25, true); if (tick === 4 || tick === 12) playSnare(); if (tick % 2 === 0) synth(4000, 'square', 0.03, 0.02); }
-            step++;
-        }, ms);
-    }
-    function stopMusic() { clearInterval(musicInterval); musicInterval = null; }
-    function playSfx(type) {
-        if (!audioCtx || isMuted) return;
-        if(type==='jump') synth(350, 'triangle', 0.1, 0.1); if(type==='doublejump') synth(600, 'square', 0.1, 0.1);
-        if(type==='collect') synth(1400, 'sine', 0.1, 0.2); if(type==='smash') { synth(80, 'sawtooth', 0.3, 0.3); playSnare(); }
-        if(type==='crash') synth(50, 'sawtooth', 0.4, 0.5); if(type==='levelup') { synth(440, 'triangle', 0.2, 0.5); setTimeout(()=>synth(880, 'triangle', 0.2, 0.5), 100); }
-        if(type==='splash') { const o = audioCtx.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(400, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime+0.3); const g = audioCtx.createGain(); g.gain.setValueAtTime(0.3, audioCtx.currentTime); g.gain.linearRampToValueAtTime(0, audioCtx.currentTime+0.3); o.connect(g); g.connect(audioCtx.destination); o.start(); }
-        if(type==='spray') synth(1000, 'white', 0.1, 0.1);
-    }
-
-    // --- VISUAL HELPERS ---
-    function spawnPopup(text, x, y, color) { floatTexts.push({ text, x, y, color, life: 1.0 }); }
-    function spawnParticles(x, y, color, count, vyMult=1) { for(let i=0;i<count;i++) particles.push({x, y, vx:(Math.random()-0.5)*15, vy:(Math.random()-1)*15*vyMult, life:1, color}); }
-    function shakeScreen(amount) { shakeAmount = amount; }
-    function flashScreen(color='white') { flashOverlay.style.background = color; flashOverlay.style.opacity = 0.5; setTimeout(() => flashOverlay.style.opacity = 0, 100); }
-    function updateEnvStyle() { let index = (currentLevel - 1) % envStyles.length; curStyle = envStyles[index]; }
-
-    // --- DRAWING FUNCTIONS (Shared) ---
-    function drawHydrant(ctx, x, y) {
-        ctx.fillStyle = "#d63031"; ctx.fillRect(x-15, y-40, 30, 40); ctx.fillRect(x-20, y-10, 40, 10); ctx.fillRect(x-20, y-35, 10, 10); ctx.fillRect(x+10, y-35, 10, 10);
-        ctx.beginPath(); ctx.arc(x, y-40, 15, Math.PI, 0); ctx.fill(); ctx.fillStyle = "#b2bec3"; ctx.fillRect(x-5, y-45, 10, 5);
-    }
-    function drawPoo(ctx, x, y, stack) {
-        for(let i=0; i<stack; i++) {
-            let yOff = -i * 35; ctx.fillStyle = "#8B4513";
-            ctx.beginPath(); ctx.ellipse(x, y+yOff-5, 22, 10, 0, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(x, y+yOff-15, 18, 9, 0, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(x, y+yOff-25, 12, 7, 0, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.moveTo(x-5,y+yOff-25); ctx.quadraticCurveTo(x,y+yOff-38, x+5,y+yOff-25); ctx.fill();
-            ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(x-7,y+yOff-15,5,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(x+7,y+yOff-15,5,0,Math.PI*2); ctx.fill();
-            ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(x-7,y+yOff-15,2,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(x+7,y+yOff-15,2,0,Math.PI*2); ctx.fill();
-        }
-    }
-    function drawFlies(ctx, x, y) {
-        // Draw flies very high up (y - 120)
-        ctx.save(); ctx.translate(x, y - 120); ctx.fillStyle = "black";
-        for(let i=0; i<4; i++) {
-            let fx = Math.sin(frame*0.2 + i)*20; let fy = Math.cos(frame*0.3 + i)*15;
-            ctx.beginPath(); ctx.arc(fx, fy, 3, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = "rgba(255,255,255,0.7)"; ctx.beginPath(); ctx.ellipse(fx, fy-2, 4, 1.5, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "black";
-        }
-        ctx.restore();
-    }
-    function drawBone(ctx, x, y) {
-        ctx.fillStyle = "#ffffff"; ctx.fillRect(x-10, y-4, 20, 8);
-        ctx.beginPath(); ctx.arc(x-10, y-5, 5, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(x-10, y+5, 5, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(x+10, y-5, 5, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(x+10, y+5, 5, 0, Math.PI*2); ctx.fill();
-    }
-
-    // --- MINI SCENE RENDERER (For Modals) ---
-    function drawMiniScene(type) {
-        modalCtx.clearRect(0, 0, modalCanvas.width, modalCanvas.height);
-        let ground = 130;
-        
-        // Background
-        let grad = modalCtx.createLinearGradient(0,0,0,150); grad.addColorStop(0, "#81ecec"); grad.addColorStop(1, "#74b9ff");
-        modalCtx.fillStyle = grad; modalCtx.fillRect(0,0,280,150);
-        modalCtx.fillStyle = "#2d3436"; modalCtx.fillRect(0, ground, 280, 20);
-        modalCtx.fillStyle = "#00b894"; modalCtx.fillRect(0, ground, 280, 5);
-
-        if(type === 'level2') {
-            // Draw Pepper Double Jumping
-            modalCtx.save(); modalCtx.translate(60, 60);
-            modalCtx.fillStyle="#2d3436"; modalCtx.beginPath(); modalCtx.ellipse(0,-20,40,24,0,0,Math.PI*2); modalCtx.fill(); // Body
-            modalCtx.fillStyle="white"; modalCtx.beginPath(); modalCtx.ellipse(15,-18,25,16,0,0,Math.PI*2); modalCtx.fill(); // Face
-            // Snout
-            modalCtx.translate(30,-35);
-            modalCtx.fillStyle="#2d3436"; modalCtx.beginPath(); modalCtx.arc(0,0,23,0,Math.PI*2); modalCtx.fill();
-            modalCtx.fillStyle="white"; modalCtx.beginPath(); modalCtx.ellipse(0, 5, 20, 15, 0, 0, Math.PI*2); modalCtx.fill(); 
-            modalCtx.fillStyle="#00fbff"; modalCtx.beginPath(); modalCtx.arc(-10,-1,5,0,Math.PI*2); modalCtx.fill(); modalCtx.beginPath(); modalCtx.arc(10,-1,5,0,Math.PI*2); modalCtx.fill();
-            modalCtx.restore();
-            
-            // Draw Stinky Stack
-            drawPoo(modalCtx, 200, ground, 2);
-            // Draw Static Flies
-            modalCtx.save(); modalCtx.translate(200, ground-120); modalCtx.fillStyle="black";
-            for(let i=0; i<4; i++) { let fx = Math.sin(i)*20; let fy = Math.cos(i)*15; modalCtx.beginPath(); modalCtx.arc(fx, fy, 3, 0, Math.PI*2); modalCtx.fill(); }
-            modalCtx.restore();
-            
-            // Text
-            modalCtx.fillStyle = "white"; modalCtx.font = "900 12px Montserrat"; modalCtx.fillText("DOUBLE JUMP!", 25, 110);
-        }
-        
-        if(type === 'mega') {
-            // Rainbow Background
-            let rGrad = modalCtx.createLinearGradient(0,0,280,150); 
-            rGrad.addColorStop(0,"rgba(255,0,0,0.5)"); rGrad.addColorStop(0.2,"rgba(255,165,0,0.5)"); rGrad.addColorStop(0.4,"rgba(255,255,0,0.5)");
-            rGrad.addColorStop(0.6,"rgba(0,255,0,0.5)"); rGrad.addColorStop(1,"rgba(0,0,255,0.5)");
-            modalCtx.fillStyle = rGrad; modalCtx.fillRect(0,0,280,150);
-            
-            // Draw Mega Pepper
-            modalCtx.save(); modalCtx.translate(140, 100); modalCtx.scale(1.5,1.5);
-            modalCtx.fillStyle="#ff00ff"; modalCtx.beginPath(); modalCtx.ellipse(0,-20,40,24,0,0,Math.PI*2); modalCtx.fill();
-            modalCtx.restore();
-            // Poos flying away
-            drawPoo(modalCtx, 50, 80, 1);
-            drawPoo(modalCtx, 230, 60, 1);
-        }
-    }
-
-    // --- GAME LOGIC ---
-    function loop() {
-        if(gameActive) {
-            if(!isPaused) frame++; // Only advance frame if not paused
-        } else {
-            frame++; // Idle animation frame
-        }
-        
-        // Draw Everything
-        groundY = canvas.height - GROUND_H;
-        ctx.save();
-        let targetZoom = pepper.isMega ? 1.05 : 1.0; zoomLevel += (targetZoom - zoomLevel) * 0.05;
-        ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(zoomLevel, zoomLevel); ctx.translate(-canvas.width/2, -canvas.height/2);
-        if(shakeAmount > 0) { ctx.translate((Math.random()-0.5)*shakeAmount, (Math.random()-0.5)*shakeAmount); shakeAmount*=0.9; }
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
-        // ENV
-        let grad = ctx.createLinearGradient(0, 0, 0, canvas.height); grad.addColorStop(0, curStyle.c1); grad.addColorStop(1, curStyle.c2); ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = "rgba(255,255,255,0.2)"; let celestialY = (currentLevel%3===2) ? canvas.height*0.8 : 100; ctx.beginPath(); ctx.arc(canvas.width*0.8, celestialY, 60, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "rgba(255,255,255,0.1)"; bgObjects.forEach(o => { if(!levelFinished && gameActive && !isPaused) o.x -= speed * 0.1; if(o.x < -200) o.x = canvas.width + 100; ctx.beginPath(); ctx.moveTo(o.x, groundY); ctx.lineTo(o.x+150, groundY-250); ctx.lineTo(o.x+300, groundY); ctx.fill(); });
-        midObjects.forEach(o => { if(!levelFinished && gameActive && !isPaused) o.x -= speed * 0.3; if(o.x < -50) o.x = canvas.width + Math.random()*300; ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.beginPath(); ctx.moveTo(o.x, groundY); ctx.lineTo(o.x+25, groundY-100); ctx.lineTo(o.x+50, groundY); ctx.fill(); });
-        ctx.fillStyle = curStyle.track; ctx.fillRect(0, groundY, canvas.width, GROUND_H);
-        ctx.fillStyle = "rgba(255,255,255,0.05)"; let stripeOffset = (frame * speed) % 100; for(let i = -100; i < canvas.width + 100; i+=100) { ctx.beginPath(); ctx.moveTo(i - stripeOffset, groundY); ctx.lineTo(i - stripeOffset + 40, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 90, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 50, groundY); ctx.fill(); }
-        ctx.fillStyle = curStyle.grass; ctx.fillRect(0, groundY, canvas.width, 15);
-
-        if (gameActive && !levelFinished && !isPaused) {
-            levelDistance += speed * 0.1;
-            let pct = Math.min((levelDistance / levelMaxDistance) * 100, 100); progressFill.style.width = pct + "%";
-            if(levelDistance >= levelMaxDistance && !finishLine) finishLine = {x: canvas.width, type: 'finish'};
-        }
-
-        // PARTICLES
-        [particles, floatTexts].forEach(arr => {
-            for(let i=arr.length-1; i>=0; i--) {
-                let p = arr[i]; 
-                if(p.text) { p.y-=2; p.life-=0.02; ctx.globalAlpha=p.life; ctx.fillStyle=p.color; ctx.font="900 30px 'Montserrat'"; ctx.fillText(p.text, p.x, p.y); } 
-                else { p.x+=p.vx; p.y+=p.vy; p.life-=0.03; ctx.globalAlpha=p.life; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,5,0,Math.PI*2); ctx.fill(); }
-                if(p.life<=0) arr.splice(i,1);
-            }
-        });
-        ctx.globalAlpha=1;
-
-        // MEGA LOGIC
-        if(pepper.isMega && gameActive && !isPaused) {
-            pepper.megaTimer--; streakFill.style.width="100%"; megaFill.style.display="block";
-            let pct = (pepper.megaTimer / MEGA_MAX_TIME) * 100; if(pct < 0) pct = 0; megaFill.style.width = pct + "%";
-            streakLabel.innerText = "MEGA MODE!"; streakLabel.style.color = "#00fbff";
-            if(pepper.megaTimer<=0) { pepper.isMega=false; pepper.streak=0; streakFill.style.width="0%"; megaFill.style.display="none"; streakLabel.innerText = "MEGA MODE! DODGE 50 DOO-DOOS TO UNLOCK"; streakLabel.style.color = "white"; }
-        }
-
-        // PLAYER PHYSICS
-        if(gameActive && !isPaused) {
-            pepper.dy += GRAVITY; pepper.y += pepper.dy;
-            if(pepper.y >= groundY) { pepper.y=groundY; pepper.dy=0; pepper.grounded=true; pepper.canDoubleJump = false; }
-        } else if (!gameActive) { pepper.y = groundY; }
-
-        // DRAW PLAYER
-        ctx.save(); ctx.translate(150, pepper.y);
-        let targetSize = pepper.isMega ? 1.4 : 1; pepper.size += (targetSize - pepper.size) * 0.1; ctx.scale(pepper.size, pepper.size);
-        if(!pepper.grounded && !pepper.canDoubleJump) ctx.rotate(frame * 0.3); else if(!pepper.grounded) ctx.rotate(pepper.dy * 0.04);
-        
-        let bodyColor = "#2d3436"; let whiteColor = "white";
-        if(pepper.isMega) { let hue = (frame * 10) % 360; bodyColor = `hsl(${hue}, 80%, 50%)`; whiteColor = `hsl(${(hue+180)%360}, 80%, 80%)`; }
-
-        ctx.save(); ctx.translate(-30, -25); ctx.rotate(-0.5+Math.sin(frame*0.3)*0.4);
-        ctx.fillStyle=bodyColor; ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(-20,-10,-10,-30); ctx.quadraticCurveTo(5,-40,15,-25); ctx.lineTo(5,-5); ctx.fill();
-        ctx.fillStyle=whiteColor; ctx.beginPath(); ctx.moveTo(-5,-25); ctx.quadraticCurveTo(5,-35,12,-25); ctx.lineTo(5,-15); ctx.fill(); ctx.restore();
-        ctx.fillStyle=bodyColor; ctx.beginPath(); ctx.ellipse(0,-20,40,24,0,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle=whiteColor; ctx.beginPath(); ctx.ellipse(15,-18,25,16,0,0,Math.PI*2); ctx.fill();
-        ctx.save(); ctx.translate(30,-35);
-        let earBounce = Math.sin(frame*0.5)*2;
-        ctx.fillStyle=bodyColor; ctx.beginPath(); ctx.moveTo(-8,-10+earBounce); ctx.lineTo(-15,-35+earBounce); ctx.lineTo(0,-15+earBounce); ctx.fill(); ctx.beginPath(); ctx.moveTo(8,-10+earBounce); ctx.lineTo(15,-35+earBounce); ctx.lineTo(0,-15+earBounce); ctx.fill();  
-        ctx.beginPath(); ctx.arc(0,0,23,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(0, -5, 18, Math.PI, 0); ctx.fill(); 
-        ctx.fillStyle=whiteColor; ctx.beginPath(); ctx.ellipse(0, 5, 20, 15, 0, 0, Math.PI*2); ctx.fill(); 
-        ctx.fillStyle="#00fbff"; ctx.beginPath(); ctx.arc(-10,-1,5,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(10,-1,5,0,Math.PI*2); ctx.fill();
-        ctx.restore();
-        ctx.strokeStyle=whiteColor; ctx.lineWidth=7; ctx.lineCap="round"; let leg=pepper.grounded && gameActive ? Math.sin(frame*0.4)*8 : -5;
-        ctx.beginPath(); ctx.moveTo(-15,-5); ctx.lineTo(-15+leg,5); ctx.stroke(); ctx.beginPath(); ctx.moveTo(15,-5); ctx.lineTo(15-leg,5); ctx.stroke();
-        ctx.restore();
-
-        // OBSTACLES
-        if(finishLine && gameActive && !isPaused) {
-            finishLine.x -= speed;
-            ctx.save(); ctx.translate(finishLine.x, groundY - 80); ctx.fillStyle = "white"; ctx.fillRect(0, 0, 5, 80); for(let r=0; r<4; r++) { for(let c=0; c<4; c++) { ctx.fillStyle = (r+c)%2===0 ? "white" : "black"; ctx.fillRect(5 + c*10, r*10, 10, 10); } } ctx.restore();
-            if(finishLine.x < 150) completeLevel();
-        }
-
-        if(!finishLine && gameActive && !isPaused) {
-            nextObstacleTimer--;
-            if(nextObstacleTimer <= 0) {
-                let r = Math.random(); let type = 'poo'; let stack = 1; let yPos = groundY;
-                if(currentLevel >= 3 && r > 0.92) { type = 'pond'; nextObstacleTimer = 60; } 
-                else if(currentLevel >= 2 && r > 0.85) { type = 'stack'; nextObstacleTimer = 45; } 
-                else if(r > 0.75) { type = 'hydrant'; nextObstacleTimer = Math.max(30, 80 - score*0.3); }
-                else if (r > 0.60) { type = 'bird'; yPos = groundY - 50 - Math.random()*30; nextObstacleTimer = Math.max(30, 80 - score*0.3); }
-                else { type = 'poo'; stack = Math.floor(Math.random()*2)+1; nextObstacleTimer = Math.max(30, 80 - score*0.3); }
-                obstacles.push({x: canvas.width, type: type, stack: stack, y: yPos, passed: false, sprayed: false});
-            }
-            if(frame % 130 === 0) bones.push({x: canvas.width, y: groundY - 120});
-        }
-
-        for(let i=obstacles.length-1; i>=0; i--) {
-            let o = obstacles[i]; 
-            if(!levelFinished && gameActive && !isPaused) o.x -= speed;
-            
-            if(o.type === 'poo') drawPoo(ctx, o.x, groundY, o.stack);
-            else if(o.type === 'stack') { drawPoo(ctx, o.x, groundY, 2); drawFlies(ctx, o.x, groundY); }
-            else if(o.type === 'bird') { ctx.save(); ctx.translate(o.x, o.y+Math.sin(frame*0.2)*10); ctx.fillStyle = "#636e72"; ctx.beginPath(); ctx.ellipse(0,0,20,10,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle = "white"; ctx.beginPath(); ctx.moveTo(-5,0); ctx.lineTo(-25,-15); ctx.lineTo(-10,5); ctx.fill(); ctx.fillStyle = "#fab1a0"; ctx.beginPath(); ctx.moveTo(15, -2); ctx.lineTo(25, 2); ctx.lineTo(15, 6); ctx.fill(); ctx.restore(); }
-            else if(o.type === 'hydrant') drawHydrant(ctx, o.x, groundY);
-            else if(o.type === 'pond') { ctx.fillStyle = "rgba(241, 196, 15, 0.8)"; ctx.beginPath(); ctx.ellipse(o.x, groundY+5, 100, 15, 0, 0, Math.PI*2); ctx.fill(); }
-            
-            let hit = false;
-            if(o.type === 'hydrant' && o.x < 150 && !o.sprayed && !hit) { o.sprayed = true; spawnParticles(o.x, groundY-40, "#00fbff", 15, 2); playSfx('spray'); }
-            if(o.type === 'bird' && Math.abs(150-o.x)<30 && Math.abs(pepper.y-30-o.y)<30) hit=true;
-            if(o.type === 'poo' && Math.abs(150-o.x)<25 && pepper.y > groundY-(o.stack*35)+15) hit=true;
-            if(o.type === 'hydrant' && Math.abs(150-o.x)<25 && pepper.y > groundY-35) hit=true;
-            if(o.type === 'stack' && Math.abs(150-o.x)<25 && pepper.y > groundY-90) hit=true;
-            if(o.type === 'pond' && o.x < 150+20 && o.x > 150-200 && pepper.y > groundY - 10) hit=true;
-
-            if(hit && gameActive && !isPaused) {
-                if(o.type === 'hydrant' || o.type === 'pond') {
-                    // Hydrant death in Mega Mode
-                    if(o.type === 'hydrant' && pepper.isMega) {
-                         gameOver('mega-hydrant');
-                    } else {
-                         let color = o.type==='hydrant' ? "#00fbff" : "#f1c40f";
-                         spawnParticles(150, groundY, color, 40); playSfx('splash'); playSfx('crash'); flashScreen(color);
-                         gameOver('standard');
-                    }
-                    continue; 
-                }
-
-                if(pepper.isMega) {
-                    score += 5; spawnParticles(o.x, groundY, "#8B4513", 20); 
-                    spawnPopup("SMASH!", o.x, o.y-50, "orange"); playSfx('smash'); shakeScreen(15);
-                    obstacles.splice(i, 1); continue;
-                }
-                if(pepper.hasShield) {
-                    pepper.hasShield = false; pepper.bones=0; boneText.innerText="0/5"; 
-                    spawnParticles(o.x, groundY, "#00fbff", 25); playSfx('crash'); flashScreen('red');
-                    obstacles.splice(i, 1); continue;
-                }
-                gameOver('standard');
-            }
-
-            if(!o.passed && o.x < 150 && o.type !== 'pond') { 
-                o.passed = true; score++; scoreEl.innerText = score + " PTS"; 
-                if(!pepper.isMega) {
-                    // Smart Counting: Use stack height for meter
-                    let points = o.stack || 1;
-                    if(o.type === 'stack') points = 2; // Stinky stack counts as 2
-                    
-                    pepper.streak += points; 
-                    let fillPct = (pepper.streak / MEGA_TRIGGER) * 100;
-                    streakFill.style.width = fillPct+"%";
-                    if(pepper.streak>=MEGA_TRIGGER){ 
-                        pepper.isMega=true; pepper.megaTimer=MEGA_MAX_TIME; 
-                        megaFill.style.display="block"; 
-                        
-                        // First Time Mega Tutorial
-                        if(!megaUnlockedOnce) {
-                            megaUnlockedOnce = true;
-                            pauseAndShowModal('mega');
-                        } else {
-                            spawnPopup("MEGA MODE!", canvas.width/2, canvas.height/3, "#ff00ff"); flashScreen('white');
-                        }
-                    }
-                }
-            }
-            if(o.x < -300) obstacles.splice(i, 1);
-        }
-
-        for(let i=bones.length-1; i>=0; i--) {
-            let b = bones[i]; 
-            if(!levelFinished && gameActive && !isPaused) {
-                if(pepper.isMega && b.x < canvas.width && b.x > 0) { b.x -= (b.x - 150) * 0.2; b.y -= (b.y - pepper.y) * 0.2; } else { b.x -= speed; }
-            }
-            drawBone(ctx, b.x, b.y);
-            
-            if(gameActive && !isPaused && Math.abs(150-b.x)<40 && Math.abs(pepper.y-25-b.y)<40) {
-                pepper.bones++; score+=5; playSfx('collect'); spawnParticles(b.x, b.y, "gold", 15);
-                spawnPopup("+5", b.x, b.y, "gold");
-                if(pepper.bones>=5) { pepper.hasShield=true; pepper.bones=0; spawnPopup("SHIELD UP!", 150, pepper.y-50, "#00fbff"); flashScreen('#00fbff'); }
-                boneText.innerText=pepper.bones+"/5"; bones.splice(i,1);
-            } else if(b.x<-100) bones.splice(i,1);
-        }
-
-        ctx.restore();
-        requestAnimationFrame(loop);
-    }
-
-    function startGame() { initAudio(); startScreen.style.display = 'none'; resetGameLogic(); }
-    
-    function goToNextLevel() {
-        currentLevel++;
-        updateEnvStyle();
-        levelMaxDistance += 1000;
-        speed += 1.5;
-        levelDistance = 0; finishLine = null; obstacles = []; levelFinished = false;
-        levelScreen.style.display = 'none'; levelInd.innerText = "LEVEL " + currentLevel;
-        pepper.x = -50; startMusic();
-        
-        let runIn = setInterval(() => { pepper.x += 5; if(pepper.x >= 100) { clearInterval(runIn); pepper.x = 100; checkLevelIntro(); } }, 16);
-    }
-
-    function checkLevelIntro() {
-        if(currentLevel === LEVEL_FOR_DOUBLE_JUMP) {
-            pepper.doubleJumpUnlocked = true;
-            pauseAndShowModal('level2');
-        }
-    }
-
-    function pauseAndShowModal(type) {
-        isPaused = true;
-        stopMusic();
-        infoModal.style.display = 'flex';
-        
-        const title = document.getElementById('modal-title');
-        const text = document.getElementById('modal-text');
-        
-        if(type === 'level2') {
-            title.innerText = "LEVEL 2 UNLOCKED!";
-            text.innerHTML = "You've gained the <b>DOUBLE JUMP!</b><br>Tap while in the air to jump again.<br>Watch out for the tall <b>Stinky Stacks!</b>";
-            drawMiniScene('level2');
-        } else if (type === 'mega') {
-            title.innerText = "MEGA MODE!";
-            text.innerHTML = "You are now running at <b>WARP SPEED!</b><br>You are invincible to Poo and Birds.<br><b>BUT WATCH OUT FOR HYDRANTS!</b>";
-            drawMiniScene('mega');
-        }
-    }
-
-    function completeLevel() { levelFinished = true; playSfx('levelup'); levelScreen.style.display = 'flex'; stopMusic(); }
-
-    function gameOver(reason) {
-        gameActive = false; stopMusic();
-        if(score > highScore) { highScore = score; localStorage.setItem('pepperHighScore', highScore); highScoreEl.innerText = "BEST: " + highScore; newRecordMsg.style.display = "block"; } else { newRecordMsg.style.display = "none"; }
-        endScoreEl.innerText = score;
-        
-        // Custom Death Screen for Mega Hydrant
-        if(reason === 'mega-hydrant') {
-            goTitle.innerText = "STINKY!";
-            goMsg.innerText = "EVEN MEGA PEPPER HAS TO HOP A HYDRANT!";
-            goCanvas.style.display = 'block';
-            let gCtx = goCanvas.getContext('2d');
-            gCtx.clearRect(0,0,150,100);
-            drawHydrant(gCtx, 75, 80);
-        } else {
-            goTitle.innerText = "GAME OVER!";
-            goMsg.innerText = "";
-            goCanvas.style.display = 'none';
-        }
-        
-        gameOverScreen.style.display = 'flex';
-    }
-    
-    function resetGame() { gameOverScreen.style.display = 'none'; resetGameLogic(); }
-    
-    function resetGameLogic() {
-        resize(); score = 0; scoreEl.innerText="0 PTS"; pepper.bones=0; boneText.innerText="0/5"; 
-        pepper.streak=0; streakFill.style.width="0%"; obstacles=[]; bones=[]; floatTexts=[]; bgObjects=[]; midObjects=[];
-        speed=9; levelDistance=0; levelFinished=false; finishLine=null;
-        currentLevel=1; updateEnvStyle(); levelInd.innerText = "LEVEL 1";
-        pepper.y = groundY; pepper.dy=0; pepper.grounded=true; pepper.doubleJumpUnlocked = false; 
-        
-        gameActive = true; isPaused = false;
-        for(let i=0; i<3; i++) bgObjects.push({x:Math.random()*canvas.width}); for(let i=0; i<5; i++) midObjects.push({x:Math.random()*canvas.width});
-        startMusic();
-    }
-
-    function handleInput() {
-        if(!gameActive || isPaused) return;
-        initAudio();
-        
-        if(pepper.grounded) {
-            pepper.dy = JUMP_FORCE; pepper.grounded = false; playSfx('jump');
-            if(pepper.doubleJumpUnlocked) pepper.canDoubleJump = true;
-        } else if (pepper.canDoubleJump) {
-            pepper.dy = DOUBLE_JUMP_FORCE; pepper.canDoubleJump = false; playSfx('doublejump'); 
-            spawnParticles(150, pepper.y, "white", 5); 
-        }
-    }
-
-    highScoreEl.innerText = "BEST: " + highScore;
-    window.addEventListener('touchstart', (e) => { if(e.target.className.includes('btn') || e.target.className.includes('menu') || menuOpen) return; if(e.target !== menuBtn) { e.preventDefault(); handleInput(); } }, {passive: false});
-    window.addEventListener('mousedown', (e) => { if(e.target.className.includes('btn') || e.target.className.includes('menu') || menuOpen) return; if(e.target !== menuBtn) handleInput(); });
-
-    resize(); ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0,0,canvas.width,canvas.height);
-    for(let i=0; i<3; i++) bgObjects.push({x:Math.random()*canvas.width}); for(let i=0; i<5; i++) midObjects.push({x:Math.random()*canvas.width});
-    loop(); 
 </script>
 </body>
 </html>
