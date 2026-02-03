@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Pepper's Doo-Doo Dash V37</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Russo+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
     
     <style>
         body { 
@@ -170,22 +170,66 @@
         }
         #start-diff-btn:hover { background: rgba(255,255,255,0.25); }
 
-        /* SHOP */
+        /* POKEMON MART SHOP DESIGN */
         #shop-screen {
-            background: linear-gradient(180deg, #5D4037 0%, #3E2723 100%);
+            background: #70a2c2; /* Wall color */
+            justify-content: flex-start;
+            padding-top: 0;
         }
-        .shop-container { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; width: 95%; max-width: 800px; }
+        
+        #shop-counter-area {
+            width: 100%; height: 35%; 
+            background: #e8e8e8;
+            border-bottom: 8px solid #5a5a5a;
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+            padding-bottom: 20px;
+            position: relative;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        #shop-keeper {
+            position: absolute; bottom: 20px; right: 20%;
+            /* Can be replaced with a canvas later */
+        }
+
+        #shop-floor {
+            width: 100%; height: 65%;
+            background-color: #f8f8f8;
+            background-image: 
+                linear-gradient(45deg, #ccc 25%, transparent 25%), 
+                linear-gradient(-45deg, #ccc 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #ccc 75%), 
+                linear-gradient(-45deg, transparent 75%, #ccc 75%);
+            background-size: 40px 40px;
+            background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center;
+        }
+
+        #shop-text-box {
+            width: 90%; max-width: 600px;
+            background: white; border: 4px solid #333; border-radius: 8px;
+            padding: 15px; margin-bottom: 20px; text-align: left;
+            font-family: 'Press Start 2P', monospace; font-size: 12px; color: #333;
+            line-height: 1.8;
+            box-shadow: 5px 5px 0px rgba(0,0,0,0.2);
+        }
+
+        .shop-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; width: 100%; }
         .shop-item {
-            background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px;
-            padding: 15px; width: 140px; text-align: center; cursor: pointer; transition: all 0.2s;
-            display: flex; flex-direction: column; align-items: center; position: relative;
+            background: white; border: 4px solid #5a5a5a; border-radius: 4px;
+            padding: 10px; width: 110px; text-align: center; cursor: pointer; 
+            display: flex; flex-direction: column; align-items: center;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+            position: relative;
         }
-        .shop-item.selected { border-color: #00fbff; background: rgba(0,251,255,0.15); }
-        .shop-item.locked { opacity: 0.5; cursor: not-allowed; }
-        .shop-icon { margin-bottom: 10px; }
-        .shop-name { color: #fff; font-weight: 900; font-size: 14px; margin-bottom: 5px; }
-        .shop-perk { color: #00fbff; font-size: 10px; margin-bottom: 5px; font-weight: 700; }
-        .shop-cost { color: #f1c40f; font-weight: 900; font-size: 14px; }
+        .shop-item.selected { border-color: #00fbff; background: #e0fbfc; transform: translateY(-5px); }
+        .shop-item.locked { opacity: 0.6; cursor: not-allowed; background: #ddd; }
+        
+        .shop-icon { margin-bottom: 10px; font-size: 30px; }
+        .shop-name { color: #333; font-weight: 900; font-size: 12px; margin-bottom: 5px; font-family: 'Montserrat'; }
+        .shop-perk { color: #0984e3; font-size: 9px; margin-bottom: 5px; font-weight: 700; }
+        .shop-cost { color: #d63031; font-weight: 900; font-size: 12px; }
 
         /* Difficulty Cards */
         .diff-container { display: flex; flex-direction: column; gap: 15px; width: 95%; max-height: 85vh; overflow-y: auto; align-items: center; }
@@ -283,16 +327,22 @@
     </div>
 
     <div id="shop-screen">
-        <h1 style="color:#f1c40f; font-size:40px; margin-bottom:10px;">PEPPER'S SHOP</h1>
-        <div class="glass-pill" style="margin-bottom:20px;">
-            <span style="font-size:12px; color:#b2bec3;">BALANCE</span>
-            <span id="shop-balance" style="font-size:24px; font-weight:900;">0 🦴</span>
-        </div>
-        
-        <div class="shop-container" id="shop-container">
+        <div id="shop-counter-area">
+            <h1 style="color:#333; font-size:30px; margin-bottom:5px; text-shadow:none;">PEPPER'S MART</h1>
+            <div class="glass-pill" style="margin-bottom:10px; background:rgba(0,0,0,0.1); border-color:#333; color:#333; box-shadow:none;">
+                <span style="font-size:12px; color:#555;">BALANCE</span>
+                <span id="shop-balance" style="font-size:24px; font-weight:900;">0 🦴</span>
             </div>
-
-        <button class="btn" id="shop-next-btn" style="margin-top:30px;">NEXT LEVEL >></button>
+            <canvas id="shopkeeper-canvas" width="100" height="100" style="position: absolute; bottom: -10px; right: 15%;"></canvas>
+        </div>
+        <div id="shop-floor">
+            <div id="shop-text-box">
+                WELCOME! TAKE A LOOK AT MY WARES.
+            </div>
+            <div class="shop-container" id="shop-container">
+                </div>
+            <button class="btn" id="shop-next-btn" style="margin-top:20px; font-size:16px; padding:10px 30px;">NEXT LEVEL >></button>
+        </div>
     </div>
 
     <div id="info-modal">
@@ -365,7 +415,6 @@
     const startDiffBtn = document.getElementById('start-diff-btn');
     const retryBtn = document.getElementById('retry-btn');
     const nextLevelBtn = document.getElementById('shop-next-btn');
-    const goToShopBtn = document.getElementById('go-to-shop-btn'); // Unused but kept for ref
     const closeHelpBtn = document.getElementById('close-help-btn');
     const modalBtn = document.getElementById('modal-btn');
     const closeDiffBtn = document.getElementById('close-diff-btn');
@@ -377,6 +426,7 @@
     const flashOverlay = document.getElementById('flash-overlay');
     const shopContainer = document.getElementById('shop-container');
     const shopBalance = document.getElementById('shop-balance');
+    const shopTextBox = document.getElementById('shop-text-box');
 
     function resize() { 
         canvas.width = window.innerWidth; 
@@ -413,7 +463,9 @@
     let menuOpen = false;
     let magnetCooldown = 0;
     let isDead = false;
-    let lastObstacleType = 'none';
+    
+    // GLOBAL SPAWN COOLDOWN (The fix for overlaps)
+    let globalSpawnCooldown = 0;
 
     let pepper = {
         x: 100, y: 0, dy: 0,
@@ -438,7 +490,7 @@
     let weatherParticles = [];
     let stars = [];
     let floatTexts = [];
-    let nextObstacleTimer = 0;
+    let nextStickTimer = 0;
     let nextBoneTimer = 0;
     let finishLine = null; 
 
@@ -497,7 +549,7 @@
         obstacles=[]; sticks=[]; bones=[]; floatTexts=[]; 
         baseSpeed = (difficulty === 'death') ? 11 : 9; speed = baseSpeed;
         levelDistance=0; levelFinished=false; levelVictoryAnim=false; finishLine=null; isDead = false;
-        lastObstacleType = 'none';
+        globalSpawnCooldown = 0;
         
         levelInd.innerText = "LEVEL " + currentLevel; 
         
@@ -513,7 +565,7 @@
         megaBarFill.style.width = "0%";
         updateMegaText();
 
-        nextObstacleTimer = 200; 
+        globalSpawnCooldown = 100; // Start delay
         
         bgMountains=[]; for(let i=0; i<3; i++) bgMountains.push({x: i*300});
         bgTrees=[]; for(let i=0; i<5; i++) bgTrees.push({x: i*200});
@@ -558,6 +610,13 @@
     function openShop() {
         shopScreen.style.display = 'flex';
         shopBalance.innerText = score + " 🦴";
+        
+        // Draw shopkeeper
+        let sk = document.getElementById('shopkeeper-canvas');
+        let skCtx = sk.getContext('2d');
+        skCtx.clearRect(0,0,100,100);
+        drawHeadPreview(skCtx, 50, 50, 'normal');
+
         renderShop();
     }
 
@@ -571,11 +630,18 @@
             div.className = 'shop-item';
             if (pepper.hat === k) div.classList.add('selected');
             
+            // Logic Fix: Explicitly check score vs cost for class
             let isAffordable = score >= item.cost;
             let alreadyOwn = pepper.hat === k; 
-            if (!isAffordable && !alreadyOwn && k !== 'none') div.classList.add('locked');
+            
+            // If not affordable AND not the one you already have, lock it
+            if (!isAffordable && !alreadyOwn && k !== 'none') {
+                div.classList.add('locked');
+            } else {
+                div.classList.remove('locked');
+            }
 
-            let iconHtml = `<div class="shop-icon">${item.icon || '🐕'}</div>`;
+            let iconHtml = `<div class="shop-icon">${item.icon || ''}</div>`;
             if (k === 'none') {
                 iconHtml = `<canvas id="shop-cvs-none" width="60" height="60" style="margin-bottom:10px;"></canvas>`;
             }
@@ -584,27 +650,37 @@
                 ${iconHtml}
                 <div class="shop-name">${item.name}</div>
                 <div class="shop-perk">${item.perk}</div>
-                <div class="shop-cost">${item.cost > 0 ? item.cost + ' 🦴' : 'FREE'}</div>
+                <div class="shop-cost">${item.cost > 0 ? item.cost + ' 🦴' : 'OWNED'}</div>
             `;
             
             div.onclick = () => {
-                if (k === 'none') { pepper.hat = 'none'; renderShop(); return; }
-                if (pepper.hat === k) return; 
+                if (k === 'none') { 
+                    pepper.hat = 'none'; 
+                    shopTextBox.innerText = "SOMETIMES NATURAL IS BEST!";
+                    renderShop(); return; 
+                }
+                if (pepper.hat === k) {
+                    shopTextBox.innerText = "YOU ARE ALREADY WEARING THAT!";
+                    return; 
+                }
+                
                 if (score >= item.cost) {
                     score -= item.cost; 
                     pepper.hat = k;
                     shopBalance.innerText = score + " 🦴";
                     scoreEl.innerText = score + " 🦴";
+                    shopTextBox.innerText = "GREAT CHOICE! LOOKING SHARP!";
                     renderShop();
                     playSfx('collect');
                 } else {
+                    shopTextBox.innerText = "YOU DON'T HAVE ENOUGH BONES!";
                     playSfx('crash'); 
                 }
             };
             shopContainer.appendChild(div);
         });
 
-        // Draw "No Hat" Pepper face
+        // Draw "No Hat" Pepper face in the grid
         let c = document.getElementById('shop-cvs-none');
         if(c) {
             let x = c.getContext('2d');
@@ -735,13 +811,19 @@
         if(isMega) { let hue = (Date.now() / 5) % 360; bodyC = `hsl(${hue}, 80%, 40%)`; white = `hsl(${(hue+180)%360}, 90%, 80%)`; }
 
         function drawHat(ctx) {
-            ctx.save(); ctx.translate(5, -28); 
-            if(pepper.hat === 'cowboy') { ctx.fillStyle = "#8B4513"; ctx.beginPath(); ctx.ellipse(0, 0, 20, 5, 0, 0, Math.PI*2); ctx.fill(); ctx.fillRect(-10, -15, 20, 15); } 
-            else if (pepper.hat === 'tophat') { ctx.fillStyle = "#2d3436"; ctx.fillRect(-12, -25, 24, 25); ctx.fillRect(-18, 0, 36, 4); ctx.fillStyle = "red"; ctx.fillRect(-12, -5, 24, 4); } 
+            ctx.save(); 
+            // HAT POSITIONING TWEAKS
+            if(pepper.hat === 'cowboy') { 
+                ctx.translate(5, -28); 
+                ctx.fillStyle = "#8B4513"; ctx.beginPath(); ctx.ellipse(0, 0, 20, 5, 0, 0, Math.PI*2); ctx.fill(); ctx.fillRect(-10, -15, 20, 15); 
+            } 
+            else if (pepper.hat === 'tophat') { 
+                ctx.translate(5, -28); 
+                ctx.fillStyle = "#2d3436"; ctx.fillRect(-12, -25, 24, 25); ctx.fillRect(-18, 0, 36, 4); ctx.fillStyle = "red"; ctx.fillRect(-12, -5, 24, 4); 
+            } 
             else if (pepper.hat === 'cap') { 
-                ctx.save(); ctx.translate(-2, 0); // Tweaked cap
+                ctx.translate(2, -25); // Lowered slightly
                 ctx.fillStyle = "#d63031"; ctx.beginPath(); ctx.arc(0, 0, 13, Math.PI, 0); ctx.fill(); ctx.fillRect(-12, 0, 24, 3); ctx.fillRect(10, 0, 12, 4); 
-                ctx.restore();
             }
             ctx.restore();
         }
@@ -775,7 +857,18 @@
         else if (!pepper.grounded && !pepper.canDoubleJump) { pepper.rotation += 0.3; ctx.rotate(pepper.rotation); } 
         else { pepper.rotation = 0; }
 
-        if(hasShield) { ctx.save(); ctx.rotate(frame*0.1); ctx.shadowBlur = 20; ctx.shadowColor = "#00fbff"; ctx.strokeStyle = "rgba(0,251,255,0.6)"; ctx.lineWidth=3; ctx.beginPath(); for(let i=0; i<6; i++) { let a = (i/6)*Math.PI*2; ctx.lineTo(Math.cos(a)*45, Math.sin(a)*45); } ctx.closePath(); ctx.stroke(); ctx.restore(); }
+        if(hasShield) { 
+            // ROTATING STICK SHIELD
+            ctx.save(); 
+            let shieldSpeed = frame * 0.1;
+            for(let i=0; i<5; i++) {
+                let angle = shieldSpeed + (i * (Math.PI * 2) / 5);
+                let sx = Math.cos(angle) * 45;
+                let sy = Math.sin(angle) * 45;
+                drawStick(ctx, sx, sy);
+            }
+            ctx.restore(); 
+        }
         
         if(pepper.magnetTimer > 0) { 
             ctx.save(); ctx.translate(0, -40); 
@@ -894,12 +987,6 @@
         }, 800);
     }
 
-    function canSpawn(x) {
-        let allObjects = [...obstacles, ...bones, ...sticks];
-        for (let obj of allObjects) { if (Math.abs(obj.x - x) < 350) return false; }
-        return true;
-    }
-
     function loop() {
         if((gameActive && !isPaused && !isCountingDown)) { frame++; } 
         
@@ -1006,60 +1093,67 @@
         }
         if(levelVictoryAnim && pepper.x > canvas.width + 100) { completeLevel(); levelVictoryAnim = false; }
 
-        // --- SPAWNING LOGIC ---
+        // --- NEW SPAWNING LOGIC (FIXED OVERLAP) ---
         if(!finishLine && gameActive && !isPaused && !isCountingDown) {
-            nextObstacleTimer--;
-            if(nextObstacleTimer <= 0) {
-                if(canSpawn(canvas.width)) {
+            
+            // COOLDOWN LOGIC: If a stack spawned recently, force a delay.
+            if (globalSpawnCooldown > 0) {
+                globalSpawnCooldown--;
+            } else {
+                // Only try to spawn if cooldown is 0
+                if(Math.random() < 0.05) { // Spawn Chance per frame when cooled down
                     let r = Math.random(); 
                     let obj = {x: canvas.width, type: 'poo', stack: 1, y: groundY};
+                    let cooldownSet = 40; // Default gap
 
-                    // SAFETY: If last was stack, FORCE simple ground poo.
-                    // This makes it physically impossible for a Bird to spawn directly after a stack.
-                    let forceSafeSpawn = (lastObstacleType === 'stack');
-
-                    if(!forceSafeSpawn && currentLevel >= 3 && r > 0.92) { 
-                        obj.type = 'pond'; nextObstacleTimer = 60; lastObstacleType='pond';
+                    if(currentLevel >= 3 && r > 0.92) { 
+                        obj.type = 'pond'; cooldownSet = 60;
                     } 
-                    else if(!forceSafeSpawn && currentLevel >= 2 && r > 0.85) { 
-                        obj.type = 'stack'; obj.stack = 3; nextObstacleTimer = 100; lastObstacleType='stack';
+                    else if(currentLevel >= 2 && r > 0.85) { 
+                        obj.type = 'stack'; obj.stack = 3; 
+                        cooldownSet = 120; // FORCE HUGE GAP AFTER STACK (approx 2 seconds)
                     } 
-                    else if(!forceSafeSpawn && r > 0.75) { 
-                        obj.type = 'hydrant'; nextObstacleTimer = Math.max(30, 80 - score*0.3); lastObstacleType='hydrant';
+                    else if(r > 0.75) { 
+                        obj.type = 'hydrant'; cooldownSet = 50;
                     }
-                    else if (!forceSafeSpawn && r > 0.60) { 
+                    else if (r > 0.60) { 
                         obj.type = 'bird'; 
                         obj.y = (Math.random() > 0.5) ? groundY - 40 : groundY - 110;
-                        nextObstacleTimer = Math.max(30, 80 - score*0.3); lastObstacleType='bird';
+                        cooldownSet = 50;
                         if(Math.random() > 0.3) bones.push({x: canvas.width, y: (obj.y < groundY-80 ? groundY-40 : groundY-150), type: 'white'});
                     }
                     else { 
-                        // Default Poo (Safe fallback)
+                        // Poo
                         obj.type = 'poo'; obj.stack = Math.floor(Math.random()*2)+1; 
-                        nextObstacleTimer = Math.max(30, 80 - score*0.3); lastObstacleType='poo';
+                        cooldownSet = 40;
                         if(Math.random() > 0.5) bones.push({x: canvas.width, y: groundY - 120, type: 'white'});
                     }
                     
                     obstacles.push(obj);
+                    globalSpawnCooldown = cooldownSet;
                 }
             }
             
             nextBoneTimer--;
             if(nextBoneTimer <= 0) {
-                 if(canSpawn(canvas.width)) {
-                     let h = Math.random();
-                     let bY = groundY - 40; 
-                     if(h > 0.5) bY = groundY - 100; 
-                     if(h > 0.85) bY = groundY - 180; 
-                     let bType = 'white';
-                     if(Math.random() > 0.98 && magnetCooldown <= 0) { bType = 'magnet'; magnetCooldown = 2700; } 
-                     else if(Math.random() > 0.9) bType = 'gold';
-                     bones.push({x: canvas.width, y: bY, type: bType});
-                     nextBoneTimer = 40 + Math.random() * 80; 
-                 }
+                 // Bones can spawn freely, they don't block movement
+                 let h = Math.random();
+                 let bY = groundY - 40; 
+                 if(h > 0.5) bY = groundY - 100; 
+                 if(h > 0.85) bY = groundY - 180; 
+                 let bType = 'white';
+                 if(Math.random() > 0.98 && magnetCooldown <= 0) { bType = 'magnet'; magnetCooldown = 2700; } 
+                 else if(Math.random() > 0.9) bType = 'gold';
+                 bones.push({x: canvas.width, y: bY, type: bType});
+                 nextBoneTimer = 40 + Math.random() * 80; 
             }
 
-            if(frame % 180 === 0 && canSpawn(canvas.width)) { if(Math.random() > 0.5) sticks.push({x: canvas.width, y: groundY - 120}); }
+            // More frequent sticks
+            nextStickTimer--;
+            if(nextStickTimer <= 0) {
+                if(Math.random() > 0.5) sticks.push({x: canvas.width, y: groundY - 120});
+                nextStickTimer = 150 + Math.random() * 200; // ~2.5 - 5 seconds
+            }
         }
 
         for(let i=obstacles.length-1; i>=0; i--) {
@@ -1071,11 +1165,12 @@
             else if(o.type === 'pond') { ctx.fillStyle = "rgba(241, 196, 15, 0.8)"; ctx.beginPath(); ctx.ellipse(o.x, groundY+5, 100, 15, 0, 0, Math.PI*2); ctx.fill(); }
             
             let hit = false;
-            if(o.type === 'bird') { if(Math.abs(150-o.x) < 30 && Math.abs(pepper.y - o.y) < 30) hit = true; }
-            if(o.type === 'poo' && Math.abs(150-o.x)<25 && pepper.y > groundY-(o.stack*35)+15) hit=true;
-            if(o.type === 'hydrant' && Math.abs(150-o.x)<25 && pepper.y > groundY-35) hit=true;
-            if(o.type === 'stack' && Math.abs(150-o.x)<25 && pepper.y > groundY-105) hit=true; 
-            if(o.type === 'pond' && o.x < 150+10 && o.x > 150-100 && pepper.y > groundY - 5) hit=true;
+            // TIGHTER HITBOXES
+            if(o.type === 'bird') { if(Math.abs(150-o.x) < 25 && Math.abs(pepper.y - o.y) < 25) hit = true; }
+            if(o.type === 'poo' && Math.abs(150-o.x)<20 && pepper.y > groundY-(o.stack*35)+15) hit=true;
+            if(o.type === 'hydrant' && Math.abs(150-o.x)<15 && pepper.y > groundY-35) hit=true; // Reduced width
+            if(o.type === 'stack' && Math.abs(150-o.x)<20 && pepper.y > groundY-105) hit=true; 
+            if(o.type === 'pond' && o.x < 150+10 && o.x > 150-90 && pepper.y > groundY - 5) hit=true; // Tighter pond
 
             if(hit && gameActive && !isPaused && !isCountingDown && !levelVictoryAnim) {
                 if(o.type === 'hydrant' || o.type === 'pond') {
@@ -1142,7 +1237,7 @@
         if(isDead) return;
         levelFinished = true; playSfx('levelup'); 
         stopMusic();
-        setTimeout(openShop, 1000); // Wait 1 sec then open shop automatically
+        setTimeout(openShop, 1500); 
     }
     
     function gameOver(reason) { 
