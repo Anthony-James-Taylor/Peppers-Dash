@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V30</title>
+    <title>Pepper's Doo-Doo Dash V31</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Russo+One&display=swap" rel="stylesheet">
     
@@ -113,7 +113,6 @@
             color: #fff; font-size: 18px; font-weight: 900; letter-spacing: 1px;
         }
 
-        /* POPPY MEGA MODE COLORS */
         .mega-active {
             border-color: transparent !important;
             background: linear-gradient(135deg, rgba(20,0,20,0.9), rgba(50,0,50,0.9));
@@ -121,7 +120,7 @@
             animation: shake 0.5s infinite;
         }
         .mega-active #mega-bar-fill {
-            background: linear-gradient(90deg, #ff00de, #00ffff, #ffff00, #ff00de); /* Poppy: Hot Pink, Cyan, Yellow */
+            background: linear-gradient(90deg, #ff00de, #00ffff, #ffff00, #ff00de); 
             background-size: 200%;
             animation: rainbowMove 0.3s linear infinite;
         }
@@ -421,8 +420,8 @@
     let levelFinished = false; 
     let isMuted = false;
     let menuOpen = false;
-    let slowMoTimer = 0;
     let magnetCooldown = 0;
+    let isDead = false;
 
     let pepper = {
         x: 100, y: 0, dy: 0,
@@ -505,7 +504,7 @@
     function resetLevelState() {
         obstacles=[]; sticks=[]; bones=[]; floatTexts=[]; 
         baseSpeed = (difficulty === 'death') ? 11 : 9; speed = baseSpeed;
-        levelDistance=0; levelFinished=false; levelVictoryAnim=false; finishLine=null;
+        levelDistance=0; levelFinished=false; levelVictoryAnim=false; finishLine=null; isDead = false;
         
         levelInd.innerText = "LEVEL " + currentLevel; 
         
@@ -514,7 +513,6 @@
         pepper.rotation = 0; pepper.x = 100;
         magnetCooldown = 0; 
         
-        // Hat Perks
         if(pepper.hat === 'tophat') { pepper.hasShield = true; pepper.sticks = 5; stickText.innerText="5/5"; } 
         else { pepper.hasShield = false; pepper.sticks = 0; stickText.innerText="0/5"; }
 
@@ -585,16 +583,16 @@
             
             div.onclick = () => {
                 if (k === 'none') { pepper.hat = 'none'; renderShop(); return; }
-                if (pepper.hat === k) return; // Already selected
+                if (pepper.hat === k) return; 
                 if (score >= item.cost) {
-                    score -= item.cost; // Pay
+                    score -= item.cost; 
                     pepper.hat = k;
                     shopBalance.innerText = score + " 🦴";
                     scoreEl.innerText = score + " 🦴";
                     renderShop();
                     playSfx('collect');
                 } else {
-                    playSfx('crash'); // Can't afford
+                    playSfx('crash'); 
                 }
             };
             shopContainer.appendChild(div);
@@ -753,14 +751,11 @@
 
         if(hasShield) { ctx.save(); ctx.rotate(frame*0.1); ctx.shadowBlur = 20; ctx.shadowColor = "#00fbff"; ctx.strokeStyle = "rgba(0,251,255,0.6)"; ctx.lineWidth=3; ctx.beginPath(); for(let i=0; i<6; i++) { let a = (i/6)*Math.PI*2; ctx.lineTo(Math.cos(a)*45, Math.sin(a)*45); } ctx.closePath(); ctx.stroke(); ctx.restore(); }
         
-        // Magnet Visual - Floating Waves
         if(pepper.magnetTimer > 0) { 
-            ctx.save(); ctx.translate(0, -40); // Float above pepper
+            ctx.save(); ctx.translate(0, -40); 
             let wave = (frame % 30) / 30;
             ctx.strokeStyle = `rgba(231, 76, 60, ${1-wave})`; ctx.lineWidth=2;
             ctx.beginPath(); ctx.arc(0,0, 20 + wave*30, 0, Math.PI*2); ctx.stroke();
-            
-            // Mini Magnet Icon above
             ctx.scale(0.6, 0.6);
             ctx.fillStyle = "#e74c3c"; ctx.strokeStyle = "#bdc3c7"; ctx.lineWidth = 4;
             ctx.beginPath(); ctx.arc(0, -5, 12, Math.PI, 0); ctx.lineTo(12, 10); ctx.lineTo(5, 10); ctx.lineTo(5, -5); ctx.arc(0, -5, 5, 0, Math.PI, true); ctx.lineTo(-5, 10); ctx.lineTo(-12, 10); ctx.closePath(); ctx.fill();
@@ -796,7 +791,7 @@
 
     function drawStick(ctx, x, y) { 
         ctx.save(); ctx.translate(x, y + Math.sin(frame*0.1)*5); 
-        ctx.scale(2.0, 2.0); // Bigger Sticks (2x)
+        ctx.scale(2.0, 2.0); 
         ctx.strokeStyle = "#8B4513"; ctx.lineWidth = 5; ctx.lineCap = "round"; 
         ctx.beginPath(); ctx.moveTo(-10, 5); ctx.lineTo(10, -5); ctx.stroke(); 
         ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(5, 5); ctx.stroke(); 
@@ -808,7 +803,6 @@
         ctx.save(); ctx.translate(x, y + Math.sin(frame*0.1)*5); 
         
         if(type === 'magnet') {
-            // Draw Magnet Item
             ctx.fillStyle = "#e74c3c"; ctx.strokeStyle = "#bdc3c7"; ctx.lineWidth = 4;
             ctx.beginPath(); ctx.arc(0, -5, 12, Math.PI, 0); ctx.lineTo(12, 10); ctx.lineTo(5, 10); ctx.lineTo(5, -5); ctx.arc(0, -5, 5, 0, Math.PI, true); ctx.lineTo(-5, 10); ctx.lineTo(-12, 10); ctx.closePath(); ctx.fill();
             ctx.fillStyle = "#bdc3c7"; ctx.fillRect(-12, 5, 7, 5); ctx.fillRect(5, 5, 7, 5);
@@ -886,10 +880,7 @@
     function loop() {
         if((gameActive && !isPaused && !isCountingDown)) { frame++; } 
         
-        let timeScale = 1.0;
-        if(slowMoTimer > 0) { slowMoTimer--; timeScale = 0.3; }
-        let currentSpeed = speed * timeScale;
-        if(levelVictoryAnim) { frame++; pepper.x += currentSpeed * 1.5; }
+        if(levelVictoryAnim) { frame++; pepper.x += speed * 1.5; }
 
         groundY = canvas.height - GROUND_H;
         ctx.save();
@@ -906,8 +897,8 @@
         let grad = ctx.createLinearGradient(0, 0, 0, canvas.height); grad.addColorStop(0, sky.c1); grad.addColorStop(1, sky.c2); ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
         
         ctx.fillStyle = "rgba(255,255,255,0.2)"; let celestialY = (currentLevel%3===2) ? canvas.height*0.8 : 100; ctx.beginPath(); ctx.arc(canvas.width*0.8, celestialY, 60, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "rgba(255,255,255,0.1)"; bgMountains.forEach(m => { if(!levelFinished && gameActive && !isPaused && !isCountingDown) m.x -= currentSpeed * 0.05; if(m.x < -300) m.x = canvas.width + 100; ctx.beginPath(); ctx.moveTo(Math.floor(m.x), groundY); ctx.lineTo(Math.floor(m.x+150), groundY-300); ctx.lineTo(Math.floor(m.x+300), groundY); ctx.fill(); });
-        bgTrees.forEach(t => { if(!levelFinished && gameActive && !isPaused && !isCountingDown) t.x -= currentSpeed * 0.2; if(t.x < -50) t.x = canvas.width + Math.random()*300; ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.beginPath(); ctx.moveTo(Math.floor(t.x), groundY); ctx.lineTo(Math.floor(t.x+25), groundY-100); ctx.lineTo(Math.floor(t.x+50), groundY); ctx.fill(); });
+        ctx.fillStyle = "rgba(255,255,255,0.1)"; bgMountains.forEach(m => { if(!levelFinished && gameActive && !isPaused && !isCountingDown) m.x -= speed * 0.05; if(m.x < -300) m.x = canvas.width + 100; ctx.beginPath(); ctx.moveTo(Math.floor(m.x), groundY); ctx.lineTo(Math.floor(m.x+150), groundY-300); ctx.lineTo(Math.floor(m.x+300), groundY); ctx.fill(); });
+        bgTrees.forEach(t => { if(!levelFinished && gameActive && !isPaused && !isCountingDown) t.x -= speed * 0.2; if(t.x < -50) t.x = canvas.width + Math.random()*300; ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.beginPath(); ctx.moveTo(Math.floor(t.x), groundY); ctx.lineTo(Math.floor(t.x+25), groundY-100); ctx.lineTo(Math.floor(t.x+50), groundY); ctx.fill(); });
         
         ctx.fillStyle = "rgba(255,255,255,0.3)";
         bgClouds.forEach(c => { if(!isPaused && !isCountingDown) c.x -= c.speed; if(c.x < -100) c.x = canvas.width + 100; ctx.beginPath(); ctx.ellipse(c.x, c.y, 40, 20, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(c.x+20, c.y-10, 30, 20, 0, 0, Math.PI*2); ctx.fill(); });
@@ -915,14 +906,14 @@
         if(currentLevel % 3 === 0 || (frame % 3000 > 1500)) { ctx.fillStyle = "white"; stars.forEach(s => { let blink = Math.sin(frame*0.1 + s.x) > 0.8 ? 1 : 0.5; ctx.globalAlpha = blink; ctx.fillRect(s.x, s.y, s.size, s.size); }); ctx.globalAlpha = 1; }
 
         ctx.fillStyle = sky.ground; ctx.fillRect(0, groundY, canvas.width, GROUND_H);
-        ctx.fillStyle = "rgba(255,255,255,0.05)"; let stripeOffset = Math.floor((frame * currentSpeed) % 100); for(let i = -100; i < canvas.width + 100; i+=100) { ctx.beginPath(); ctx.moveTo(i - stripeOffset, groundY); ctx.lineTo(i - stripeOffset + 40, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 90, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 50, groundY); ctx.fill(); }
-        if(!levelFinished && pepper.grounded && (gameActive || levelVictoryAnim)) { ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.beginPath(); ctx.arc(120 - (frame*currentSpeed)%20, groundY+2, 5 * Math.random(), 0, Math.PI*2); ctx.fill(); }
+        ctx.fillStyle = "rgba(255,255,255,0.05)"; let stripeOffset = Math.floor((frame * speed) % 100); for(let i = -100; i < canvas.width + 100; i+=100) { ctx.beginPath(); ctx.moveTo(i - stripeOffset, groundY); ctx.lineTo(i - stripeOffset + 40, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 90, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 50, groundY); ctx.fill(); }
+        if(!levelFinished && pepper.grounded && (gameActive || levelVictoryAnim)) { ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.beginPath(); ctx.arc(120 - (frame*speed)%20, groundY+2, 5 * Math.random(), 0, Math.PI*2); ctx.fill(); }
         ctx.fillStyle = sky.grass; ctx.fillRect(0, groundY, canvas.width, 20);
 
         if(currentLevel >= 3) { ctx.fillStyle = "rgba(255,255,255,0.5)"; weatherParticles.forEach(p => { if(!isPaused && !isCountingDown) { p.y += p.speed; p.x += p.wind; } if(p.y > canvas.height) p.y = 0; if(p.x > canvas.width) p.x = 0; ctx.fillRect(p.x, p.y, p.size, p.size); }); }
 
         if (gameActive && !levelFinished && !isPaused && !isCountingDown) {
-            levelDistance += currentSpeed * 0.1;
+            levelDistance += speed * 0.1;
             let pct = Math.min((levelDistance / levelMaxDistance) * 100, 100); progressFill.style.width = pct + "%";
             if(levelDistance >= levelMaxDistance && !finishLine) finishLine = {x: canvas.width, type: 'finish'};
         }
@@ -966,8 +957,8 @@
         drawHusky(ctx, drawX, pepper.y, pepper.isMega, pepper.hasShield);
         if(!gameActive && !isCountingDown && !levelVictoryAnim) { drawSteamDooDoo(ctx, canvas.width * 0.75, groundY-15); }
 
-        if(finishLine) {
-            finishLine.x -= currentSpeed;
+        if(finishLine && !isDead) {
+            finishLine.x -= speed;
             ctx.save(); ctx.translate(finishLine.x, groundY - 150); 
             let wave = Math.sin(frame*0.2) * 10; ctx.fillStyle = "white"; ctx.fillRect(0, 0, 10, 150); 
             for(let r=0; r<4; r++) { for(let c=0; c<6; c++) { ctx.fillStyle = (r+c)%2===0 ? "white" : "black"; ctx.fillRect(10 + c*20, r*20 + (c*wave*0.1), 20, 20); } } ctx.restore();
@@ -1036,7 +1027,7 @@
         }
 
         for(let i=obstacles.length-1; i>=0; i--) {
-            let o = obstacles[i]; if(!levelFinished && gameActive && !isPaused && !isCountingDown) o.x -= currentSpeed;
+            let o = obstacles[i]; if(!levelFinished && gameActive && !isPaused && !isCountingDown) o.x -= speed;
             if(o.type === 'poo') drawDooDoo(ctx, o.x, groundY, o.stack);
             else if(o.type === 'stack') { drawDooDoo(ctx, o.x, groundY, 3); drawFlies(ctx, o.x, groundY); }
             else if(o.type === 'bird') { drawFlies(ctx, o.x, o.y); } 
@@ -1049,10 +1040,6 @@
             if(o.type === 'hydrant' && Math.abs(150-o.x)<25 && pepper.y > groundY-35) hit=true;
             if(o.type === 'stack' && Math.abs(150-o.x)<25 && pepper.y > groundY-105) hit=true; 
             if(o.type === 'pond' && o.x < 150+10 && o.x > 150-100 && pepper.y > groundY - 5) hit=true;
-
-            if(!hit && !o.passed && Math.abs(150-o.x) < 60 && Math.abs(pepper.y - (o.y || groundY)) < 60) {
-               if(slowMoTimer <= 0 && Math.random() > 0.7) slowMoTimer = 15; 
-            }
 
             if(hit && gameActive && !isPaused && !isCountingDown && !levelVictoryAnim) {
                 if(o.type === 'hydrant' || o.type === 'pond') {
@@ -1068,7 +1055,7 @@
         }
 
         for(let i=sticks.length-1; i>=0; i--) {
-            let s = sticks[i]; if(!levelFinished && gameActive && !isPaused && !isCountingDown) s.x -= currentSpeed; drawStick(ctx, s.x, s.y);
+            let s = sticks[i]; if(!levelFinished && gameActive && !isPaused && !isCountingDown) s.x -= speed; drawStick(ctx, s.x, s.y);
             if(gameActive && !isPaused && Math.abs(150-s.x)<40 && Math.abs(pepper.y-25-s.y)<40) {
                 if(difficulty !== 'death') {
                     pepper.sticks++; playSfx('collect'); spawnParticles(s.x, s.y, "#00b894", 15);
@@ -1080,7 +1067,7 @@
         }
 
         for(let i=bones.length-1; i>=0; i--) {
-            let b = bones[i]; if(!levelFinished && gameActive && !isPaused && !isCountingDown) b.x -= currentSpeed; drawBone(ctx, b.x, b.y, b.type);
+            let b = bones[i]; if(!levelFinished && gameActive && !isPaused && !isCountingDown) b.x -= speed; drawBone(ctx, b.x, b.y, b.type);
             if(gameActive && !isPaused && Math.abs(150-b.x)<40 && Math.abs(pepper.y-25-b.y)<40) {
                 if(b.type === 'magnet') { pepper.magnetTimer = 600; playSfx('magnet'); spawnPopup("MAGNET!", b.x, b.y, "#e74c3c"); }
                 else {
@@ -1097,7 +1084,7 @@
 
         if (gameActive && !isPaused) {
             fgBushes.forEach(bush => {
-                bush.x -= currentSpeed * 1.5; 
+                bush.x -= speed * 1.5; 
                 if(bush.x < -150) { bush.x = canvas.width + Math.random()*500; }
                 ctx.fillStyle = "#0f1519"; 
                 ctx.beginPath();
@@ -1112,8 +1099,13 @@
         requestAnimationFrame(loop);
     }
 
-    function completeLevel() { levelFinished = true; playSfx('levelup'); levelScreen.style.display = 'flex'; stopMusic(); }
+    function completeLevel() { 
+        if(isDead) return;
+        levelFinished = true; playSfx('levelup'); levelScreen.style.display = 'flex'; stopMusic(); 
+    }
+    
     function gameOver(reason) { 
+        isDead = true;
         gameActive = false; stopMusic(); 
         if(score > highScore) { highScore = score; localStorage.setItem('pepperHighScore', highScore); highScoreEl.innerText = "BEST: " + highScore + " 🦴"; } 
         endScoreEl.innerText = score; 
