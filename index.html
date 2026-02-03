@@ -422,6 +422,7 @@
     let menuOpen = false;
     let magnetCooldown = 0;
     let isDead = false;
+    let lastObstacleType = 'none'; // CRITICAL: Track the last type for collision prevention
 
     let pepper = {
         x: 100, y: 0, dy: 0,
@@ -506,6 +507,7 @@
         obstacles=[]; sticks=[]; bones=[]; floatTexts=[]; 
         baseSpeed = (difficulty === 'death') ? 11 : 9; speed = baseSpeed;
         levelDistance=0; levelFinished=false; levelVictoryAnim=false; finishLine=null; isDead = false;
+        lastObstacleType = 'none';
         
         levelInd.innerText = "LEVEL " + currentLevel; 
         
@@ -585,7 +587,7 @@
             if (!isAffordable && !alreadyOwn && k !== 'none') div.classList.add('locked');
 
             div.innerHTML = `
-                <div class="shop-icon">${item.icon || '🐕'}</div>
+                <div class="shop-icon">${item.icon || '🐺'}</div>
                 <div class="shop-name">${item.name}</div>
                 <div class="shop-perk">${item.perk}</div>
                 <div class="shop-cost">${item.cost > 0 ? item.cost + ' 🦴' : 'FREE'}</div>
@@ -731,11 +733,11 @@
         if(isMega) { let hue = (Date.now() / 5) % 360; bodyC = `hsl(${hue}, 80%, 40%)`; white = `hsl(${(hue+180)%360}, 90%, 80%)`; }
 
         function drawHat(ctx) {
-            ctx.save(); ctx.translate(2, -35); // Base hat position
+            ctx.save(); ctx.translate(5, -28); // FIXED: Cap position optimized
             if(pepper.hat === 'cowboy') { ctx.fillStyle = "#8B4513"; ctx.beginPath(); ctx.ellipse(0, 0, 20, 5, 0, 0, Math.PI*2); ctx.fill(); ctx.fillRect(-10, -15, 20, 15); } 
             else if (pepper.hat === 'tophat') { ctx.fillStyle = "#2d3436"; ctx.fillRect(-12, -25, 24, 25); ctx.fillRect(-18, 0, 36, 4); ctx.fillStyle = "red"; ctx.fillRect(-12, -5, 24, 4); } 
             else if (pepper.hat === 'cap') { 
-                ctx.save(); ctx.translate(0, -5); // Adjust cap specifically up
+                ctx.save(); ctx.translate(0, 3); // Slightly lower
                 ctx.fillStyle = "#d63031"; ctx.beginPath(); ctx.arc(0, 0, 12, Math.PI, 0); ctx.fill(); ctx.fillRect(-12, 0, 24, 2); ctx.fillRect(10, 0, 12, 4); 
                 ctx.restore();
             }
@@ -1007,32 +1009,34 @@
             nextObstacleTimer--;
             if(nextObstacleTimer <= 0) {
                 if(canSpawn(canvas.width)) {
-                    let r = Math.random(); let obj = {x: canvas.width, type: 'poo', stack: 1, y: groundY};
+                    let r = Math.random(); 
+                    let obj = {x: canvas.width, type: 'poo', stack: 1, y: groundY};
 
-                    if(currentLevel >= 3 && r > 0.92) { obj.type = 'pond'; nextObstacleTimer = 60; } 
-                    else if(currentLevel >= 2 && r > 0.85) { obj.type = 'stack'; obj.stack = 3; nextObstacleTimer = 100; } 
-                    else if(r > 0.75) { obj.type = 'hydrant'; nextObstacleTimer = Math.max(30, 80 - score*0.3); }
-                    else if (r > 0.60) { 
+                    // SAFETY: If last was stack, force simple poo
+                    let forceSimplePoo = (lastObstacleType === 'stack');
+
+                    if(!forceSimplePoo && currentLevel >= 3 && r > 0.92) { 
+                        obj.type = 'pond'; nextObstacleTimer = 60; lastObstacleType='pond';
+                    } 
+                    else if(!forceSimplePoo && currentLevel >= 2 && r > 0.85) { 
+                        obj.type = 'stack'; obj.stack = 3; nextObstacleTimer = 100; lastObstacleType='stack';
+                    } 
+                    else if(!forceSimplePoo && r > 0.75) { 
+                        obj.type = 'hydrant'; nextObstacleTimer = Math.max(30, 80 - score*0.3); lastObstacleType='hydrant';
+                    }
+                    else if (!forceSimplePoo && r > 0.60) { 
                         obj.type = 'bird'; 
                         obj.y = (Math.random() > 0.5) ? groundY - 40 : groundY - 110;
-                        nextObstacleTimer = Math.max(30, 80 - score*0.3); 
+                        nextObstacleTimer = Math.max(30, 80 - score*0.3); lastObstacleType='bird';
                         if(Math.random() > 0.3) bones.push({x: canvas.width, y: (obj.y < groundY-80 ? groundY-40 : groundY-150), type: 'white'});
                     }
                     else { 
-                        obj.type = 'poo'; obj.stack = Math.floor(Math.random()*2)+1; nextObstacleTimer = Math.max(30, 80 - score*0.3);
+                        // Default Poo
+                        obj.type = 'poo'; obj.stack = Math.floor(Math.random()*2)+1; 
+                        nextObstacleTimer = Math.max(30, 80 - score*0.3); lastObstacleType='poo';
                         if(Math.random() > 0.5) bones.push({x: canvas.width, y: groundY - 120, type: 'white'});
                     }
                     
-                    // FAIL-SAFE: If a bird is about to spawn, check if the last obstacle was a stack.
-                    // If it was a stack and it's still on screen, force the new obstacle to be a safe, ground-level poo.
-                    if(obj.type === 'bird' && obstacles.length > 0) {
-                        let lastOb = obstacles[obstacles.length-1];
-                        if(lastOb.type === 'stack' && lastOb.x > canvas.width - 600) {
-                            obj.type = 'poo';
-                            obj.y = groundY;
-                            obj.stack = 1;
-                        }
-                    }
                     obstacles.push(obj);
                 }
             }
