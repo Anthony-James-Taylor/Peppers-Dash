@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V35</title>
+    <title>Pepper's Doo-Doo Dash V36</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Russo+One&display=swap" rel="stylesheet">
     
@@ -557,7 +557,7 @@
 
     // --- SHOP SYSTEM ---
     const hatData = {
-        none: { name: "No Hat", cost: 0, perk: "None" },
+        none: { name: "No Hat", cost: 0, perk: "None", icon: "🐺" },
         cap: { name: "Red Cap", cost: 50, perk: "2x 🦴", icon: "🧢" },
         tophat: { name: "Top Hat", cost: 100, perk: "Start w/ 🛡️", icon: "🎩" },
         cowboy: { name: "Cowboy", cost: 200, perk: "Half Price Mega", icon: "🤠" }
@@ -731,10 +731,14 @@
         if(isMega) { let hue = (Date.now() / 5) % 360; bodyC = `hsl(${hue}, 80%, 40%)`; white = `hsl(${(hue+180)%360}, 90%, 80%)`; }
 
         function drawHat(ctx) {
-            ctx.save(); ctx.translate(2, -35); // Adjusted Y to sit ON TOP of head (-35)
+            ctx.save(); ctx.translate(2, -35); // Base hat position
             if(pepper.hat === 'cowboy') { ctx.fillStyle = "#8B4513"; ctx.beginPath(); ctx.ellipse(0, 0, 20, 5, 0, 0, Math.PI*2); ctx.fill(); ctx.fillRect(-10, -15, 20, 15); } 
             else if (pepper.hat === 'tophat') { ctx.fillStyle = "#2d3436"; ctx.fillRect(-12, -25, 24, 25); ctx.fillRect(-18, 0, 36, 4); ctx.fillStyle = "red"; ctx.fillRect(-12, -5, 24, 4); } 
-            else if (pepper.hat === 'cap') { ctx.fillStyle = "#d63031"; ctx.beginPath(); ctx.arc(0, 0, 12, Math.PI, 0); ctx.fill(); ctx.fillRect(-12, 0, 24, 2); ctx.fillRect(10, 0, 12, 4); }
+            else if (pepper.hat === 'cap') { 
+                ctx.save(); ctx.translate(0, -5); // Adjust cap specifically up
+                ctx.fillStyle = "#d63031"; ctx.beginPath(); ctx.arc(0, 0, 12, Math.PI, 0); ctx.fill(); ctx.fillRect(-12, 0, 24, 2); ctx.fillRect(10, 0, 12, 4); 
+                ctx.restore();
+            }
             ctx.restore();
         }
 
@@ -756,7 +760,7 @@
             ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(-12, -7, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(8, -7, 2, 0, Math.PI*2); ctx.fill();
             drawHat(ctx); 
             if(difficulty === 'normal') { drawAviators(ctx, 0, 0); }
-            if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, -5, 32, Math.PI, 0); ctx.stroke(); ctx.fillStyle="#FFD700"; ctx.beginPath(); ctx.arc(0, 20, 6, 0, Math.PI*2); ctx.fill(); }
+            if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, -5, 32, Math.PI, 0); ctx.stroke(); ctx.fillStyle = "#FFD700"; ctx.beginPath(); ctx.arc(0, 20, 6, 0, Math.PI*2); ctx.fill(); }
             else { ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 12, 10, 0, Math.PI); ctx.stroke(); ctx.fillStyle = "pink"; ctx.beginPath(); ctx.arc(0, 22, 6, 0, Math.PI, false); ctx.fill(); }
             ctx.restore();
             return;
@@ -888,21 +892,7 @@
 
     function canSpawn(x) {
         let allObjects = [...obstacles, ...bones, ...sticks];
-        
-        // Safety Check 1: General Overlap
-        for (let obj of allObjects) {
-            if (Math.abs(obj.x - x) < 350) return false; 
-        }
-
-        // Safety Check 2: Poop Stack Proximity
-        // If the last obstacle was a STACK, enforce a huge gap before spawning anything else
-        if (obstacles.length > 0) {
-            let lastOb = obstacles[obstacles.length-1];
-            if (lastOb.type === 'stack' && Math.abs(lastOb.x - x) < 800) { // Increased gap to 800
-                return false; 
-            }
-        }
-
+        for (let obj of allObjects) { if (Math.abs(obj.x - x) < 350) return false; }
         return true;
     }
 
@@ -1017,37 +1007,31 @@
             nextObstacleTimer--;
             if(nextObstacleTimer <= 0) {
                 if(canSpawn(canvas.width)) {
-                    let r = Math.random(); let type = 'poo'; let stack = 1; let yPos = groundY;
-                    let obj = {x: canvas.width, type: 'poo', stack: 1, y: groundY, passed: false, sprayed: false};
+                    let r = Math.random(); let obj = {x: canvas.width, type: 'poo', stack: 1, y: groundY};
 
                     if(currentLevel >= 3 && r > 0.92) { obj.type = 'pond'; nextObstacleTimer = 60; } 
                     else if(currentLevel >= 2 && r > 0.85) { obj.type = 'stack'; obj.stack = 3; nextObstacleTimer = 100; } 
                     else if(r > 0.75) { obj.type = 'hydrant'; nextObstacleTimer = Math.max(30, 80 - score*0.3); }
                     else if (r > 0.60) { 
-                        // Prevent low bird immediately after stack
-                        // Double check here as well for logic flow
-                        let lastObj = obstacles[obstacles.length-1];
-                        if(lastObj && lastObj.type === 'stack' && Math.abs(lastObj.x - canvas.width) < 800) {
-                             // Force Skip or Force High
-                             // Since canSpawn handles the gap, we just set type here normally
-                             // but canSpawn should have blocked this. If it passed canSpawn, it's safe distance.
-                        }
-                        
                         obj.type = 'bird'; 
-                        let bh = Math.random();
-                        if(bh > 0.5) obj.y = groundY - 40; 
-                        else obj.y = groundY - 110; 
-                        
+                        obj.y = (Math.random() > 0.5) ? groundY - 40 : groundY - 110;
                         nextObstacleTimer = Math.max(30, 80 - score*0.3); 
-                        
-                        if(Math.random() > 0.3) {
-                            let bY = (obj.y < groundY - 80) ? groundY - 40 : groundY - 150;
-                            bones.push({x: canvas.width, y: bY, type: 'white'});
-                        }
+                        if(Math.random() > 0.3) bones.push({x: canvas.width, y: (obj.y < groundY-80 ? groundY-40 : groundY-150), type: 'white'});
                     }
                     else { 
                         obj.type = 'poo'; obj.stack = Math.floor(Math.random()*2)+1; nextObstacleTimer = Math.max(30, 80 - score*0.3);
                         if(Math.random() > 0.5) bones.push({x: canvas.width, y: groundY - 120, type: 'white'});
+                    }
+                    
+                    // FAIL-SAFE: If a bird is about to spawn, check if the last obstacle was a stack.
+                    // If it was a stack and it's still on screen, force the new obstacle to be a safe, ground-level poo.
+                    if(obj.type === 'bird' && obstacles.length > 0) {
+                        let lastOb = obstacles[obstacles.length-1];
+                        if(lastOb.type === 'stack' && lastOb.x > canvas.width - 600) {
+                            obj.type = 'poo';
+                            obj.y = groundY;
+                            obj.stack = 1;
+                        }
                     }
                     obstacles.push(obj);
                 }
@@ -1059,14 +1043,10 @@
                      let h = Math.random();
                      let bY = groundY - 40; 
                      if(h > 0.5) bY = groundY - 100; 
-                     if(h > 0.85) bY = groundY - 180; // Super High (Double Jump)
+                     if(h > 0.85) bY = groundY - 180; 
                      let bType = 'white';
-                     if(Math.random() > 0.98 && magnetCooldown <= 0) { 
-                         bType = 'magnet'; 
-                         magnetCooldown = 2700; // 45s cooldown
-                     } 
+                     if(Math.random() > 0.98 && magnetCooldown <= 0) { bType = 'magnet'; magnetCooldown = 2700; } 
                      else if(Math.random() > 0.9) bType = 'gold';
-                     
                      bones.push({x: canvas.width, y: bY, type: bType});
                      nextBoneTimer = 40 + Math.random() * 80; 
                  }
@@ -1121,23 +1101,13 @@
                 if(b.type === 'magnet') { pepper.magnetTimer = 600; playSfx('magnet'); spawnPopup("MAGNET!", b.x, b.y, "#e74c3c"); }
                 else {
                     let val = (b.type === 'gold') ? 5 : 1;
-                    let scoreVal = (pepper.hat === 'cap') ? val * 2 : val; // CAP PERK (Score only)
-                    
-                    score += scoreVal; 
-                    scoreEl.innerText = score + " 🦴"; 
+                    let scoreVal = (pepper.hat === 'cap') ? val * 2 : val; 
+                    score += scoreVal; scoreEl.innerText = score + " 🦴"; 
                     playSfx('collect'); spawnParticles(b.x, b.y, "gold", 15); spawnPopup("+"+scoreVal, b.x, b.y, "gold"); 
-                    
                     if(!pepper.isMega && difficulty !== 'death') { 
-                        let target = (pepper.hat === 'cowboy') ? 25 : 50; // COWBOY PERK (Threshold)
-                        pepper.streak += val; // Gold bone = 5 streak points now
-                        if(pepper.streak >= target){ 
-                            pepper.isMega=true; 
-                            pepper.megaTimer = 900; 
-                            pepper.spinTimer = 40; 
-                            spawnPopup("MEGA MODE!", canvas.width/2, canvas.height/3, "#ff00ff"); 
-                            flashScreen('white'); 
-                            shakeScreen(20);
-                        } 
+                        let target = (pepper.hat === 'cowboy') ? 25 : 50; 
+                        pepper.streak += val; 
+                        if(pepper.streak >= target){ pepper.isMega=true; pepper.megaTimer = 900; pepper.spinTimer = 40; spawnPopup("MEGA MODE!", canvas.width/2, canvas.height/3, "#ff00ff"); flashScreen('white'); shakeScreen(20); } 
                     }
                 }
                 bones.splice(i,1);
