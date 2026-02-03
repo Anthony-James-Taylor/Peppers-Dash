@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V14</title>
+    <title>Pepper's Doo-Doo Dash V15</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     
@@ -197,7 +197,8 @@
         <h2 style="color:#00fbff; font-size:30px; margin-bottom:10px;">HOW TO PLAY</h2>
         <div style="color:white; text-align:left; font-size:14px; line-height:1.6; width:85%; background:rgba(0,0,0,0.5); padding:15px; border-radius:10px;">
             <b>CONTROLS:</b><br>
-            👆 <b>TAP</b> to Jump. 🚀 <b>LEVEL 2+</b>: Double Jump.<br>
+            👆 <b>TAP</b> to Jump.<br>
+            🚀 <b>AIR TAP</b> to Double Jump (Available Immediately!)<br>
             <hr style="border:0; border-top:1px solid rgba(255,255,255,0.3); margin:10px 0;">
             <b>SCORING:</b><br>
             💩 <b>POO</b> = 1 PT | 💩💩 <b>STACK</b> = 2 PTS | 🦴 <b>BONE</b> = 5 PTS<br>
@@ -283,14 +284,13 @@
     const GROUND_H = 140; 
     const MEGA_MAX_TIME = 900; 
     const MEGA_TRIGGER = 50; 
-    const LEVEL_FOR_DOUBLE_JUMP = 2; 
     
-    let difficulty = 'normal'; // baby, normal, death
+    let difficulty = 'normal';
     let gameActive = false;
     let isPaused = false;
     let frame = 0;
     let score = 0;
-    let levelStartScore = 0; // For Baby Mode
+    let levelStartScore = 0;
     let highScore = localStorage.getItem('pepperHighScore') || 0;
     let speed = 9;
     let groundY = 0; 
@@ -316,7 +316,8 @@
         x: 100, y: 0, dy: 0,
         grounded: true, canDoubleJump: false, isMega: false,
         streak: 0, megaTimer: 0, sticks: 0, hasShield: false, size: 1,
-        doubleJumpUnlocked: false, runFrame: 0
+        doubleJumpUnlocked: true, // ALWAYS UNLOCKED
+        runFrame: 0
     };
 
     let obstacles = [];
@@ -337,7 +338,11 @@
     let audioCtx;
     let musicInterval;
     let step = 0;
-    const tracks = { 1: { bass: [82,0,82,98,0,82,110,0,82,0,123,110,98,82,0,146], tempo: 142 }, 2: { bass: [98,98,196,98,110,110,220,110,123,123,246,123,130,130,261,130], tempo: 120 }, 3: { bass: [82,82,87,87,92,92,98,98,110,110,98,98,92,92,87,87], tempo: 110 } };
+    const tracks = { 
+        1: { bass: [82,0,82,98,0,82,110,0,82,0,123,110,98,82,0,146], lead: [0,0,0,0,0,0,0,0, 392,0,329,0,293,0,0,0], tempo: 142 }, 
+        2: { bass: [98,98,196,98,110,110,220,110,123,123,246,123,130,130,261,130], lead: [0,0,0,523,0,0,0,493,0,0,0,440,0,0,392,0], tempo: 120 }, 
+        3: { bass: [82,82,87,87,92,92,98,98,110,110,98,98,92,92,87,87], lead: [329,0,349,0,392,0,440,0,392,0,349,0,329,0,0,0], tempo: 110 } 
+    };
     function initAudio() { if (!audioCtx && AudioContext) audioCtx = new AudioContext(); if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }
 
     // --- INPUT HANDLERS ---
@@ -356,11 +361,7 @@
     attachFastClick(modalBtn, () => { closeModal(); });
     attachFastClick(closeDiffBtn, () => { difficultyScreen.style.display = 'none'; });
 
-    // --- DIFFICULTY SYSTEM ---
-    function openDifficultyScreen() {
-        difficultyScreen.style.display = 'flex';
-        renderDiffPreviews();
-    }
+    function openDifficultyScreen() { difficultyScreen.style.display = 'flex'; renderDiffPreviews(); }
     function setDifficulty(mode) {
         difficulty = mode;
         document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
@@ -380,42 +381,22 @@
         c.save(); c.translate(x, y); 
         let bodyC = (mode==='death') ? "#2d3436" : "#1a1a1a";
         let eyeC = (mode==='death') ? "red" : "#00fbff";
-        
-        // Head Base
         c.fillStyle = bodyC; c.beginPath(); c.arc(0, 0, 30, 0, Math.PI*2); c.fill();
         c.fillStyle = "white"; c.beginPath(); c.arc(0, 8, 22, 0, Math.PI*2); c.fill();
-        
-        // Ears
-        c.fillStyle = bodyC; 
-        c.beginPath(); c.moveTo(-20, -10); c.lineTo(-25, -40); c.lineTo(-5, -20); c.fill();
-        c.beginPath(); c.moveTo(20, -10); c.lineTo(25, -40); c.lineTo(5, -20); c.fill();
-        c.fillStyle = "pink";
-        c.beginPath(); c.moveTo(-18, -15); c.lineTo(-22, -30); c.lineTo(-10, -20); c.fill();
-        c.beginPath(); c.moveTo(18, -15); c.lineTo(22, -30); c.lineTo(10, -20); c.fill();
-
-        // Face
-        c.fillStyle = "black"; c.beginPath(); c.arc(0, 5, 5, 0, Math.PI*2); c.fill(); // Nose
-        c.fillStyle = eyeC; 
-        c.beginPath(); c.arc(-10, -5, 6, 0, Math.PI*2); c.fill(); 
-        c.beginPath(); c.arc(10, -5, 6, 0, Math.PI*2); c.fill();
+        c.fillStyle = bodyC; c.beginPath(); c.moveTo(-20, -10); c.lineTo(-25, -40); c.lineTo(-5, -20); c.fill(); c.beginPath(); c.moveTo(20, -10); c.lineTo(25, -40); c.lineTo(5, -20); c.fill();
+        c.fillStyle = "pink"; c.beginPath(); c.moveTo(-18, -15); c.lineTo(-22, -30); c.lineTo(-10, -20); c.fill(); c.beginPath(); c.moveTo(18, -15); c.lineTo(22, -30); c.lineTo(10, -20); c.fill();
+        c.fillStyle = "black"; c.beginPath(); c.arc(0, 5, 5, 0, Math.PI*2); c.fill(); 
+        c.fillStyle = eyeC; c.beginPath(); c.arc(-10, -5, 6, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(10, -5, 6, 0, Math.PI*2); c.fill();
         c.fillStyle = "white"; c.beginPath(); c.arc(-12, -7, 2, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(8, -7, 2, 0, Math.PI*2); c.fill();
 
-        if(mode === 'normal') { // Sunglasses
+        if(mode === 'normal') { 
             c.fillStyle = "black"; 
-            c.beginPath(); c.arc(-10, -5, 8, 0, Math.PI*2); c.fill(); // Left Lens
-            c.beginPath(); c.arc(10, -5, 8, 0, Math.PI*2); c.fill(); // Right Lens
-            c.fillRect(-10, -12, 20, 4); // Top Bar
-            c.beginPath(); c.moveTo(-18,-5); c.quadraticCurveTo(-10, 5, -2, -5); c.fill(); // Shape
-            c.beginPath(); c.moveTo(18,-5); c.quadraticCurveTo(10, 5, 2, -5); c.fill();
+            c.beginPath(); c.moveTo(-18,-8); c.lineTo(-2,-8); c.lineTo(-2,0); c.quadraticCurveTo(-10,4,-18,0); c.fill();
+            c.beginPath(); c.moveTo(18,-8); c.lineTo(2,-8); c.lineTo(2,0); c.quadraticCurveTo(10,4,18,0); c.fill();
+            c.beginPath(); c.moveTo(-2,-8); c.quadraticCurveTo(0,-12,2,-8); c.stroke();
         }
-        if(mode === 'baby') { // Bonnet & Dummy
-            c.strokeStyle = "pink"; c.lineWidth = 6; c.beginPath(); c.arc(0, -5, 32, Math.PI, 0); c.stroke();
-            c.fillStyle = "cyan"; c.beginPath(); c.arc(0, 18, 6, 0, Math.PI*2); c.fill(); // Dummy
-            c.fillStyle = "white"; c.beginPath(); c.arc(0, 18, 2, 0, Math.PI*2); c.fill();
-        } else {
-            // Smile
-            c.strokeStyle = "black"; c.lineWidth = 2; c.beginPath(); c.arc(0, 12, 10, 0, Math.PI); c.stroke();
-        }
+        if(mode === 'baby') { c.strokeStyle = "pink"; c.lineWidth = 6; c.beginPath(); c.arc(0, -5, 32, Math.PI, 0); c.stroke(); c.fillStyle = "cyan"; c.beginPath(); c.arc(0, 18, 6, 0, Math.PI*2); c.fill(); } 
+        else { c.strokeStyle = "black"; c.lineWidth = 2; c.beginPath(); c.arc(0, 12, 10, 0, Math.PI); c.stroke(); }
         c.restore();
     }
 
@@ -425,7 +406,31 @@
     function playSnare() { if (!audioCtx || isMuted) return; const b = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.1, audioCtx.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; const n = audioCtx.createBufferSource(); n.buffer = b; const f = audioCtx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 1500; const g = audioCtx.createGain(); g.gain.setValueAtTime(0.3, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08); n.connect(f); f.connect(g); g.connect(audioCtx.destination); n.start(); }
     function playBark() { if (!audioCtx || isMuted) return; const osc = audioCtx.createOscillator(); osc.type = 'triangle'; const gain = audioCtx.createGain(); osc.frequency.setValueAtTime(300, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.15); gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.2); }
     
-    function startMusic() { if (musicInterval || isMuted) return; let track = tracks[currentLevel] || tracks[3]; let seq = track.bass; let ms = track.tempo; if(difficulty==='death') ms*=0.9; step=0; musicInterval = setInterval(() => { if (!gameActive || isPaused) return; let tick = step % 16; if (pepper.isMega) { let arp = [523, 659, 783, 1046]; synth(arp[step % 4], 'square', 0.08, 0.1); if(step % 2 === 0) synth(130, 'sawtooth', 0.15, 0.1); if(tick % 4 === 2) playSnare(); } else { let b = seq[tick]; if (b) synth(b, 'sawtooth', 0.25, 0.25, true); if (tick === 4 || tick === 12) playSnare(); if (tick % 2 === 0) synth(4000, 'square', 0.03, 0.02); } step++; }, ms); }
+    function startMusic() { 
+        if (musicInterval || isMuted) return; 
+        let track = tracks[currentLevel] || tracks[3]; 
+        let ms = track.tempo; if(difficulty==='death') ms*=0.9; 
+        step=0; 
+        musicInterval = setInterval(() => { 
+            if (!gameActive || isPaused) return; 
+            let tick = step % 16; 
+            if (pepper.isMega) { 
+                let arp = [523, 659, 783, 1046]; synth(arp[step % 4], 'square', 0.08, 0.1); 
+                if(step % 2 === 0) synth(130, 'sawtooth', 0.15, 0.1); if(tick % 4 === 2) playSnare(); 
+            } else { 
+                let b = track.bass[tick]; 
+                if (b) synth(b, 'sawtooth', 0.25, 0.25, true); 
+                if (tick === 4 || tick === 12) playSnare(); 
+                if (tick % 2 === 0) synth(4000, 'square', 0.03, 0.02); 
+                // Dynamic Halfway Music
+                if(levelDistance > levelMaxDistance/2) {
+                    let l = track.lead[tick];
+                    if(l) synth(l*2, 'square', 0.1, 0.15); // Funky High Lead
+                }
+            } 
+            step++; 
+        }, ms); 
+    }
     function stopMusic() { clearInterval(musicInterval); musicInterval = null; }
     function playSfx(type) { if (!audioCtx || isMuted) return; if(type==='jump') synth(350, 'triangle', 0.1, 0.1); if(type==='doublejump') synth(600, 'square', 0.1, 0.1); if(type==='collect') synth(1400, 'sine', 0.1, 0.2); if(type==='smash') { synth(80, 'sawtooth', 0.3, 0.3); playSnare(); } if(type==='crash') synth(50, 'sawtooth', 0.4, 0.5); if(type==='levelup') { synth(440, 'triangle', 0.2, 0.5); setTimeout(()=>synth(880, 'triangle', 0.2, 0.5), 100); } if(type==='splash') { const o = audioCtx.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(400, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime+0.3); const g = audioCtx.createGain(); g.gain.setValueAtTime(0.3, audioCtx.currentTime); g.gain.linearRampToValueAtTime(0, audioCtx.currentTime+0.3); o.connect(g); g.connect(audioCtx.destination); o.start(); } if(type==='spray') synth(1000, 'white', 0.1, 0.1); }
 
@@ -447,31 +452,31 @@
         // START SCREEN
         if(!gameActive) {
             ctx.scale(1.5, 1.5); ctx.translate(0, -30);
+            
+            // Shadows
+            ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.beginPath(); ctx.ellipse(0, 50, 30, 8, 0, 0, Math.PI*2); ctx.fill();
+
             let pulse = 40 + Math.sin(Date.now()/200)*5;
             ctx.shadowBlur = 30; ctx.shadowColor=eyeC; ctx.fillStyle = "rgba(255,255,255,0.2)"; ctx.beginPath(); ctx.arc(0,0, pulse, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
             
-            // Sitting Body
             ctx.fillStyle = bodyC; ctx.beginPath(); ctx.ellipse(0, 35, 20, 15, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.moveTo(-15, 35); ctx.lineTo(-10, 10); ctx.lineTo(10, 10); ctx.lineTo(15, 35); ctx.fill(); 
             ctx.fillStyle = white; ctx.beginPath(); ctx.ellipse(0, 20, 12, 18, 0, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = white; ctx.beginPath(); ctx.ellipse(-10, 45, 6, 8, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(10, 45, 6, 8, 0, 0, Math.PI*2); ctx.fill();
             let tw = Math.sin(Date.now()/100) * 0.5; ctx.save(); ctx.translate(20, 35); ctx.rotate(tw); ctx.fillStyle = white; ctx.beginPath(); ctx.ellipse(10, -10, 10, 20, 0.5, 0, Math.PI*2); ctx.fill(); ctx.restore();
             
-            // Head
             ctx.fillStyle = bodyC; ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = white; ctx.beginPath(); ctx.arc(0, 8, 22, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = bodyC; ctx.beginPath(); ctx.moveTo(-20, -10); ctx.lineTo(-25, -40); ctx.lineTo(-5, -20); ctx.fill(); ctx.beginPath(); ctx.moveTo(20, -10); ctx.lineTo(25, -40); ctx.lineTo(5, -20); ctx.fill();
             ctx.fillStyle = "pink"; ctx.beginPath(); ctx.moveTo(-18, -15); ctx.lineTo(-22, -30); ctx.lineTo(-10, -20); ctx.fill(); ctx.beginPath(); ctx.moveTo(18, -15); ctx.lineTo(22, -30); ctx.lineTo(10, -20); ctx.fill();
             ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(0, 5, 5, 0, Math.PI*2); ctx.fill(); 
             ctx.fillStyle = eyeC; ctx.beginPath(); ctx.arc(-10, -5, 6, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(10, -5, 6, 0, Math.PI*2); ctx.fill(); 
+            ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(-12, -7, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(8, -7, 2, 0, Math.PI*2); ctx.fill();
             
-            // Modifiers
             if(difficulty === 'normal') { 
                 ctx.fillStyle = "black"; 
-                ctx.beginPath(); ctx.arc(-10, -5, 8, 0, Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.arc(10, -5, 8, 0, Math.PI*2); ctx.fill();
-                ctx.fillRect(-10, -12, 20, 4);
-                ctx.beginPath(); ctx.moveTo(-18,-5); ctx.quadraticCurveTo(-10, 5, -2, -5); ctx.fill();
-                ctx.beginPath(); ctx.moveTo(18,-5); ctx.quadraticCurveTo(10, 5, 2, -5); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(-18,-8); ctx.lineTo(-2,-8); ctx.lineTo(-2,0); ctx.quadraticCurveTo(-10,4,-18,0); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(18,-8); ctx.lineTo(2,-8); ctx.lineTo(2,0); ctx.quadraticCurveTo(10,4,18,0); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(-2,-8); ctx.quadraticCurveTo(0,-12,2,-8); ctx.stroke();
             }
             if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, -5, 32, Math.PI, 0); ctx.stroke(); ctx.fillStyle="cyan"; ctx.beginPath(); ctx.arc(0, 20, 6, 0, Math.PI*2); ctx.fill(); }
             else { ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 12, 10, 0, Math.PI); ctx.stroke(); ctx.fillStyle = "pink"; ctx.beginPath(); ctx.arc(0, 22, 6, 0, Math.PI, false); ctx.fill(); }
@@ -484,9 +489,16 @@
         if(!pepper.grounded && !pepper.canDoubleJump) ctx.rotate(legOffset * 0.2); else if(!pepper.grounded) ctx.rotate(pepper.dy * 0.04);
 
         if(hasShield) { 
-            let pulse = 35 + Math.sin(frame*0.2)*3;
-            let alpha = 0.4 + Math.sin(frame*0.2)*0.2;
-            ctx.fillStyle = `rgba(0,251,255,${alpha})`; ctx.beginPath(); ctx.arc(0, -10, pulse, 0, Math.PI*2); ctx.fill();
+            ctx.save(); ctx.rotate(frame*0.1);
+            ctx.shadowBlur = 20; ctx.shadowColor = "#00fbff";
+            ctx.strokeStyle = "rgba(0,251,255,0.6)"; ctx.lineWidth=3;
+            ctx.beginPath(); 
+            for(let i=0; i<6; i++) {
+                let a = (i/6)*Math.PI*2;
+                ctx.lineTo(Math.cos(a)*40, Math.sin(a)*40);
+            }
+            ctx.closePath(); ctx.stroke();
+            ctx.restore();
         }
 
         ctx.fillStyle = white; ctx.beginPath(); ctx.ellipse(-2, -12, 22, 12, 0, 0, Math.PI*2); ctx.fill(); 
@@ -501,11 +513,10 @@
         ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(12, 2, 2.5, 0, Math.PI*2); ctx.fill(); 
         ctx.fillStyle = eyeC; ctx.beginPath(); ctx.arc(2, -3, 3.5, 0, Math.PI*2); ctx.fill(); 
         
-        // Modifiers Side View
         if(difficulty === 'normal') { 
             ctx.fillStyle = "black"; 
-            ctx.beginPath(); ctx.arc(2, -3, 6, 0, Math.PI*2); ctx.fill();
-            ctx.fillRect(2, -9, 8, 2);
+            ctx.beginPath(); ctx.moveTo(2, -3); ctx.lineTo(10, -3); ctx.lineTo(10, 2); ctx.quadraticCurveTo(6, 4, 2, 2); ctx.fill(); // Lens
+            ctx.fillRect(2, -5, 8, 2); // Frame
         }
         if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(-2, -5, 16, Math.PI, 0); ctx.stroke(); ctx.fillStyle = "cyan"; ctx.beginPath(); ctx.arc(14, 6, 3, 0, Math.PI*2); ctx.fill(); }
         else if(!gameActive) { ctx.strokeStyle="black"; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(6,6,5,0,2.5); ctx.stroke(); } 
@@ -524,7 +535,7 @@
         ctx.beginPath(); ctx.arc(-12, 6, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
         ctx.beginPath(); ctx.arc(12, -6, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
         ctx.beginPath(); ctx.arc(12, 6, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-        ctx.fillRect(-10, -4, 20, 8); // Cover strokes
+        ctx.fillRect(-10, -4, 20, 8); 
         ctx.restore(); 
     }
     
@@ -537,14 +548,18 @@
     }
     
     function drawSteamPoo(ctx, x, y) {
-        ctx.save(); ctx.translate(x, y); ctx.scale(2, 2);
+        ctx.save(); ctx.translate(x, y); ctx.scale(2.5, 2.5);
+        
+        // Shadow
+        ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.beginPath(); ctx.ellipse(0, 5, 25, 5, 0, 0, Math.PI*2); ctx.fill();
+
         drawPoo(ctx, 0, 0, 1);
         ctx.fillStyle = "rgba(200,200,200,0.5)";
         let t = Date.now()/500;
         for(let i=0; i<3; i++) {
-            let sx = Math.sin(t + i)*10;
-            let sy = -20 - (t*20 + i*20)%60;
-            let sSize = 5 + (Math.abs(sy)/60)*5;
+            let sx = Math.sin(t + i)*5;
+            let sy = -25 - (t*20 + i*25)%50;
+            let sSize = 3 + (Math.abs(sy)/50)*5;
             ctx.beginPath(); ctx.arc(sx, sy, sSize, 0, Math.PI*2); ctx.fill();
         }
         ctx.restore();
@@ -611,7 +626,7 @@
         
         if(!gameActive) {
             // Draw Steam Poo on Start Screen
-            drawSteamPoo(ctx, canvas.width*0.8, groundY-50);
+            drawSteamPoo(ctx, canvas.width - 100, groundY-15);
         }
 
         if(finishLine && gameActive && !isPaused) {
@@ -655,7 +670,9 @@
             if(o.type === 'poo' && Math.abs(150-o.x)<25 && pepper.y > groundY-(o.stack*35)+15) hit=true;
             if(o.type === 'hydrant' && Math.abs(150-o.x)<25 && pepper.y > groundY-35) hit=true;
             if(o.type === 'stack' && Math.abs(150-o.x)<25 && pepper.y > groundY-105) hit=true; 
-            if(o.type === 'pond' && o.x < 150 && o.x > 150-180 && pepper.y > groundY - 5) hit=true;
+            
+            // Tightened Pond Hitbox
+            if(o.type === 'pond' && o.x < 150+10 && o.x > 150-100 && pepper.y > groundY - 5) hit=true;
 
             if(!hit && !o.passed && !o.nearMissAwarded && (o.type === 'poo' || o.type === 'stack')) { if(Math.abs(150-o.x) < 30 && Math.abs(pepper.y - (groundY-(o.stack*35))) < 30) closeCall = true; }
 
@@ -717,7 +734,7 @@
         currentLevel++; updateEnvStyle(); levelMaxDistance += 1000; 
         speed += 0.5; 
         levelDistance = 0; finishLine = null; obstacles = []; levelFinished = false; levelScreen.style.display = 'none'; levelInd.innerText = "LEVEL " + currentLevel; pepper.x = -50; startMusic();
-        let runIn = setInterval(() => { pepper.x += 5; if(pepper.x >= 100) { clearInterval(runIn); pepper.x = 100; checkLevelIntro(); } }, 16);
+        let runIn = setInterval(() => { pepper.x += 5; if(pepper.x >= 100) { clearInterval(runIn); pepper.x = 100; } }, 16);
         nextObstacleTimer = 180;
     }
     
@@ -732,8 +749,7 @@
         let runIn = setInterval(() => { pepper.x += 5; if(pepper.x >= 100) { clearInterval(runIn); pepper.x = 100; } }, 16);
     }
 
-    function checkLevelIntro() { if(currentLevel === LEVEL_FOR_DOUBLE_JUMP) { pepper.doubleJumpUnlocked = true; pauseAndShowModal('level2'); } }
-    function pauseAndShowModal(type) { isPaused = true; stopMusic(); infoModal.style.display = 'flex'; const title = document.getElementById('modal-title'); const text = document.getElementById('modal-text'); if(type === 'level2') { title.innerText = "LEVEL 2 UNLOCKED!"; text.innerHTML = "You've gained the <b>DOUBLE JUMP!</b><br>Tap while in the air to jump again.<br>Watch out for the tall <b>Stinky Stacks!</b>"; drawMiniScene('level2'); } else if (type === 'mega') { title.innerText = "MEGA MODE!"; text.innerHTML = "You are now running at <b>WARP SPEED!</b><br>You are invincible to Poo and Birds.<br><b>BUT WATCH OUT FOR HYDRANTS!</b>"; drawMiniScene('mega'); } }
+    function pauseAndShowModal(type) { isPaused = true; stopMusic(); infoModal.style.display = 'flex'; const title = document.getElementById('modal-title'); const text = document.getElementById('modal-text'); if(type === 'mega') { title.innerText = "MEGA MODE!"; text.innerHTML = "You are now running at <b>WARP SPEED!</b><br>You are invincible to Poo and Birds.<br><b>BUT WATCH OUT FOR HYDRANTS!</b>"; drawMiniScene('mega'); } }
     function completeLevel() { levelFinished = true; playSfx('levelup'); levelScreen.style.display = 'flex'; stopMusic(); }
     
     function gameOver(reason) { 
@@ -750,7 +766,7 @@
     function resetGame() { gameOverScreen.style.display = 'none'; resetGameLogic(); }
     
     function resetGameLogic() { 
-        resize(); score = 0; levelStartScore = 0; scoreEl.innerText="0 PTS"; pepper.sticks=0; stickText.innerText="0/5"; pepper.streak=0; streakFill.style.width="0%"; obstacles=[]; sticks=[]; bones=[]; floatTexts=[]; speed=9; levelDistance=0; levelFinished=false; finishLine=null; currentLevel=1; updateEnvStyle(); levelInd.innerText = "LEVEL 1"; pepper.y = groundY; pepper.dy=0; pepper.grounded=true; pepper.doubleJumpUnlocked = false; 
+        resize(); score = 0; levelStartScore = 0; scoreEl.innerText="0 PTS"; pepper.sticks=0; stickText.innerText="0/5"; pepper.streak=0; streakFill.style.width="0%"; obstacles=[]; sticks=[]; bones=[]; floatTexts=[]; speed=9; levelDistance=0; levelFinished=false; finishLine=null; currentLevel=1; updateEnvStyle(); levelInd.innerText = "LEVEL 1"; pepper.y = groundY; pepper.dy=0; pepper.grounded=true; 
         
         if(difficulty === 'death') speed = 10; 
 
