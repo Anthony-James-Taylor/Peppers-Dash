@@ -87,7 +87,7 @@
         
         #start-screen { background: none; backdrop-filter: none; z-index: 50; gap: 20px; }
         
-        .title-box { animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2; pointer-events: none; margin-bottom: 100px; }
+        .title-box { animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2; pointer-events: none; margin-bottom: 80px; }
         h1 { 
             color: #fff; font-size: 50px; margin: 0; line-height: 0.9; font-weight: 900; 
             letter-spacing: -3px; text-transform: uppercase;
@@ -334,11 +334,11 @@
     let menuOpen = false;
     let megaUnlockedOnce = false;
 
-    // Sky colors for levels
+    // Sky & Ground Colors
     let envStyles = [
-        { c1: "#81ecec", c2: "#74b9ff", grass: "#00b894", track: "#5D4037" }, // Day
-        { c1: "#ff9f43", c2: "#ee5253", grass: "#e17055", track: "#5D4037" }, // Sunset
-        { c1: "#2c3e50", c2: "#000000", grass: "#192a56", track: "#3E2723" }  // Night
+        { c1: "#81ecec", c2: "#74b9ff", grass: "#00b894", ground: "#5D4037" }, // Day
+        { c1: "#ff9f43", c2: "#ee5253", grass: "#e17055", ground: "#3E2723" }, // Sunset
+        { c1: "#2c3e50", c2: "#000000", grass: "#192a56", ground: "#2d3436" }  // Night
     ];
     let curStyle = envStyles[0];
 
@@ -419,6 +419,26 @@
 
         if(mode === 'death') streakLabel.innerText = "I AM DEATH! (NO SHIELDS)";
         else streakLabel.innerText = "MEGA MODE! DODGE 50 DOO-DOOS TO UNLOCK";
+    }
+
+    // --- GAME LOGIC ---
+    function resetGameLogic() {
+        score = 0; levelStartScore = 0; scoreEl.innerText="0 PTS"; 
+        pepper.sticks=0; stickText.innerText="0/5"; pepper.streak=0; streakFill.style.width="0%"; 
+        obstacles=[]; sticks=[]; bones=[]; floatTexts=[]; 
+        speed = (difficulty === 'death') ? 11 : 9;
+        levelDistance=0; levelFinished=false; finishLine=null; currentLevel=1; 
+        updateEnvStyle(); levelInd.innerText = "LEVEL 1"; 
+        pepper.y = groundY; pepper.dy=0; pepper.grounded=true; 
+        pepper.isMega = false; pepper.hasShield = false;
+
+        nextObstacleTimer = 200; 
+        
+        bgMountains=[]; for(let i=0; i<3; i++) bgMountains.push({x: i*300});
+        bgTrees=[]; for(let i=0; i<5; i++) bgTrees.push({x: i*200});
+        bgClouds=[]; for(let i=0; i<5; i++) bgClouds.push({x: Math.random()*canvas.width, y: Math.random()*150, speed: 0.2 + Math.random()*0.3});
+        weatherParticles=[]; for(let i=0; i<50; i++) weatherParticles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, speed:2+Math.random()*2, wind:-1+Math.random()*2, size:2+Math.random()*2});
+        stars=[]; for(let i=0; i<50; i++) stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height/2, size:Math.random()*3});
     }
 
     function goHome() {
@@ -727,8 +747,13 @@
             ctx.globalAlpha = 1;
         }
 
-        ctx.fillStyle = curStyle.track; ctx.fillRect(0, groundY, canvas.width, GROUND_H);
+        // Draw Ground (Dirt/Earth)
+        ctx.fillStyle = curStyle.ground; ctx.fillRect(0, groundY, canvas.width, GROUND_H);
+        
+        // Stripes
         ctx.fillStyle = "rgba(255,255,255,0.05)"; let stripeOffset = (frame * speed) % 100; for(let i = -100; i < canvas.width + 100; i+=100) { ctx.beginPath(); ctx.moveTo(i - stripeOffset, groundY); ctx.lineTo(i - stripeOffset + 40, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 90, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 50, groundY); ctx.fill(); }
+        
+        // Grass Top
         ctx.fillStyle = curStyle.grass; ctx.fillRect(0, groundY, canvas.width, 20);
 
         if(currentLevel >= 3) { ctx.fillStyle = "rgba(255,255,255,0.5)"; weatherParticles.forEach(p => { if(!isPaused && !isCountingDown) { p.y += p.speed; p.x += p.wind; } if(p.y > canvas.height) p.y = 0; if(p.x > canvas.width) p.x = 0; ctx.fillRect(p.x, p.y, p.size, p.size); }); }
