@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V31</title>
+    <title>Pepper's Doo-Doo Dash V33</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Russo+One&display=swap" rel="stylesheet">
     
@@ -113,6 +113,7 @@
             color: #fff; font-size: 18px; font-weight: 900; letter-spacing: 1px;
         }
 
+        /* POPPY MEGA MODE COLORS */
         .mega-active {
             border-color: transparent !important;
             background: linear-gradient(135deg, rgba(20,0,20,0.9), rgba(50,0,50,0.9));
@@ -398,7 +399,6 @@
     const JUMP_FORCE = -19; 
     const DOUBLE_JUMP_FORCE = -15; 
     const GROUND_H = 140; 
-    const MEGA_TRIGGER = 50; 
     
     let difficulty = 'normal';
     let gameActive = false;
@@ -431,6 +431,7 @@
         runFrame: 0,
         rotation: 0,
         magnetTimer: 0,
+        spinTimer: 0,
         hat: 'none'
     };
 
@@ -509,7 +510,7 @@
         levelInd.innerText = "LEVEL " + currentLevel; 
         
         pepper.y = groundY; pepper.dy=0; pepper.grounded=true; 
-        pepper.isMega = false; pepper.megaTimer = 0; pepper.magnetTimer = 0;
+        pepper.isMega = false; pepper.megaTimer = 0; pepper.magnetTimer = 0; pepper.spinTimer = 0;
         pepper.rotation = 0; pepper.x = 100;
         magnetCooldown = 0; 
         
@@ -518,8 +519,7 @@
 
         megaMeter.classList.remove('mega-active');
         megaBarFill.style.width = "0%";
-        if(difficulty === 'death') megaText.innerText = "NO MEGA MODE!";
-        else megaText.innerText = "COLLECT 50 🦴";
+        updateMegaText();
 
         nextObstacleTimer = 200; 
         
@@ -529,6 +529,16 @@
         fgBushes=[]; for(let i=0; i<3; i++) fgBushes.push({x: Math.random()*canvas.width});
         weatherParticles=[]; for(let i=0; i<50; i++) weatherParticles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, speed:2+Math.random()*2, wind:-1+Math.random()*2, size:2+Math.random()*2});
         stars=[]; for(let i=0; i<50; i++) stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height/2, size:Math.random()*3});
+    }
+
+    function updateMegaText() {
+        if(difficulty === 'death') { megaText.innerText = "NO MEGA MODE!"; return; }
+        let target = (pepper.hat === 'cowboy') ? 25 : 50;
+        if(pepper.isMega) megaText.innerText = "MEGA MODE!";
+        else {
+            let remaining = Math.max(0, target - pepper.streak);
+            megaText.innerText = "COLLECT " + remaining + " 🦴";
+        }
     }
 
     function goToNextLevel() { 
@@ -550,7 +560,7 @@
         none: { name: "No Hat", cost: 0, perk: "None" },
         cap: { name: "Red Cap", cost: 50, perk: "Double Bones", icon: "🧢" },
         tophat: { name: "Top Hat", cost: 100, perk: "Start w/ Shield", icon: "🎩" },
-        cowboy: { name: "Cowboy", cost: 200, perk: "Longer Mega", icon: "🤠" }
+        cowboy: { name: "Cowboy", cost: 200, perk: "Half Mega Req", icon: "🤠" }
     };
 
     function openShop() {
@@ -708,6 +718,14 @@
     function drawHusky(ctx, x, y, isMega, hasShield) {
         ctx.save(); ctx.translate(x, y);
         let s = isMega ? 1.4 : 1; ctx.scale(s, s);
+        
+        // Spin Logic
+        if(pepper.spinTimer > 0) {
+            pepper.spinTimer--;
+            let angle = (pepper.spinTimer / 20) * Math.PI * 2;
+            ctx.rotate(angle);
+        }
+
         let bodyC = "#1a1a1a"; let white = "#ffffff"; let eyeC = "#00fbff";
         if(difficulty === 'death') { bodyC = "#2d3436"; eyeC = "red"; }
         if(isMega) { let hue = (Date.now() / 5) % 360; bodyC = `hsl(${hue}, 80%, 40%)`; white = `hsl(${(hue+180)%360}, 90%, 80%)`; }
@@ -929,10 +947,35 @@
 
         if(difficulty !== 'death') {
             if(pepper.isMega && gameActive && !isPaused && !isCountingDown) {
-                pepper.megaTimer--; megaMeter.classList.add('mega-active'); megaBarFill.style.width = "100%"; megaText.innerText = "MEGA MODE!";
-                if(pepper.megaTimer<=0) { pepper.isMega=false; pepper.streak=0; megaMeter.classList.remove('mega-active'); megaBarFill.style.width = "0%"; megaText.innerText = "COLLECT 50 🦴"; }
+                pepper.megaTimer--; 
+                megaMeter.classList.add('mega-active'); 
+                
+                // Calculate percentage for draining bar
+                // Base time is 900, if cowboy hat, it's longer (wait, Cowboy logic is implemented in spawn, let's verify usage here)
+                // Cowboy hat increases DURATION? No, previously it was "Longer Mega". 
+                // Now Cowboy is "Half Mega Req". 
+                // BUT, in V30 I had Cowboy increase duration. In V32 I changed it to "Half Mega Req".
+                // So default duration is 900 always now unless I kept the longer duration too.
+                // Let's stick to 900 for standard.
+                let maxTime = 900;
+                let pct = (pepper.megaTimer / maxTime) * 100;
+                megaBarFill.style.width = pct + "%";
+                
+                megaText.innerText = "MEGA MODE!";
+                if(pepper.megaTimer<=0) { 
+                    pepper.isMega=false; 
+                    pepper.streak=0; 
+                    megaMeter.classList.remove('mega-active'); 
+                    megaBarFill.style.width = "0%"; 
+                    updateMegaText(); 
+                }
             } else if (!pepper.isMega) {
-                let remaining = Math.max(0, MEGA_TRIGGER - pepper.streak); let pct = (pepper.streak / MEGA_TRIGGER) * 100; megaBarFill.style.width = pct + "%"; megaText.innerText = "COLLECT " + remaining + " 🦴";
+                // Filling up bar logic
+                let target = (pepper.hat === 'cowboy') ? 25 : 50;
+                let remaining = Math.max(0, target - pepper.streak); 
+                let pct = (pepper.streak / target) * 100; 
+                megaBarFill.style.width = pct + "%"; 
+                megaText.innerText = "COLLECT " + remaining + " 🦴";
             }
         }
 
@@ -1076,7 +1119,18 @@
                     score+=val; scoreEl.innerText = score + " 🦴"; 
                     playSfx('collect'); spawnParticles(b.x, b.y, "gold", 15); spawnPopup("+"+val, b.x, b.y, "gold"); 
                     let megaVal = (pepper.hat === 'cap') ? val : 1;
-                    if(!pepper.isMega && difficulty !== 'death') { pepper.streak += megaVal; if(pepper.streak>=MEGA_TRIGGER){ pepper.isMega=true; pepper.megaTimer = (pepper.hat==='cowboy') ? 1350 : 900; spawnPopup("MEGA MODE!", canvas.width/2, canvas.height/3, "#ff00ff"); flashScreen('white'); } }
+                    if(!pepper.isMega && difficulty !== 'death') { 
+                        let target = (pepper.hat === 'cowboy') ? 25 : 50;
+                        pepper.streak += megaVal; 
+                        if(pepper.streak>=target){ 
+                            pepper.isMega=true; 
+                            pepper.megaTimer = 900; 
+                            pepper.spinTimer = 40; // Mega Spin
+                            spawnPopup("MEGA MODE!", canvas.width/2, canvas.height/3, "#ff00ff"); 
+                            flashScreen('white'); 
+                            shakeScreen(20);
+                        } 
+                    }
                 }
                 bones.splice(i,1);
             } else if(b.x<-100) bones.splice(i,1);
