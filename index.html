@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V29</title>
+    <title>Pepper's Doo-Doo Dash V30</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Russo+One&display=swap" rel="stylesheet">
     
@@ -113,6 +113,7 @@
             color: #fff; font-size: 18px; font-weight: 900; letter-spacing: 1px;
         }
 
+        /* POPPY MEGA MODE COLORS */
         .mega-active {
             border-color: transparent !important;
             background: linear-gradient(135deg, rgba(20,0,20,0.9), rgba(50,0,50,0.9));
@@ -120,7 +121,7 @@
             animation: shake 0.5s infinite;
         }
         .mega-active #mega-bar-fill {
-            background: linear-gradient(90deg, #ff00de, #00ffff, #ffff00, #ff00de); 
+            background: linear-gradient(90deg, #ff00de, #00ffff, #ffff00, #ff00de); /* Poppy: Hot Pink, Cyan, Yellow */
             background-size: 200%;
             animation: rainbowMove 0.3s linear infinite;
         }
@@ -130,13 +131,13 @@
         @keyframes shake { 0% { transform: translate(0,0); } 25% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -1px); } 75% { transform: translate(-1px, 1px); } 100% { transform: translate(1px, -1px); } }
 
         /* SCREENS */
-        #start-screen, #game-over, #shop-screen, #how-to-screen, #info-modal, #difficulty-screen { 
+        #start-screen, #game-over, #shop-screen, #level-screen, #how-to-screen, #info-modal, #difficulty-screen { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
             display: flex; flex-direction: column; justify-content: center; align-items: center; 
             z-index: 200; text-align: center; 
         }
-        #game-over, #shop-screen, #how-to-screen, #info-modal, #difficulty-screen { display: none; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); }
+        #game-over, #shop-screen, #level-screen, #how-to-screen, #info-modal, #difficulty-screen { display: none; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); }
         
         #start-screen { background: none; backdrop-filter: none; z-index: 50; gap: 20px; }
         
@@ -406,7 +407,7 @@
     let isCountingDown = false;
     let levelVictoryAnim = false;
     let frame = 0;
-    let score = 0; // Total Bones
+    let score = 0; 
     let levelStartScore = 0;
     let highScore = localStorage.getItem('pepperHighScore') || 0;
     let speed = 9;
@@ -421,6 +422,7 @@
     let isMuted = false;
     let menuOpen = false;
     let slowMoTimer = 0;
+    let magnetCooldown = 0;
 
     let pepper = {
         x: 100, y: 0, dy: 0,
@@ -430,7 +432,7 @@
         runFrame: 0,
         rotation: 0,
         magnetTimer: 0,
-        hat: 'none' // none, cap, tophat, cowboy
+        hat: 'none'
     };
 
     let obstacles = [];
@@ -510,6 +512,7 @@
         pepper.y = groundY; pepper.dy=0; pepper.grounded=true; 
         pepper.isMega = false; pepper.megaTimer = 0; pepper.magnetTimer = 0;
         pepper.rotation = 0; pepper.x = 100;
+        magnetCooldown = 0; 
         
         // Hat Perks
         if(pepper.hat === 'tophat') { pepper.hasShield = true; pepper.sticks = 5; stickText.innerText="5/5"; } 
@@ -571,8 +574,6 @@
             
             let isAffordable = score >= item.cost;
             let alreadyOwn = pepper.hat === k; 
-            // In this simple loop, you rebuy hats every level or just select. 
-            // Let's allow selecting any affordable hat.
             if (!isAffordable && !alreadyOwn && k !== 'none') div.classList.add('locked');
 
             div.innerHTML = `
@@ -752,13 +753,18 @@
 
         if(hasShield) { ctx.save(); ctx.rotate(frame*0.1); ctx.shadowBlur = 20; ctx.shadowColor = "#00fbff"; ctx.strokeStyle = "rgba(0,251,255,0.6)"; ctx.lineWidth=3; ctx.beginPath(); for(let i=0; i<6; i++) { let a = (i/6)*Math.PI*2; ctx.lineTo(Math.cos(a)*45, Math.sin(a)*45); } ctx.closePath(); ctx.stroke(); ctx.restore(); }
         
-        // Magnet Visual
+        // Magnet Visual - Floating Waves
         if(pepper.magnetTimer > 0) { 
-            ctx.save(); ctx.rotate(-frame*0.1); 
-            ctx.strokeStyle = "rgba(231, 76, 60, 0.7)"; ctx.lineWidth=2; 
-            let r = 40 + Math.sin(frame*0.2)*10;
-            ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.stroke(); 
-            ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.beginPath(); ctx.arc(0,0,r-10,0,Math.PI*2); ctx.stroke();
+            ctx.save(); ctx.translate(0, -40); // Float above pepper
+            let wave = (frame % 30) / 30;
+            ctx.strokeStyle = `rgba(231, 76, 60, ${1-wave})`; ctx.lineWidth=2;
+            ctx.beginPath(); ctx.arc(0,0, 20 + wave*30, 0, Math.PI*2); ctx.stroke();
+            
+            // Mini Magnet Icon above
+            ctx.scale(0.6, 0.6);
+            ctx.fillStyle = "#e74c3c"; ctx.strokeStyle = "#bdc3c7"; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.arc(0, -5, 12, Math.PI, 0); ctx.lineTo(12, 10); ctx.lineTo(5, 10); ctx.lineTo(5, -5); ctx.arc(0, -5, 5, 0, Math.PI, true); ctx.lineTo(-5, 10); ctx.lineTo(-12, 10); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = "#bdc3c7"; ctx.fillRect(-12, 5, 7, 5); ctx.fillRect(5, 5, 7, 5);
             ctx.restore(); 
         }
 
@@ -790,7 +796,7 @@
 
     function drawStick(ctx, x, y) { 
         ctx.save(); ctx.translate(x, y + Math.sin(frame*0.1)*5); 
-        ctx.scale(1.5, 1.5); // Bigger Sticks
+        ctx.scale(2.0, 2.0); // Bigger Sticks (2x)
         ctx.strokeStyle = "#8B4513"; ctx.lineWidth = 5; ctx.lineCap = "round"; 
         ctx.beginPath(); ctx.moveTo(-10, 5); ctx.lineTo(10, -5); ctx.stroke(); 
         ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(5, 5); ctx.stroke(); 
@@ -802,7 +808,7 @@
         ctx.save(); ctx.translate(x, y + Math.sin(frame*0.1)*5); 
         
         if(type === 'magnet') {
-            // Draw Magnet
+            // Draw Magnet Item
             ctx.fillStyle = "#e74c3c"; ctx.strokeStyle = "#bdc3c7"; ctx.lineWidth = 4;
             ctx.beginPath(); ctx.arc(0, -5, 12, Math.PI, 0); ctx.lineTo(12, 10); ctx.lineTo(5, 10); ctx.lineTo(5, -5); ctx.arc(0, -5, 5, 0, Math.PI, true); ctx.lineTo(-5, 10); ctx.lineTo(-12, 10); ctx.closePath(); ctx.fill();
             ctx.fillStyle = "#bdc3c7"; ctx.fillRect(-12, 5, 7, 5); ctx.fillRect(5, 5, 7, 5);
@@ -871,7 +877,8 @@
     function canSpawn(x) {
         let allObjects = [...obstacles, ...bones, ...sticks];
         for (let obj of allObjects) {
-            if (Math.abs(obj.x - x) < 300) return false; 
+            // Strict 350px gap, especially for Birds/Poo
+            if (Math.abs(obj.x - x) < 350) return false; 
         }
         return true;
     }
@@ -937,6 +944,8 @@
                 let remaining = Math.max(0, MEGA_TRIGGER - pepper.streak); let pct = (pepper.streak / MEGA_TRIGGER) * 100; megaBarFill.style.width = pct + "%"; megaText.innerText = "COLLECT " + remaining + " 🦴";
             }
         }
+
+        if(magnetCooldown > 0) magnetCooldown--;
 
         if(pepper.magnetTimer > 0 && gameActive) {
             pepper.magnetTimer--;
@@ -1012,7 +1021,10 @@
                      if(h > 0.5) bY = groundY - 100; 
                      if(h > 0.85) bY = groundY - 180; // Super High (Double Jump)
                      let bType = 'white';
-                     if(Math.random() > 0.98) bType = 'magnet'; 
+                     if(Math.random() > 0.98 && magnetCooldown <= 0) { 
+                         bType = 'magnet'; 
+                         magnetCooldown = 2700; // 45s cooldown
+                     } 
                      else if(Math.random() > 0.9) bType = 'gold';
                      
                      bones.push({x: canvas.width, y: bY, type: bType});
