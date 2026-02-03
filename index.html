@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V38 (Remastered)</title>
+    <title>Pepper's Doo-Doo Dash V39</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
         /* CORE RESET & LAYOUT */
@@ -45,7 +45,7 @@
         .menu-item { background: rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; color: white; font-weight: 700; font-size: 14px; text-align: center; cursor: pointer; border: 1px solid transparent; transition: background 0.2s; }
         .menu-item:active { background: rgba(255,255,255,0.3); }
 
-        /* SCREENS (Start, Game Over, Shop) */
+        /* SCREENS */
         .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 200; text-align: center; pointer-events: auto; }
         #start-screen { background: none; backdrop-filter: none; z-index: 50; gap: 20px; display: flex; }
         
@@ -217,7 +217,7 @@
 
 <script>
     const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d', { alpha: false }); // Optimize for no alpha on background
+    const ctx = canvas.getContext('2d', { alpha: false }); 
     
     // UI Elements
     const uiLayer = document.getElementById('ui-layer');
@@ -267,8 +267,8 @@
     let frame = 0;
     let score = 0; 
     let levelStartScore = 0;
-    let speed = 11.5;
-    let baseSpeed = 11.5;
+    let speed = 9; // SLOWER START SPEED
+    let baseSpeed = 9;
     let groundY = 0; 
     let shakeAmount = 0;
     let zoomLevel = 3.5;
@@ -281,10 +281,9 @@
     let magnetCooldown = 0;
     let isDead = false;
 
-    // --- FIX FOR CLUSTERING: SPAWN LOGIC VARS ---
-    // Instead of just X, we track when the area is "clear" for the next spawn
-    let nextSpawnAllowedX = 0; // The X coordinate where the next spawn is permitted
-    let minSpawnGap = 400;     // Base gap
+    // --- SPAWN LOGIC VARS ---
+    let nextSpawnAllowedX = 0; 
+    let minSpawnGap = 300;     
     
     let pepper = {
         x: 100, y: 0, dy: 0,
@@ -368,8 +367,8 @@
 
     function resetLevelState() {
         obstacles=[]; sticks=[]; bones=[]; floatTexts=[];
-        baseSpeed = (difficulty === 'death') ? 13 : 11.5; speed = baseSpeed;
-        if(difficulty === 'baby') speed = 9;
+        baseSpeed = (difficulty === 'death') ? 13 : 9.0; speed = baseSpeed;
+        if(difficulty === 'baby') speed = 7.5;
         
         levelDistance=0; levelFinished=false; levelVictoryAnim=false; finishLine=null; isDead = false;
         levelInd.innerText = "LEVEL " + currentLevel; 
@@ -765,8 +764,9 @@
             updateEntities();
         } else if (levelVictoryAnim) {
             frame++;
-            pepper.x += speed * 1.5;
+            pepper.x += 15; // Move dog off screen
             updateEntities();
+            if(pepper.x > canvas.width + 100) { completeLevel(); levelVictoryAnim = false; }
         }
 
         // 2. Rendering
@@ -811,10 +811,9 @@
                 levelFinished = true; levelVictoryAnim = true; pepper.x = 150; 
             }
         }
-        if(levelVictoryAnim && pepper.x > canvas.width + 100) { completeLevel(); levelVictoryAnim = false; }
     }
 
-    // --- IMPROVED SPAWN MANAGER (FIXES CLUSTERING) ---
+    // --- IMPROVED SPAWN MANAGER (FIXES CLUSTERING & VARIETY) ---
     function spawnManager() {
         if(finishLine || levelFinished) return;
 
@@ -869,19 +868,19 @@
 
             // PRIORITY 3: STICKS (Rare)
             else if (spawnChance > 0.4 && spawnChance < 0.42) {
-                sticks.push({x: canvas.width, y: groundY - 120});
+                // Random height for sticks now
+                let sY = groundY - (100 + Math.random() * 60); 
+                sticks.push({x: canvas.width, y: sY});
                 spawnedType = 'stick';
                 objectWidth = 40;
             }
 
-            // If we spawned something, calculate the GAP for the next item
+            // GAP CALCULATION
             if (spawnedType) {
-                // Base gap + Object Width + Random Variance
-                // This ensures we never spawn something 'inside' the previous object's danger zone
-                let gapVariance = Math.random() * 200;
-                let speedFactor = speed * 10; // Faster speed needs more gap
+                // Random gap between 300 and 900
+                let rngGap = 300 + Math.random() * 600; 
                 
-                nextSpawnAllowedX = canvas.width + objectWidth + minSpawnGap + gapVariance;
+                nextSpawnAllowedX = canvas.width + objectWidth + rngGap;
                 
                 // Add extra breathing room after big obstacles
                 if(spawnedType === 'obstacle' && objectWidth > 100) {
@@ -942,7 +941,8 @@
         for(let i=sticks.length-1; i>=0; i--) {
             let s = sticks[i];
             if(!levelFinished) s.x -= speed;
-            if(!isDead && Math.abs(150-s.x)<40 && Math.abs(pepper.y-25-s.y)<40) {
+            // FIXED STICK HITBOX: Increased Y tolerance
+            if(!isDead && Math.abs(150-s.x)<50 && Math.abs(pepper.y-40-s.y)<60) {
                 if(difficulty !== 'death') {
                     pepper.sticks++; playSfx('collect'); spawnParticles(s.x, s.y, "#00b894", 15);
                     if(pepper.sticks>=5) { pepper.hasShield=true; pepper.sticks=0; spawnPopup("STICK SHIELD!", 150, pepper.y-50, "#00b894"); flashScreen('#00b894'); }
@@ -973,10 +973,10 @@
         }
         
         // Update Environment
-        bgMountains.forEach(m => { m.x -= speed * 0.05; if(m.x < -300) m.x = canvas.width + 100; });
-        bgTrees.forEach(t => { t.x -= speed * 0.2; if(t.x < -50) t.x = canvas.width + Math.random()*300; });
+        bgMountains.forEach(m => { if(!levelFinished) m.x -= speed * 0.05; if(m.x < -300) m.x = canvas.width + 100; });
+        bgTrees.forEach(t => { if(!levelFinished) t.x -= speed * 0.2; if(t.x < -50) t.x = canvas.width + Math.random()*300; });
         bgClouds.forEach(c => { c.x -= c.speed; if(c.x < -100) c.x = canvas.width + 100; });
-        fgBushes.forEach(b => { b.x -= speed * 1.5; if(b.x < -150) b.x = canvas.width + Math.random()*500; });
+        fgBushes.forEach(b => { if(!levelFinished) b.x -= speed * 1.5; if(b.x < -150) b.x = canvas.width + Math.random()*500; });
         weatherParticles.forEach(p => { p.y += p.speed; p.x += p.wind; if(p.y > canvas.height) p.y = 0; if(p.x > canvas.width) p.x = 0; });
     }
 
