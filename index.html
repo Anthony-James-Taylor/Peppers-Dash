@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V33</title>
+    <title>Pepper's Doo-Doo Dash V34</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Russo+One&display=swap" rel="stylesheet">
     
@@ -888,10 +888,21 @@
 
     function canSpawn(x) {
         let allObjects = [...obstacles, ...bones, ...sticks];
+        
+        // Safety Check 1: General Overlap
         for (let obj of allObjects) {
-            // Strict 350px gap, especially for Birds/Poo
             if (Math.abs(obj.x - x) < 350) return false; 
         }
+
+        // Safety Check 2: Poop Stack Proximity
+        // If the last obstacle was a STACK, enforce a huge gap before spawning anything else
+        if (obstacles.length > 0) {
+            let lastOb = obstacles[obstacles.length-1];
+            if (lastOb.type === 'stack' && Math.abs(lastOb.x - x) < 600) {
+                return false; // Force a 600px gap after any stack
+            }
+        }
+
         return true;
     }
 
@@ -950,13 +961,6 @@
                 pepper.megaTimer--; 
                 megaMeter.classList.add('mega-active'); 
                 
-                // Calculate percentage for draining bar
-                // Base time is 900, if cowboy hat, it's longer (wait, Cowboy logic is implemented in spawn, let's verify usage here)
-                // Cowboy hat increases DURATION? No, previously it was "Longer Mega". 
-                // Now Cowboy is "Half Mega Req". 
-                // BUT, in V30 I had Cowboy increase duration. In V32 I changed it to "Half Mega Req".
-                // So default duration is 900 always now unless I kept the longer duration too.
-                // Let's stick to 900 for standard.
                 let maxTime = 900;
                 let pct = (pepper.megaTimer / maxTime) * 100;
                 megaBarFill.style.width = pct + "%";
@@ -970,7 +974,6 @@
                     updateMegaText(); 
                 }
             } else if (!pepper.isMega) {
-                // Filling up bar logic
                 let target = (pepper.hat === 'cowboy') ? 25 : 50;
                 let remaining = Math.max(0, target - pepper.streak); 
                 let pct = (pepper.streak / target) * 100; 
@@ -1115,17 +1118,19 @@
                 if(b.type === 'magnet') { pepper.magnetTimer = 600; playSfx('magnet'); spawnPopup("MAGNET!", b.x, b.y, "#e74c3c"); }
                 else {
                     let val = (b.type === 'gold') ? 5 : 1;
-                    if(pepper.hat === 'cap') val *= 2; // CAP PERK
-                    score+=val; scoreEl.innerText = score + " 🦴"; 
-                    playSfx('collect'); spawnParticles(b.x, b.y, "gold", 15); spawnPopup("+"+val, b.x, b.y, "gold"); 
-                    let megaVal = (pepper.hat === 'cap') ? val : 1;
+                    let scoreVal = (pepper.hat === 'cap') ? val * 2 : val; // CAP PERK (Score only)
+                    
+                    score += scoreVal; 
+                    scoreEl.innerText = score + " 🦴"; 
+                    playSfx('collect'); spawnParticles(b.x, b.y, "gold", 15); spawnPopup("+"+scoreVal, b.x, b.y, "gold"); 
+                    
                     if(!pepper.isMega && difficulty !== 'death') { 
-                        let target = (pepper.hat === 'cowboy') ? 25 : 50;
-                        pepper.streak += megaVal; 
-                        if(pepper.streak>=target){ 
+                        let target = (pepper.hat === 'cowboy') ? 25 : 50; // COWBOY PERK (Threshold)
+                        pepper.streak += val; // Gold bone = 5 streak points now
+                        if(pepper.streak >= target){ 
                             pepper.isMega=true; 
                             pepper.megaTimer = 900; 
-                            pepper.spinTimer = 40; // Mega Spin
+                            pepper.spinTimer = 40; 
                             spawnPopup("MEGA MODE!", canvas.width/2, canvas.height/3, "#ff00ff"); 
                             flashScreen('white'); 
                             shakeScreen(20);
