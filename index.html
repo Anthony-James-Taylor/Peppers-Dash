@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V40</title>
+    <title>Pepper's Doo-Doo Dash V41</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        [cite_start]/* CORE RESET & LAYOUT [cite: 1] */
+        /* CORE RESET & LAYOUT */
         body { margin: 0; overflow: hidden; background: #1a1a1a; font-family: 'Montserrat', sans-serif; touch-action: none; user-select: none; -webkit-user-select: none; }
         canvas { display: block; }
         
         /* UI LAYERS */
-        #ui-layer, #flash-overlay, #menu-overlay, #screens-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-        #ui-layer { display: none; flex-direction: column; align-items: center; z-index: 10; }
-        #flash-overlay { background: white; opacity: 0; z-index: 100; transition: opacity 0.1s ease-out; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: none; flex-direction: column; align-items: center; z-index: 10; }
+        #flash-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; z-index: 100; pointer-events: none; transition: opacity 0.1s ease-out; }
         
         /* HUD ELEMENTS */
         .hud-top { display: flex; justify-content: space-between; width: 90%; margin-top: 20px; align-items: flex-start; }
@@ -260,26 +259,31 @@
     const GROUND_H = 140; 
     
     let difficulty = 'normal';
-    let gameActive = false;
+    
+    // GAME STATES
+    const STATE_MENU = 0;
+    const STATE_COUNTDOWN = 1;
+    const STATE_PLAYING = 2;
+    const STATE_VICTORY = 3;
+    const STATE_GAMEOVER = 4;
+    const STATE_SHOP = 5;
+    let gameState = STATE_MENU;
+
     let isPaused = false;
-    let isCountingDown = false;
-    let levelVictoryAnim = false;
     let frame = 0;
     let score = 0; 
     let levelStartScore = 0;
-    let speed = 9; 
-    let baseSpeed = 9;
+    let speed = 11; // INCREASED SPEED
+    let baseSpeed = 11;
     let groundY = 0; 
     let shakeAmount = 0;
     let zoomLevel = 3.5;
     let currentLevel = 1;
     let levelDistance = 0;
-    let levelMaxDistance = 4000; // INCREASED LEVEL LENGTH
-    let levelFinished = false; 
+    let levelMaxDistance = 3000; // INCREASED LENGTH
     let isMuted = false;
     let menuOpen = false;
     let magnetCooldown = 0;
-    let isDead = false;
 
     // --- SPAWN LOGIC VARS ---
     let nextSpawnAllowedX = 0; 
@@ -323,10 +327,10 @@
     
     // Bindings
     attachFastClick(menuBtn, () => { menuOpen = !menuOpen; menuContent.style.display = menuOpen ? "flex" : "none"; menuBtn.innerText = menuOpen ? "✕" : "☰"; });
-    attachFastClick(document.getElementById('menu-mute'), () => { isMuted = !isMuted; document.getElementById('menu-mute').innerText = isMuted ? "🔇 SOUND: OFF" : "🔊 SOUND: ON"; if(isMuted) stopMusic(); else if(gameActive && !isPaused && !isCountingDown) startMusic(); });
+    attachFastClick(document.getElementById('menu-mute'), () => { isMuted = !isMuted; document.getElementById('menu-mute').innerText = isMuted ? "🔇 SOUND: OFF" : "🔊 SOUND: ON"; if(isMuted) stopMusic(); else if(gameState === STATE_PLAYING && !isPaused) startMusic(); });
     attachFastClick(document.getElementById('menu-home'), goHome);
-    attachFastClick(document.getElementById('menu-help'), () => { if(gameActive) { isPaused = true; stopMusic(); } menuContent.style.display = 'none'; menuOpen = false; menuBtn.innerText = "☰"; howToScreen.style.display = 'flex'; });
-    attachFastClick(document.getElementById('close-help-btn'), () => { howToScreen.style.display = 'none'; if(gameActive) { isPaused = false; startMusic(); } });
+    attachFastClick(document.getElementById('menu-help'), () => { if(gameState === STATE_PLAYING) { isPaused = true; stopMusic(); } menuContent.style.display = 'none'; menuOpen = false; menuBtn.innerText = "☰"; howToScreen.style.display = 'flex'; });
+    attachFastClick(document.getElementById('close-help-btn'), () => { howToScreen.style.display = 'none'; if(gameState === STATE_PLAYING) { isPaused = false; startMusic(); } });
     attachFastClick(document.getElementById('start-btn'), () => startSequence(false));
     attachFastClick(startDiffBtn, openDifficultyScreen);
     attachFastClick(retryBtn, () => { if(difficulty === 'baby') { resetLevelState(); startSequence(false); } else { resetGameLogic(); startSequence(false); } });
@@ -338,7 +342,7 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight; 
         groundY = canvas.height - GROUND_H;
-        if(!gameActive && !frame) pepper.y = groundY;
+        if(gameState !== STATE_PLAYING && !frame) pepper.y = groundY;
     }
     window.addEventListener('resize', resize);
 
@@ -367,10 +371,10 @@
 
     function resetLevelState() {
         obstacles=[]; sticks=[]; bones=[]; floatTexts=[];
-        baseSpeed = (difficulty === 'death') ? 13 : 9.0; speed = baseSpeed;
-        if(difficulty === 'baby') speed = 7.5;
+        baseSpeed = (difficulty === 'death') ? 14 : 11.0; speed = baseSpeed;
+        if(difficulty === 'baby') speed = 8.5;
         
-        levelDistance=0; levelFinished=false; levelVictoryAnim=false; finishLine=null; isDead = false;
+        levelDistance=0; finishLine=null;
         levelInd.innerText = "LEVEL " + currentLevel; 
         
         pepper.y = groundY; pepper.dy=0; pepper.grounded=true; 
@@ -416,7 +420,7 @@
     }
 
     function goHome() {
-        gameActive = false; isPaused = false; isCountingDown = false; stopMusic();
+        gameState = STATE_MENU; isPaused = false; stopMusic();
         uiLayer.style.display = 'none'; menuContent.style.display = 'none'; menuOpen = false; menuBtn.innerText = "☰";
         startScreen.style.display = 'flex'; gameOverScreen.style.display = 'none'; howToScreen.style.display = 'none'; shopScreen.style.display = 'none';
         resetGameLogic(); pepper.y = groundY; pepper.dy = 0; zoomLevel = 3.5;
@@ -430,6 +434,7 @@
     };
 
     function openShop() {
+        gameState = STATE_SHOP;
         shopScreen.style.display = 'flex';
         shopBalance.innerText = score + " 🦴";
         // Shopkeeper Animation Frame
@@ -535,7 +540,7 @@
         let ms = track.tempo; if(difficulty==='death') ms*=0.9; 
         step=0;
         musicInterval = setInterval(() => { 
-            if (!gameActive || isPaused || isCountingDown) return; 
+            if (gameState !== STATE_PLAYING || isPaused) return; 
             let tick = step % 16; 
             if (pepper.isMega) { 
                 let arp = [523, 659, 783, 1046]; synth(arp[step % 4], 'square', 0.08, 0.1); 
@@ -606,7 +611,7 @@
             ctx.restore();
         }
 
-        if(!gameActive && !isCountingDown && !levelVictoryAnim) {
+        if(gameState !== STATE_PLAYING && gameState !== STATE_VICTORY && gameState !== STATE_COUNTDOWN) {
             ctx.scale(1.5, 1.5); ctx.translate(0, -50); 
             ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.beginPath(); ctx.ellipse(0, 50, 30, 8, 0, 0, Math.PI*2); ctx.fill();
             let pulse = 40 + Math.sin(Date.now()/200)*5; ctx.shadowBlur = 30; ctx.shadowColor=eyeC; ctx.fillStyle = "rgba(255,255,255,0.2)"; ctx.beginPath(); ctx.arc(0,0, pulse, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
@@ -624,7 +629,7 @@
             drawHat(ctx);
             if(difficulty === 'normal') drawAviators(ctx, 0, 0);
             if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, -5, 32, Math.PI, 0); ctx.stroke(); ctx.fillStyle = "#FFD700"; ctx.beginPath(); ctx.arc(0, 20, 6, 0, Math.PI*2); ctx.fill(); }
-            else { ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 12, 10, 0, Math.PI); ctx.stroke(); ctx.fillStyle = "pink"; ctx.beginPath(); ctx.arc(0, 22, 6, 0, Math.PI, false); ctx.fill(); }
+            else { ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 12, 10, 0, Math.PI); ctx.stroke(); }
             ctx.restore(); return;
         }
 
@@ -742,34 +747,34 @@
     function startSequence(isFullReset = false) {
         if(isFullReset) resetGameLogic();
         initAudio(); startScreen.style.display = 'none'; gameOverScreen.style.display = 'none'; uiLayer.style.display = 'flex';
+        gameState = STATE_COUNTDOWN;
         isCountingDown = true; countdownLayer.style.display = 'flex';
         let count = 3;
         countdownText.innerText = count;
         let interval = setInterval(() => {
             count--;
             if(count > 0) { countdownText.innerText = count; countdownText.style.animation = 'none'; countdownText.offsetHeight; countdownText.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; playSnare(); } 
-            else { clearInterval(interval); countdownText.innerText = "GO!"; playBark(); setTimeout(() => { countdownLayer.style.display = 'none'; isCountingDown = false; gameActive = true; startMusic(); }, 500); }
+            else { clearInterval(interval); countdownText.innerText = "GO!"; playBark(); setTimeout(() => { countdownLayer.style.display = 'none'; isCountingDown = false; gameState = STATE_PLAYING; startMusic(); }, 500); }
         }, 800);
     }
 
-    // Refactored Loop: Update -> Spawn -> Draw
     function loop() {
         requestAnimationFrame(loop);
         
-        // 1. Logic Updates
-        if(gameActive && !isPaused && !isCountingDown) {
+        if(gameState === STATE_PLAYING && !isPaused) {
             frame++;
             updatePhysics();
             spawnManager();
             updateEntities();
-        } else if (levelVictoryAnim) {
+        } 
+        else if (gameState === STATE_VICTORY) {
             frame++;
-            pepper.x += 10; // Forced Run
-            updateEntities(); // Keep animating flies/coins
-            if(pepper.x > canvas.width + 50) { completeLevel(); levelVictoryAnim = false; }
+            pepper.x += 15; // Forced Victory Run
+            pepper.runFrame += 0.5; // Leg animation
+            updateEntities(true); // Keep background entities moving relative to camera
+            if(pepper.x > canvas.width + 100) { completeLevel(); gameState = STATE_SHOP; }
         }
 
-        // 2. Rendering
         drawGame();
     }
 
@@ -807,11 +812,9 @@
         // Finish Line Logic
         if(finishLine) {
             finishLine.x -= speed;
-            if(finishLine.x < 150 && !levelFinished && !isDead) { 
-                levelFinished = true; 
-                gameActive = false; // LOCK CONTROLS
-                levelVictoryAnim = true; // FORCE RUN
-                pepper.x = 150; 
+            // CRITICAL FIX: If dog crosses finish line, switch to VICTORY state immediately
+            if(finishLine.x <= 150) { 
+                gameState = STATE_VICTORY;
                 playSfx('levelup');
             }
         }
@@ -819,7 +822,7 @@
 
     // --- SPAWN MANAGER ---
     function spawnManager() {
-        if(finishLine || levelFinished) return;
+        if(finishLine) return;
         nextSpawnAllowedX -= speed;
         if(canvas.width > nextSpawnAllowedX) {
             let spawnChance = Math.random();
@@ -860,11 +863,11 @@
         }
     }
 
-    function updateEntities() {
+    function updateEntities(victoryMode = false) {
         if(magnetCooldown > 0) magnetCooldown--;
         
         // MAGNET EFFECT
-        if(pepper.magnetTimer > 0 && gameActive) {
+        if(pepper.magnetTimer > 0 && gameState === STATE_PLAYING) {
             pepper.magnetTimer--;
             bones.forEach(b => {
                 let dx = 150 - b.x; let dy = pepper.y - b.y;
@@ -873,44 +876,51 @@
             });
         }
 
-        // UPDATE OBSTACLES (Slightly smaller hitboxes)
+        // MOVEMENT
+        let moveSpeed = speed;
+        if (victoryMode) moveSpeed = 0; // Stop world, move dog
+
+        // UPDATE OBSTACLES
         for(let i=obstacles.length-1; i>=0; i--) {
             let o = obstacles[i];
-            if(!levelFinished) o.x -= speed;
+            o.x -= moveSpeed;
             
-            let hit = false;
-            if(o.type === 'bird' && Math.abs(150-o.x) < 20 && Math.abs(pepper.y - o.y) < 20) hit = true;
-            if(o.type === 'poo' && Math.abs(150-o.x) < 15 && pepper.y > groundY-(o.stack*35)+15) hit=true;
-            if(o.type === 'hydrant' && Math.abs(150-o.x) < 15 && pepper.y > groundY-30) hit=true; 
-            if(o.type === 'stack' && Math.abs(150-o.x) < 15 && pepper.y > groundY-105) hit=true;
-            if(o.type === 'pond' && o.x < 150+10 && o.x > 150-90 && pepper.y > groundY - 5) hit=true;
+            if (!victoryMode && !isDead) {
+                let hit = false;
+                if(o.type === 'bird' && Math.abs(150-o.x) < 20 && Math.abs(pepper.y - o.y) < 20) hit = true;
+                if(o.type === 'poo' && Math.abs(150-o.x) < 15 && pepper.y > groundY-(o.stack*35)+15) hit=true;
+                if(o.type === 'hydrant' && Math.abs(150-o.x) < 15 && pepper.y > groundY-30) hit=true; 
+                if(o.type === 'stack' && Math.abs(150-o.x) < 15 && pepper.y > groundY-105) hit=true;
+                if(o.type === 'pond' && o.x < 150+10 && o.x > 150-90 && pepper.y > groundY - 5) hit=true;
 
-            if(hit && !isDead && !levelVictoryAnim) {
-                if(o.type === 'hydrant' || o.type === 'pond') {
-                     if(o.type === 'hydrant' && pepper.isMega) { gameOver('mega-hydrant'); } 
-                     else { 
-                         let color = o.type==='hydrant' ? "#00fbff" : "#f1c40f"; 
-                         spawnParticles(150, groundY, color, 40); playSfx('splash'); playSfx('crash'); flashScreen(color); gameOver('standard'); 
-                     }
-                     continue;
+                if(hit) {
+                    if(o.type === 'hydrant' || o.type === 'pond') {
+                        if(o.type === 'hydrant' && pepper.isMega) { gameOver('mega-hydrant'); } 
+                        else { 
+                            let color = o.type==='hydrant' ? "#00fbff" : "#f1c40f"; 
+                            spawnParticles(150, groundY, color, 40); playSfx('splash'); playSfx('crash'); flashScreen(color); gameOver('standard'); 
+                        }
+                        continue;
+                    }
+                    if(pepper.isMega) { 
+                        score += 5; spawnParticles(o.x, groundY, "#8B4513", 20); spawnPopup("SMASH!", o.x, o.y-50, "orange"); playSfx('smash'); shakeScreen(15); obstacles.splice(i, 1); continue; 
+                    }
+                    if(pepper.hasShield) { 
+                        pepper.hasShield = false; pepper.sticks=0; stickText.innerText="0/5"; spawnParticles(o.x, groundY, "#8B4513", 25); playSfx('crash'); flashScreen('red'); spawnPopup("SHIELD BROKE!", 150, pepper.y-50, "red"); obstacles.splice(i, 1); continue; 
+                    }
+                    gameOver('standard');
                 }
-                if(pepper.isMega) { 
-                    score += 5; spawnParticles(o.x, groundY, "#8B4513", 20); spawnPopup("SMASH!", o.x, o.y-50, "orange"); playSfx('smash'); shakeScreen(15); obstacles.splice(i, 1); continue; 
-                }
-                if(pepper.hasShield) { 
-                    pepper.hasShield = false; pepper.sticks=0; stickText.innerText="0/5"; spawnParticles(o.x, groundY, "#8B4513", 25); playSfx('crash'); flashScreen('red'); spawnPopup("SHIELD BROKE!", 150, pepper.y-50, "red"); obstacles.splice(i, 1); continue; 
-                }
-                gameOver('standard');
             }
             if(o.x < -300) obstacles.splice(i, 1);
         }
 
-        // UPDATE COLLECTIBLES (Larger Hitboxes)
+        // UPDATE COLLECTIBLES
         for(let i=sticks.length-1; i>=0; i--) {
             let s = sticks[i];
-            if(!levelFinished) s.x -= speed;
-            // HUGE HITBOX FOR STICKS
-            if(!isDead && Math.abs(150-s.x)<60 && Math.abs(pepper.y-40-s.y)<100) {
+            s.x -= moveSpeed;
+            // FIX: HITBOX FROM DOG CENTER (y-25) TO ITEM CENTER
+            // FIX: Massive vertical tolerance (100px)
+            if(!victoryMode && !isDead && Math.abs(150-s.x) < 50 && Math.abs((pepper.y - 25) - s.y) < 100) {
                 if(difficulty !== 'death') {
                     pepper.sticks++; playSfx('collect'); spawnParticles(s.x, s.y, "#00b894", 15);
                     if(pepper.sticks>=5) { pepper.hasShield=true; pepper.sticks=0; spawnPopup("STICK SHIELD!", 150, pepper.y-50, "#00b894"); flashScreen('#00b894'); }
@@ -922,9 +932,8 @@
 
         for(let i=bones.length-1; i>=0; i--) {
             let b = bones[i];
-            if(!levelFinished) b.x -= speed;
-            // HUGE HITBOX FOR BONES
-            if(!isDead && Math.abs(150-b.x)<60 && Math.abs(pepper.y-25-b.y)<100) {
+            b.x -= moveSpeed;
+            if(!victoryMode && !isDead && Math.abs(150-b.x) < 50 && Math.abs((pepper.y - 25) - b.y) < 100) {
                 if(b.type === 'magnet') { 
                     pepper.magnetTimer = 600; playSfx('magnet'); spawnPopup("MAGNET!", b.x, b.y, "#e74c3c"); 
                 } else {
@@ -941,18 +950,18 @@
             } else if(b.x<-100) bones.splice(i,1);
         }
         
-        // Update Environment (Stop moving if level finished)
-        bgMountains.forEach(m => { if(!levelFinished) m.x -= speed * 0.05; if(m.x < -300) m.x = canvas.width + 100; });
-        bgTrees.forEach(t => { if(!levelFinished) t.x -= speed * 0.2; if(t.x < -50) t.x = canvas.width + Math.random()*300; });
+        // Environment
+        bgMountains.forEach(m => { m.x -= moveSpeed * 0.05; if(m.x < -300) m.x = canvas.width + 100; });
+        bgTrees.forEach(t => { t.x -= moveSpeed * 0.2; if(t.x < -50) t.x = canvas.width + Math.random()*300; });
         bgClouds.forEach(c => { c.x -= c.speed; if(c.x < -100) c.x = canvas.width + 100; });
-        fgBushes.forEach(b => { if(!levelFinished) b.x -= speed * 1.5; if(b.x < -150) b.x = canvas.width + Math.random()*500; });
+        fgBushes.forEach(b => { b.x -= moveSpeed * 1.5; if(b.x < -150) b.x = canvas.width + Math.random()*500; });
         weatherParticles.forEach(p => { p.y += p.speed; p.x += p.wind; if(p.y > canvas.height) p.y = 0; if(p.x > canvas.width) p.x = 0; });
     }
 
     // DRAWING
     function drawGame() {
         groundY = canvas.height - GROUND_H;
-        let targetZoom = (gameActive && pepper.isMega) ? 1.05 : 1.0;
+        let targetZoom = (gameState === STATE_PLAYING && pepper.isMega) ? 1.05 : 1.0;
         zoomLevel += (targetZoom - zoomLevel) * 0.05;
         
         ctx.save();
@@ -975,6 +984,8 @@
         // Ground
         ctx.fillStyle = sky.ground; ctx.fillRect(0, groundY, canvas.width, GROUND_H);
         ctx.fillStyle = "rgba(255,255,255,0.05)"; let stripeOffset = Math.floor((frame * speed) % 100);
+        if (gameState === STATE_VICTORY) stripeOffset = 0; // Stop ground scroll
+        
         for(let i = -100; i < canvas.width + 100; i+=100) { ctx.beginPath(); ctx.moveTo(i - stripeOffset, groundY); ctx.lineTo(i - stripeOffset + 40, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 90, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 50, groundY); ctx.fill(); }
         
         ctx.fillStyle = sky.grass; ctx.fillRect(0, groundY, canvas.width, 20);
@@ -992,21 +1003,22 @@
         bones.forEach(b => drawBone(ctx, b.x, b.y, b.type));
 
         // Mega Mode Effects
-        if(pepper.isMega && (gameActive || levelVictoryAnim)) {
+        if(pepper.isMega && (gameState === STATE_PLAYING || gameState === STATE_VICTORY)) {
             ctx.save(); ctx.strokeStyle = "rgba(255, 255, 255, 0.5)"; ctx.lineWidth = 2;
             for(let i=0; i<10; i++) { let ly = Math.random() * canvas.height; let lx = Math.random() * canvas.width; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 50 + Math.random()*50, ly); ctx.stroke(); }
             ctx.restore();
         }
 
         // Pepper
-        let drawX = (levelVictoryAnim || gameActive) ? pepper.x : 150;
-        if(!gameActive && !isCountingDown && !levelVictoryAnim) drawX = 150;
-        if(!gameActive && !isCountingDown && !levelVictoryAnim) drawSteamDooDoo(ctx, canvas.width * 0.75, groundY-15);
+        let drawX = 150;
+        if (gameState === STATE_VICTORY) drawX = pepper.x;
+        
+        if(gameState === STATE_MENU || gameState === STATE_SHOP) drawSteamDooDoo(ctx, canvas.width * 0.75, groundY-15);
         
         drawHusky(ctx, drawX, pepper.y, pepper.isMega, pepper.hasShield);
 
         // Finish Line
-        if(finishLine && !isDead) {
+        if(finishLine) {
             ctx.save(); ctx.translate(finishLine.x, groundY - 150); 
             let wave = Math.sin(frame*0.2) * 10; ctx.fillStyle = "white"; ctx.fillRect(0, 0, 10, 150);
             for(let r=0; r<4; r++) { for(let c=0; c<6; c++) { ctx.fillStyle = (r+c)%2===0 ? "white" : "black"; ctx.fillRect(10 + c*20, r*20 + (c*wave*0.1), 20, 20); } } ctx.restore();
@@ -1029,12 +1041,12 @@
 
     function completeLevel() { 
         if(isDead) return;
-        levelFinished = true; playSfx('levelup'); stopMusic();
-        setTimeout(openShop, 1500); 
+        playSfx('levelup'); stopMusic();
+        setTimeout(openShop, 500); 
     }
     
     function gameOver(reason) { 
-        isDead = true; gameActive = false; stopMusic(); 
+        isDead = true; gameState = STATE_GAMEOVER; stopMusic(); 
         endScoreEl.innerText = score; 
         if(difficulty === 'baby') { retryBtn.innerText = "RETRY LEVEL (BABY MODE)"; } else { retryBtn.innerText = "TRY AGAIN"; }
         if(reason === 'mega-hydrant') { 
@@ -1047,7 +1059,7 @@
     }
 
     function handleInput() { 
-        if(!gameActive || isPaused || isCountingDown || levelVictoryAnim) return;
+        if(gameState !== STATE_PLAYING || isPaused) return;
         initAudio(); 
         if(pepper.grounded) { pepper.dy = JUMP_FORCE; pepper.grounded = false; playSfx('jump'); if(pepper.doubleJumpUnlocked) pepper.canDoubleJump = true; } 
         else if (pepper.canDoubleJump) { pepper.dy = DOUBLE_JUMP_FORCE; pepper.canDoubleJump = false; playSfx('doublejump'); spawnParticles(150, pepper.y, "white", 5); } 
