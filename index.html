@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V36</title>
+    <title>Pepper's Doo-Doo Dash V37</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Russo+One&display=swap" rel="stylesheet">
     
@@ -61,7 +61,6 @@
         }
         
         #score { font-size: 24px; font-weight: 900; line-height: 1; color: #fff; }
-        #high-score-box { margin-top: 5px; font-size: 12px; color: #f1c40f; font-weight: 900; letter-spacing: 1px; }
         #level-indicator { color: #00fbff; font-weight: 900; font-size: 12px; margin-bottom: 2px; }
 
         #stick-canvas { width: 40px; height: 40px; } 
@@ -113,7 +112,6 @@
             color: #fff; font-size: 18px; font-weight: 900; letter-spacing: 1px;
         }
 
-        /* POPPY MEGA MODE COLORS */
         .mega-active {
             border-color: transparent !important;
             background: linear-gradient(135deg, rgba(20,0,20,0.9), rgba(50,0,50,0.9));
@@ -131,13 +129,13 @@
         @keyframes shake { 0% { transform: translate(0,0); } 25% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -1px); } 75% { transform: translate(-1px, 1px); } 100% { transform: translate(1px, -1px); } }
 
         /* SCREENS */
-        #start-screen, #game-over, #shop-screen, #level-screen, #how-to-screen, #info-modal, #difficulty-screen { 
+        #start-screen, #game-over, #shop-screen, #how-to-screen, #info-modal, #difficulty-screen { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
             display: flex; flex-direction: column; justify-content: center; align-items: center; 
             z-index: 200; text-align: center; 
         }
-        #game-over, #shop-screen, #level-screen, #how-to-screen, #info-modal, #difficulty-screen { display: none; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); }
+        #game-over, #shop-screen, #how-to-screen, #info-modal, #difficulty-screen { display: none; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); }
         
         #start-screen { background: none; backdrop-filter: none; z-index: 50; gap: 20px; }
         
@@ -173,15 +171,18 @@
         #start-diff-btn:hover { background: rgba(255,255,255,0.25); }
 
         /* SHOP */
+        #shop-screen {
+            background: linear-gradient(180deg, #5D4037 0%, #3E2723 100%);
+        }
         .shop-container { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; width: 95%; max-width: 800px; }
         .shop-item {
-            background: rgba(255,255,255,0.1); border: 2px solid transparent; border-radius: 12px;
+            background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px;
             padding: 15px; width: 140px; text-align: center; cursor: pointer; transition: all 0.2s;
-            display: flex; flex-direction: column; align-items: center;
+            display: flex; flex-direction: column; align-items: center; position: relative;
         }
-        .shop-item.selected { border-color: #00fbff; background: rgba(0,251,255,0.1); }
+        .shop-item.selected { border-color: #00fbff; background: rgba(0,251,255,0.15); }
         .shop-item.locked { opacity: 0.5; cursor: not-allowed; }
-        .shop-icon { font-size: 40px; margin-bottom: 10px; }
+        .shop-icon { margin-bottom: 10px; }
         .shop-name { color: #fff; font-weight: 900; font-size: 14px; margin-bottom: 5px; }
         .shop-perk { color: #00fbff; font-size: 10px; margin-bottom: 5px; font-weight: 700; }
         .shop-cost { color: #f1c40f; font-weight: 900; font-size: 14px; }
@@ -232,7 +233,6 @@
             <div class="glass-pill" id="score-box">
                 <div id="level-indicator">LEVEL 1</div>
                 <span id="score">0 🦴</span>
-                <div id="high-score-box">BEST: 0 🦴</div>
             </div>
             <div class="glass-pill" id="stick-box">
                 <canvas id="stick-canvas" width="40" height="40"></canvas>
@@ -283,7 +283,7 @@
     </div>
 
     <div id="shop-screen">
-        <h1 style="color:#f1c40f; font-size:40px; margin-bottom:10px;">SHOP</h1>
+        <h1 style="color:#f1c40f; font-size:40px; margin-bottom:10px;">PEPPER'S SHOP</h1>
         <div class="glass-pill" style="margin-bottom:20px;">
             <span style="font-size:12px; color:#b2bec3;">BALANCE</span>
             <span id="shop-balance" style="font-size:24px; font-weight:900;">0 🦴</span>
@@ -321,12 +321,6 @@
         <div class="btn" id="close-help-btn" style="margin-top:15px; padding:15px 40px;">GOT IT</div>
     </div>
 
-    <div id="level-screen">
-        <h1 style="color:#00fbff; font-size:40px;">LEVEL COMPLETE!</h1>
-        <div class="glass-pill" style="margin: 20px 0;"><span id="score-label">NEXT STOP: THE SHOP</span></div>
-        <div class="btn" id="go-to-shop-btn">GO TO SHOP >></div>
-    </div>
-
     <div id="game-over">
         <h1 id="go-title" style="color:#ff7675; font-size:50px;">GAME OVER!</h1>
         <canvas id="go-canvas" class="visual-example" width="150" height="100" style="display:none; margin:10px 0;"></canvas>
@@ -345,7 +339,6 @@
     const levelInd = document.getElementById('level-indicator');
     const stickText = document.getElementById('stick-text');
     const progressFill = document.getElementById('progress-fill');
-    const highScoreEl = document.getElementById('high-score-box');
     const countdownLayer = document.getElementById('countdown-layer');
     const countdownText = document.getElementById('countdown-text');
     const megaMeter = document.getElementById('mega-meter');
@@ -363,7 +356,6 @@
     const startScreen = document.getElementById('start-screen');
     const difficultyScreen = document.getElementById('difficulty-screen');
     const gameOverScreen = document.getElementById('game-over');
-    const levelScreen = document.getElementById('level-screen');
     const shopScreen = document.getElementById('shop-screen');
     const howToScreen = document.getElementById('how-to-screen');
     const infoModal = document.getElementById('info-modal');
@@ -373,7 +365,7 @@
     const startDiffBtn = document.getElementById('start-diff-btn');
     const retryBtn = document.getElementById('retry-btn');
     const nextLevelBtn = document.getElementById('shop-next-btn');
-    const goToShopBtn = document.getElementById('go-to-shop-btn');
+    const goToShopBtn = document.getElementById('go-to-shop-btn'); // Unused but kept for ref
     const closeHelpBtn = document.getElementById('close-help-btn');
     const modalBtn = document.getElementById('modal-btn');
     const closeDiffBtn = document.getElementById('close-diff-btn');
@@ -408,7 +400,6 @@
     let frame = 0;
     let score = 0; 
     let levelStartScore = 0;
-    let highScore = localStorage.getItem('pepperHighScore') || 0;
     let speed = 9;
     let baseSpeed = 9;
     let groundY = 0; 
@@ -422,7 +413,7 @@
     let menuOpen = false;
     let magnetCooldown = 0;
     let isDead = false;
-    let lastObstacleType = 'none'; // CRITICAL: Track the last type for collision prevention
+    let lastObstacleType = 'none';
 
     let pepper = {
         x: 100, y: 0, dy: 0,
@@ -476,7 +467,6 @@
     attachFastClick(startBtn, () => { startSequence(false); });
     attachFastClick(startDiffBtn, () => { openDifficultyScreen(); });
     attachFastClick(retryBtn, () => { if(difficulty === 'baby') { resetLevelState(); startSequence(false); } else { resetGameLogic(); startSequence(false); } });
-    attachFastClick(goToShopBtn, () => { openShop(); });
     attachFastClick(nextLevelBtn, () => { goToNextLevel(); });
     attachFastClick(modalBtn, () => { closeModal(); });
     attachFastClick(closeDiffBtn, () => { difficultyScreen.style.display = 'none'; });
@@ -546,27 +536,26 @@
     function goToNextLevel() { 
         shopScreen.style.display = 'none';
         levelStartScore = score; currentLevel++; levelMaxDistance += 1000; 
-        resetLevelState(); levelScreen.style.display = 'none'; 
+        resetLevelState(); 
         startSequence(false); 
     }
 
     function goHome() {
         gameActive = false; isPaused = false; isCountingDown = false; stopMusic();
         uiLayer.style.display = 'none'; menuContent.style.display = 'none'; menuOpen = false; menuBtn.innerText = "☰";
-        startScreen.style.display = 'flex'; gameOverScreen.style.display = 'none'; levelScreen.style.display = 'none'; howToScreen.style.display = 'none'; shopScreen.style.display = 'none';
+        startScreen.style.display = 'flex'; gameOverScreen.style.display = 'none'; howToScreen.style.display = 'none'; shopScreen.style.display = 'none';
         resetGameLogic(); pepper.y = groundY; pepper.dy = 0; zoomLevel = 3.5;
     }
 
     // --- SHOP SYSTEM ---
     const hatData = {
-        none: { name: "No Hat", cost: 0, perk: "None", icon: "🐺" },
+        none: { name: "No Hat", cost: 0, perk: "None", canvasId: 'shop-cvs-none' },
         cap: { name: "Red Cap", cost: 50, perk: "2x 🦴", icon: "🧢" },
         tophat: { name: "Top Hat", cost: 100, perk: "Start w/ 🛡️", icon: "🎩" },
         cowboy: { name: "Cowboy", cost: 200, perk: "Half Price Mega", icon: "🤠" }
     };
 
     function openShop() {
-        levelScreen.style.display = 'none';
         shopScreen.style.display = 'flex';
         shopBalance.innerText = score + " 🦴";
         renderShop();
@@ -586,8 +575,13 @@
             let alreadyOwn = pepper.hat === k; 
             if (!isAffordable && !alreadyOwn && k !== 'none') div.classList.add('locked');
 
+            let iconHtml = `<div class="shop-icon">${item.icon || '🐕'}</div>`;
+            if (k === 'none') {
+                iconHtml = `<canvas id="shop-cvs-none" width="60" height="60" style="margin-bottom:10px;"></canvas>`;
+            }
+
             div.innerHTML = `
-                <div class="shop-icon">${item.icon || '🐺'}</div>
+                ${iconHtml}
                 <div class="shop-name">${item.name}</div>
                 <div class="shop-perk">${item.perk}</div>
                 <div class="shop-cost">${item.cost > 0 ? item.cost + ' 🦴' : 'FREE'}</div>
@@ -609,6 +603,14 @@
             };
             shopContainer.appendChild(div);
         });
+
+        // Draw "No Hat" Pepper face
+        let c = document.getElementById('shop-cvs-none');
+        if(c) {
+            let x = c.getContext('2d');
+            x.clearRect(0,0,60,60);
+            drawHeadPreview(x, 30, 30, 'normal');
+        }
     }
 
     // --- DRAWING ---
@@ -733,12 +735,12 @@
         if(isMega) { let hue = (Date.now() / 5) % 360; bodyC = `hsl(${hue}, 80%, 40%)`; white = `hsl(${(hue+180)%360}, 90%, 80%)`; }
 
         function drawHat(ctx) {
-            ctx.save(); ctx.translate(5, -28); // FIXED: Cap position optimized
+            ctx.save(); ctx.translate(5, -28); 
             if(pepper.hat === 'cowboy') { ctx.fillStyle = "#8B4513"; ctx.beginPath(); ctx.ellipse(0, 0, 20, 5, 0, 0, Math.PI*2); ctx.fill(); ctx.fillRect(-10, -15, 20, 15); } 
             else if (pepper.hat === 'tophat') { ctx.fillStyle = "#2d3436"; ctx.fillRect(-12, -25, 24, 25); ctx.fillRect(-18, 0, 36, 4); ctx.fillStyle = "red"; ctx.fillRect(-12, -5, 24, 4); } 
             else if (pepper.hat === 'cap') { 
-                ctx.save(); ctx.translate(0, 3); // Slightly lower
-                ctx.fillStyle = "#d63031"; ctx.beginPath(); ctx.arc(0, 0, 12, Math.PI, 0); ctx.fill(); ctx.fillRect(-12, 0, 24, 2); ctx.fillRect(10, 0, 12, 4); 
+                ctx.save(); ctx.translate(-2, 0); // Tweaked cap
+                ctx.fillStyle = "#d63031"; ctx.beginPath(); ctx.arc(0, 0, 13, Math.PI, 0); ctx.fill(); ctx.fillRect(-12, 0, 24, 3); ctx.fillRect(10, 0, 12, 4); 
                 ctx.restore();
             }
             ctx.restore();
@@ -1012,26 +1014,27 @@
                     let r = Math.random(); 
                     let obj = {x: canvas.width, type: 'poo', stack: 1, y: groundY};
 
-                    // SAFETY: If last was stack, force simple poo
-                    let forceSimplePoo = (lastObstacleType === 'stack');
+                    // SAFETY: If last was stack, FORCE simple ground poo.
+                    // This makes it physically impossible for a Bird to spawn directly after a stack.
+                    let forceSafeSpawn = (lastObstacleType === 'stack');
 
-                    if(!forceSimplePoo && currentLevel >= 3 && r > 0.92) { 
+                    if(!forceSafeSpawn && currentLevel >= 3 && r > 0.92) { 
                         obj.type = 'pond'; nextObstacleTimer = 60; lastObstacleType='pond';
                     } 
-                    else if(!forceSimplePoo && currentLevel >= 2 && r > 0.85) { 
+                    else if(!forceSafeSpawn && currentLevel >= 2 && r > 0.85) { 
                         obj.type = 'stack'; obj.stack = 3; nextObstacleTimer = 100; lastObstacleType='stack';
                     } 
-                    else if(!forceSimplePoo && r > 0.75) { 
+                    else if(!forceSafeSpawn && r > 0.75) { 
                         obj.type = 'hydrant'; nextObstacleTimer = Math.max(30, 80 - score*0.3); lastObstacleType='hydrant';
                     }
-                    else if (!forceSimplePoo && r > 0.60) { 
+                    else if (!forceSafeSpawn && r > 0.60) { 
                         obj.type = 'bird'; 
                         obj.y = (Math.random() > 0.5) ? groundY - 40 : groundY - 110;
                         nextObstacleTimer = Math.max(30, 80 - score*0.3); lastObstacleType='bird';
                         if(Math.random() > 0.3) bones.push({x: canvas.width, y: (obj.y < groundY-80 ? groundY-40 : groundY-150), type: 'white'});
                     }
                     else { 
-                        // Default Poo
+                        // Default Poo (Safe fallback)
                         obj.type = 'poo'; obj.stack = Math.floor(Math.random()*2)+1; 
                         nextObstacleTimer = Math.max(30, 80 - score*0.3); lastObstacleType='poo';
                         if(Math.random() > 0.5) bones.push({x: canvas.width, y: groundY - 120, type: 'white'});
@@ -1056,7 +1059,7 @@
                  }
             }
 
-            if(frame % 300 === 0 && canSpawn(canvas.width)) { if(Math.random() > 0.5) sticks.push({x: canvas.width, y: groundY - 120}); }
+            if(frame % 180 === 0 && canSpawn(canvas.width)) { if(Math.random() > 0.5) sticks.push({x: canvas.width, y: groundY - 120}); }
         }
 
         for(let i=obstacles.length-1; i>=0; i--) {
@@ -1137,13 +1140,14 @@
 
     function completeLevel() { 
         if(isDead) return;
-        levelFinished = true; playSfx('levelup'); levelScreen.style.display = 'flex'; stopMusic(); 
+        levelFinished = true; playSfx('levelup'); 
+        stopMusic();
+        setTimeout(openShop, 1000); // Wait 1 sec then open shop automatically
     }
     
     function gameOver(reason) { 
         isDead = true;
         gameActive = false; stopMusic(); 
-        if(score > highScore) { highScore = score; localStorage.setItem('pepperHighScore', highScore); highScoreEl.innerText = "BEST: " + highScore + " 🦴"; } 
         endScoreEl.innerText = score; 
         if(difficulty === 'baby') { retryBtn.innerText = "RETRY LEVEL (BABY MODE)"; } else { retryBtn.innerText = "TRY AGAIN"; }
         if(reason === 'mega-hydrant') { goTitle.innerText = "STINKY!"; goMsg.innerText = "EVEN MEGA PEPPER HAS TO HOP A HYDRANT!"; goCanvas.style.display = 'block'; let gCtx = goCanvas.getContext('2d'); gCtx.clearRect(0,0,150,100); drawHydrant(gCtx, 75, 80); } else { goTitle.innerText = "GAME OVER!"; goMsg.innerText = ""; goCanvas.style.display = 'none'; } 
@@ -1156,7 +1160,6 @@
         else if (pepper.canDoubleJump) { pepper.dy = DOUBLE_JUMP_FORCE; pepper.canDoubleJump = false; playSfx('doublejump'); spawnParticles(150, pepper.y, "white", 5); } 
     }
 
-    highScoreEl.innerText = "BEST: " + highScore + " 🦴";
     window.addEventListener('touchstart', (e) => { if(e.target.className.includes('btn') || e.target.className.includes('menu') || menuOpen || e.target.closest('.diff-card') || e.target.closest('.shop-item')) return; if(e.target !== menuBtn) { e.preventDefault(); handleInput(); } }, {passive: false});
     window.addEventListener('mousedown', (e) => { if(e.target.className.includes('btn') || e.target.className.includes('menu') || menuOpen || e.target.closest('.diff-card') || e.target.closest('.shop-item')) return; if(e.target !== menuBtn) handleInput(); });
 
