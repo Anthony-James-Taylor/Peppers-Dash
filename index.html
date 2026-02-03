@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V39</title>
+    <title>Pepper's Doo-Doo Dash V40</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        /* CORE RESET & LAYOUT */
+        [cite_start]/* CORE RESET & LAYOUT [cite: 1] */
         body { margin: 0; overflow: hidden; background: #1a1a1a; font-family: 'Montserrat', sans-serif; touch-action: none; user-select: none; -webkit-user-select: none; }
         canvas { display: block; }
         
@@ -267,14 +267,14 @@
     let frame = 0;
     let score = 0; 
     let levelStartScore = 0;
-    let speed = 9; // SLOWER START SPEED
+    let speed = 9; 
     let baseSpeed = 9;
     let groundY = 0; 
     let shakeAmount = 0;
     let zoomLevel = 3.5;
     let currentLevel = 1;
     let levelDistance = 0;
-    let levelMaxDistance = 2000; 
+    let levelMaxDistance = 4000; // INCREASED LEVEL LENGTH
     let levelFinished = false; 
     let isMuted = false;
     let menuOpen = false;
@@ -764,9 +764,9 @@
             updateEntities();
         } else if (levelVictoryAnim) {
             frame++;
-            pepper.x += 15; // Move dog off screen
-            updateEntities();
-            if(pepper.x > canvas.width + 100) { completeLevel(); levelVictoryAnim = false; }
+            pepper.x += 10; // Forced Run
+            updateEntities(); // Keep animating flies/coins
+            if(pepper.x > canvas.width + 50) { completeLevel(); levelVictoryAnim = false; }
         }
 
         // 2. Rendering
@@ -808,84 +808,54 @@
         if(finishLine) {
             finishLine.x -= speed;
             if(finishLine.x < 150 && !levelFinished && !isDead) { 
-                levelFinished = true; levelVictoryAnim = true; pepper.x = 150; 
+                levelFinished = true; 
+                gameActive = false; // LOCK CONTROLS
+                levelVictoryAnim = true; // FORCE RUN
+                pepper.x = 150; 
+                playSfx('levelup');
             }
         }
     }
 
-    // --- IMPROVED SPAWN MANAGER (FIXES CLUSTERING & VARIETY) ---
+    // --- SPAWN MANAGER ---
     function spawnManager() {
         if(finishLine || levelFinished) return;
-
-        // Move the "allowed spawn point" to the left as the world moves
         nextSpawnAllowedX -= speed;
-        
-        // If the right edge of the screen is past the allowed spawn point, we can spawn something new
         if(canvas.width > nextSpawnAllowedX) {
             let spawnChance = Math.random();
             let spawnedType = null;
-            let objectWidth = 0; // Represents the visual width of the object + buffer
+            let objectWidth = 0; 
             
             // PRIORITY 1: OBSTACLES (4% chance)
             if(spawnChance < 0.04) {
                 let r = Math.random();
                 let obj = {x: canvas.width, type: 'poo', stack: 1, y: groundY};
-                
-                if(currentLevel >= 3 && r > 0.92) { 
-                    obj.type = 'pond'; objectWidth = 250; 
-                } 
-                else if(currentLevel >= 2 && r > 0.85) { 
-                    obj.type = 'stack'; obj.stack = 3; objectWidth = 100; 
-                } 
-                else if(r > 0.75) { 
-                    obj.type = 'hydrant'; objectWidth = 60; 
-                }
-                else if (r > 0.60) { 
-                    obj.type = 'bird'; obj.y = (Math.random() > 0.5) ? groundY - 40 : groundY - 110; objectWidth = 60; 
-                }
-                else { 
-                    obj.type = 'poo'; obj.stack = Math.floor(Math.random()*2)+1; objectWidth = 60; 
-                }
-                
-                obstacles.push(obj);
-                spawnedType = 'obstacle';
+                if(currentLevel >= 3 && r > 0.92) { obj.type = 'pond'; objectWidth = 250; } 
+                else if(currentLevel >= 2 && r > 0.85) { obj.type = 'stack'; obj.stack = 3; objectWidth = 100; } 
+                else if(r > 0.75) { obj.type = 'hydrant'; objectWidth = 60; }
+                else if (r > 0.60) { obj.type = 'bird'; obj.y = (Math.random() > 0.5) ? groundY - 40 : groundY - 110; objectWidth = 60; }
+                else { obj.type = 'poo'; obj.stack = Math.floor(Math.random()*2)+1; objectWidth = 60; }
+                obstacles.push(obj); spawnedType = 'obstacle';
             }
-            
-            // PRIORITY 2: BONES (High chance if no obstacle)
+            // PRIORITY 2: BONES
             else if (spawnChance > 0.95) {
                 let h = Math.random();
-                let bY = groundY - 40; 
-                if(h > 0.5) bY = groundY - 100;
-                if(h > 0.85) bY = groundY - 180; 
+                let bY = groundY - 40; if(h > 0.5) bY = groundY - 100; if(h > 0.85) bY = groundY - 180; 
                 let bType = 'white';
                 if(Math.random() > 0.98 && magnetCooldown <= 0) { bType = 'magnet'; magnetCooldown = 2700; } 
                 else if(Math.random() > 0.9) bType = 'gold';
-                
-                bones.push({x: canvas.width, y: bY, type: bType});
-                spawnedType = 'bone';
-                objectWidth = 40;
+                bones.push({x: canvas.width, y: bY, type: bType}); spawnedType = 'bone'; objectWidth = 40;
             }
-
-            // PRIORITY 3: STICKS (Rare)
+            // PRIORITY 3: STICKS
             else if (spawnChance > 0.4 && spawnChance < 0.42) {
-                // Random height for sticks now
                 let sY = groundY - (100 + Math.random() * 60); 
-                sticks.push({x: canvas.width, y: sY});
-                spawnedType = 'stick';
-                objectWidth = 40;
+                sticks.push({x: canvas.width, y: sY}); spawnedType = 'stick'; objectWidth = 40;
             }
 
-            // GAP CALCULATION
             if (spawnedType) {
-                // Random gap between 300 and 900
                 let rngGap = 300 + Math.random() * 600; 
-                
                 nextSpawnAllowedX = canvas.width + objectWidth + rngGap;
-                
-                // Add extra breathing room after big obstacles
-                if(spawnedType === 'obstacle' && objectWidth > 100) {
-                    nextSpawnAllowedX += 200; 
-                }
+                if(spawnedType === 'obstacle' && objectWidth > 100) nextSpawnAllowedX += 200; 
             }
         }
     }
@@ -903,21 +873,19 @@
             });
         }
 
-        // UPDATE OBSTACLES
+        // UPDATE OBSTACLES (Slightly smaller hitboxes)
         for(let i=obstacles.length-1; i>=0; i--) {
             let o = obstacles[i];
             if(!levelFinished) o.x -= speed;
             
             let hit = false;
-            // Precise Collision Boxes
-            if(o.type === 'bird' && Math.abs(150-o.x) < 25 && Math.abs(pepper.y - o.y) < 25) hit = true;
-            if(o.type === 'poo' && Math.abs(150-o.x) < 20 && pepper.y > groundY-(o.stack*35)+15) hit=true;
+            if(o.type === 'bird' && Math.abs(150-o.x) < 20 && Math.abs(pepper.y - o.y) < 20) hit = true;
+            if(o.type === 'poo' && Math.abs(150-o.x) < 15 && pepper.y > groundY-(o.stack*35)+15) hit=true;
             if(o.type === 'hydrant' && Math.abs(150-o.x) < 15 && pepper.y > groundY-30) hit=true; 
-            if(o.type === 'stack' && Math.abs(150-o.x) < 20 && pepper.y > groundY-105) hit=true;
+            if(o.type === 'stack' && Math.abs(150-o.x) < 15 && pepper.y > groundY-105) hit=true;
             if(o.type === 'pond' && o.x < 150+10 && o.x > 150-90 && pepper.y > groundY - 5) hit=true;
 
             if(hit && !isDead && !levelVictoryAnim) {
-                // Collision Logic
                 if(o.type === 'hydrant' || o.type === 'pond') {
                      if(o.type === 'hydrant' && pepper.isMega) { gameOver('mega-hydrant'); } 
                      else { 
@@ -937,12 +905,12 @@
             if(o.x < -300) obstacles.splice(i, 1);
         }
 
-        // UPDATE COLLECTIBLES
+        // UPDATE COLLECTIBLES (Larger Hitboxes)
         for(let i=sticks.length-1; i>=0; i--) {
             let s = sticks[i];
             if(!levelFinished) s.x -= speed;
-            // FIXED STICK HITBOX: Increased Y tolerance
-            if(!isDead && Math.abs(150-s.x)<50 && Math.abs(pepper.y-40-s.y)<60) {
+            // HUGE HITBOX FOR STICKS
+            if(!isDead && Math.abs(150-s.x)<60 && Math.abs(pepper.y-40-s.y)<100) {
                 if(difficulty !== 'death') {
                     pepper.sticks++; playSfx('collect'); spawnParticles(s.x, s.y, "#00b894", 15);
                     if(pepper.sticks>=5) { pepper.hasShield=true; pepper.sticks=0; spawnPopup("STICK SHIELD!", 150, pepper.y-50, "#00b894"); flashScreen('#00b894'); }
@@ -955,7 +923,8 @@
         for(let i=bones.length-1; i>=0; i--) {
             let b = bones[i];
             if(!levelFinished) b.x -= speed;
-            if(!isDead && Math.abs(150-b.x)<40 && Math.abs(pepper.y-25-b.y)<40) {
+            // HUGE HITBOX FOR BONES
+            if(!isDead && Math.abs(150-b.x)<60 && Math.abs(pepper.y-25-b.y)<100) {
                 if(b.type === 'magnet') { 
                     pepper.magnetTimer = 600; playSfx('magnet'); spawnPopup("MAGNET!", b.x, b.y, "#e74c3c"); 
                 } else {
@@ -972,7 +941,7 @@
             } else if(b.x<-100) bones.splice(i,1);
         }
         
-        // Update Environment
+        // Update Environment (Stop moving if level finished)
         bgMountains.forEach(m => { if(!levelFinished) m.x -= speed * 0.05; if(m.x < -300) m.x = canvas.width + 100; });
         bgTrees.forEach(t => { if(!levelFinished) t.x -= speed * 0.2; if(t.x < -50) t.x = canvas.width + Math.random()*300; });
         bgClouds.forEach(c => { c.x -= c.speed; if(c.x < -100) c.x = canvas.width + 100; });
