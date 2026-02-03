@@ -170,46 +170,50 @@
         }
         #start-diff-btn:hover { background: rgba(255,255,255,0.25); }
 
-        /* POKEMON MART SHOP DESIGN (Revised) */
+        /* POKEMON MART SHOP DESIGN (Overhauled) */
         #shop-screen {
             background: #74b9ff; /* Sky blue wall */
-            justify-content: flex-end; 
+            justify-content: flex-end; /* Align contents to bottom */
             padding: 0;
         }
         
-        #shop-shelves {
-            position: absolute; top: 10%; width: 90%; height: 40%;
-            background: #dfe6e9;
-            border: 4px solid #636e72; border-radius: 4px;
-            display: flex; justify-content: center; align-items: center;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
+        #shop-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 60%;
+            background: #5fabdb; /* Wall */
             z-index: 1;
-        }
-
-        /* Shelf Rows */
-        .shelf-row {
-            width: 100%; height: 10px; background: #636e72;
-            position: absolute; left: 0;
+            /* Simple CSS Shelf Pattern */
+            background-image: 
+                linear-gradient(to bottom, #4a89ad 5%, transparent 5%),
+                linear-gradient(to bottom, #4a89ad 5%, transparent 5%),
+                linear-gradient(to right, #4a89ad 1px, transparent 1px);
+            background-size: 100% 80px, 100% 80px, 100px 100%;
+            background-position: 0 20px, 0 60px, 0 0;
         }
 
         #shop-keeper-area {
-            position: absolute; bottom: 35%; width: 100%; height: 30%;
+            position: absolute; top: 15%; width: 100%; height: 45%;
             display: flex; justify-content: center; align-items: flex-end;
             z-index: 2; pointer-events: none;
         }
 
         #shop-counter {
-            width: 100%; height: 35%;
-            background: #b2bec3; /* Counter top */
-            border-top: 8px solid #636e72;
-            z-index: 5;
+            width: 100%; height: 40%;
+            background: #dcdde1; /* Counter top */
+            border-top: 10px solid #b2bec3;
+            z-index: 3;
             position: relative;
             display: flex; flex-direction: column; align-items: center;
             box-shadow: 0 -10px 20px rgba(0,0,0,0.2);
         }
 
+        #shop-counter::after {
+            content:''; position: absolute; bottom: 0; width: 100%; height: 70%;
+            background: #7f8fa6; /* Counter front */
+            border-top: 2px solid #57606f;
+        }
+
         #shop-text-box-container {
-            position: absolute; bottom: 20px; width: 90%; max-width: 600px;
+            position: absolute; bottom: 10px; width: 95%; max-width: 600px;
             background: white; border: 4px solid #2d3436; border-radius: 8px;
             padding: 15px; z-index: 10;
             font-family: 'Press Start 2P', monospace; font-size: 12px; color: #2d3436;
@@ -227,19 +231,20 @@
         }
         #shop-next-btn:active { transform: scale(0.95); box-shadow: 1px 1px 0 #c0392b; }
 
-        .shop-container {
-            display: flex; gap: 30px; z-index: 5;
-            position: absolute; top: 15%; width: 100%; justify-content: center;
+        .shop-items-grid {
+            position: absolute; top: -60px; /* Sit ON the counter */
+            display: flex; gap: 15px; z-index: 5;
+            perspective: 500px;
         }
 
         .shop-item {
-            background: white; border: 3px solid #2d3436; border-radius: 4px;
-            width: 80px; padding: 8px; text-align: center;
+            background: white; border: 3px solid #2d3436; border-radius: 8px;
+            width: 90px; padding: 8px; text-align: center;
             cursor: pointer; transition: transform 0.2s;
-            box-shadow: 0 5px 0px rgba(0,0,0,0.3);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
             display: flex; flex-direction: column; align-items: center;
         }
-        .shop-item.selected { border-color: #00fbff; background: #e0fbfc; transform: translateY(-5px); }
+        .shop-item.selected { border-color: #00fbff; background: #e0fbfc; transform: translateY(-10px); }
         .shop-item.locked { opacity: 0.7; background: #b2bec3; cursor: not-allowed; }
         
         .shop-icon { font-size: 24px; margin-bottom: 5px; }
@@ -350,19 +355,16 @@
     </div>
 
     <div id="shop-screen">
+        <div id="shop-bg"></div>
         <div class="balance-tag" id="shop-balance">0 🦴</div>
         
-        <div id="shop-shelves">
-            <div class="shelf-row" style="top:30%;"></div>
-            <div class="shelf-row" style="top:70%;"></div>
-            <div class="shop-container" id="shop-container"></div>
-        </div>
-
         <div id="shop-keeper-area">
             <canvas id="shopkeeper-canvas" width="200" height="200"></canvas>
         </div>
 
         <div id="shop-counter">
+            <div class="shop-items-grid" id="shop-container"></div>
+            
             <div id="shop-text-box-container">
                 <div id="shop-text">WELCOME! TAKE A LOOK AT MY WARES.</div>
                 <button id="shop-next-btn">NEXT LEVEL</button>
@@ -475,8 +477,8 @@
     let frame = 0;
     let score = 0; 
     let levelStartScore = 0;
-    let speed = 11.5; // Faster Speed!
-    let baseSpeed = 11.5;
+    let speed = 9;
+    let baseSpeed = 9;
     let groundY = 0; 
     let shakeAmount = 0;
     let zoomLevel = 3.5; 
@@ -489,9 +491,8 @@
     let magnetCooldown = 0;
     let isDead = false;
     
-    // GLOBAL SPAWN TRACKER (The "Last Object" position)
-    // Tracks the X position of the last thing spawned (obstacle OR bone) to ensure gaps
-    let lastObjectX = 0;
+    // SPAWN CONTROL
+    let globalSpawnCooldown = 0;
 
     let pepper = {
         x: 100, y: 0, dy: 0,
@@ -516,6 +517,8 @@
     let weatherParticles = [];
     let stars = [];
     let floatTexts = [];
+    let nextStickTimer = 0;
+    let nextBoneTimer = 0;
     let finishLine = null; 
 
     // --- AUDIO ---
@@ -524,9 +527,9 @@
     let musicInterval;
     let step = 0;
     const tracks = { 
-        1: { bass: [82,0,82,98,0,82,110,0,82,0,123,110,98,82,0,146], lead: [0,0,0,0,0,0,0,0, 392,0,329,0,293,0,0,0], tempo: 130 }, 
-        2: { bass: [98,98,196,98,110,110,220,110,123,123,246,123,130,130,261,130], lead: [0,0,0,523,0,0,0,493,0,0,0,440,0,0,392,0], tempo: 110 }, 
-        3: { bass: [82,82,87,87,92,92,98,98,110,110,98,98,92,92,87,87], lead: [329,0,349,0,392,0,440,0,392,0,349,0,329,0,0,0], tempo: 100 } 
+        1: { bass: [82,0,82,98,0,82,110,0,82,0,123,110,98,82,0,146], lead: [0,0,0,0,0,0,0,0, 392,0,329,0,293,0,0,0], tempo: 142 }, 
+        2: { bass: [98,98,196,98,110,110,220,110,123,123,246,123,130,130,261,130], lead: [0,0,0,523,0,0,0,493,0,0,0,440,0,0,392,0], tempo: 120 }, 
+        3: { bass: [82,82,87,87,92,92,98,98,110,110,98,98,92,92,87,87], lead: [329,0,349,0,392,0,440,0,392,0,349,0,329,0,0,0], tempo: 110 } 
     };
     function initAudio() { if (!audioCtx && AudioContext) audioCtx = new AudioContext(); if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }
 
@@ -571,9 +574,9 @@
 
     function resetLevelState() {
         obstacles=[]; sticks=[]; bones=[]; floatTexts=[]; 
-        baseSpeed = (difficulty === 'death') ? 13 : 11.5; speed = baseSpeed;
+        baseSpeed = (difficulty === 'death') ? 11 : 9; speed = baseSpeed;
         levelDistance=0; levelFinished=false; levelVictoryAnim=false; finishLine=null; isDead = false;
-        lastObjectX = 0;
+        globalSpawnCooldown = 0;
         
         levelInd.innerText = "LEVEL " + currentLevel; 
         
@@ -589,7 +592,7 @@
         megaBarFill.style.width = "0%";
         updateMegaText();
 
-        lastObjectX = canvas.width; // Init
+        globalSpawnCooldown = 100; 
         
         bgMountains=[]; for(let i=0; i<3; i++) bgMountains.push({x: i*300});
         bgTrees=[]; for(let i=0; i<5; i++) bgTrees.push({x: i*200});
@@ -625,6 +628,7 @@
 
     // --- SHOP SYSTEM ---
     const hatData = {
+        none: { name: "No Hat", cost: 0, perk: "None", canvasId: 'shop-cvs-none' },
         cap: { name: "Red Cap", cost: 50, perk: "2x 🦴", icon: "🧢" },
         tophat: { name: "Top Hat", cost: 100, perk: "Start w/ 🛡️", icon: "🎩" },
         cowboy: { name: "Cowboy", cost: 200, perk: "Half Price Mega", icon: "🤠" }
@@ -644,31 +648,19 @@
             skFrame++;
             skCtx.clearRect(0,0,200,200);
             
+            // Breathe
             let breathe = Math.sin(skFrame*0.05) * 2;
             
+            // Draw big pepper
             skCtx.save();
-            skCtx.translate(100, 150 + breathe);
-            skCtx.scale(3, 3);
+            skCtx.translate(100, 100 + breathe);
+            skCtx.scale(2.5, 2.5); // Big!
             
-            // Draw Human Shopkeeper
-            skCtx.fillStyle = "#ffccaa"; // Skin
-            skCtx.fillRect(-10, -30, 20, 20); // Head
-            skCtx.fillStyle = "#2d3436"; // Hair/Cap
-            skCtx.fillRect(-12, -32, 24, 6);
-            skCtx.fillRect(-10, -35, 20, 5);
+            // Simple Body
+            skCtx.fillStyle = "#1a1a1a";
+            skCtx.beginPath(); skCtx.ellipse(0, 40, 25, 15, 0, 0, Math.PI*2); skCtx.fill();
             
-            skCtx.fillStyle = "#3498db"; // Shirt
-            skCtx.fillRect(-15, -10, 30, 25);
-            skCtx.fillStyle = "#ecf0f1"; // Apron
-            skCtx.fillRect(-10, -5, 20, 20);
-            
-            // Eyes (Blink)
-            if (skFrame % 150 < 140) {
-                skCtx.fillStyle = "black";
-                skCtx.fillRect(-6, -22, 4, 4);
-                skCtx.fillRect(2, -22, 4, 4);
-            }
-            
+            drawHeadPreview(skCtx, 0, 0, 'normal');
             skCtx.restore();
             
             requestAnimationFrame(animateShopkeeper);
@@ -680,7 +672,7 @@
 
     function renderShop() {
         shopContainer.innerHTML = '';
-        const keys = ['cap', 'tophat', 'cowboy'];
+        const keys = ['none', 'cap', 'tophat', 'cowboy'];
         
         keys.forEach(k => {
             let item = hatData[k];
@@ -691,20 +683,30 @@
             let isAffordable = score >= item.cost;
             let alreadyOwn = pepper.hat === k; 
             
-            if (!isAffordable && !alreadyOwn) {
+            if (!isAffordable && !alreadyOwn && k !== 'none') {
                 div.classList.add('locked');
             } else {
                 div.classList.remove('locked');
             }
 
+            let iconHtml = `<div class="shop-icon">${item.icon || ''}</div>`;
+            if (k === 'none') {
+                iconHtml = `<canvas id="shop-cvs-none" width="60" height="60" style="margin-bottom:10px;"></canvas>`;
+            }
+
             div.innerHTML = `
-                <div class="shop-icon">${item.icon}</div>
+                ${iconHtml}
                 <div class="shop-name">${item.name}</div>
                 <div class="shop-perk">${item.perk}</div>
-                <div class="shop-cost">${alreadyOwn ? 'OWNED' : (item.cost + ' 🦴')}</div>
+                <div class="shop-cost">${alreadyOwn ? 'OWNED' : (item.cost > 0 ? item.cost + ' 🦴' : 'FREE')}</div>
             `;
             
             div.onclick = () => {
+                if (k === 'none') { 
+                    pepper.hat = 'none'; 
+                    shopText.innerText = "SOMETIMES NATURAL IS BEST!";
+                    renderShop(); return; 
+                }
                 if (pepper.hat === k) {
                     shopText.innerText = "YOU ARE ALREADY WEARING THAT!";
                     return; 
@@ -725,6 +727,13 @@
             };
             shopContainer.appendChild(div);
         });
+
+        let c = document.getElementById('shop-cvs-none');
+        if(c) {
+            let x = c.getContext('2d');
+            x.clearRect(0,0,60,60);
+            drawHeadPreview(x, 30, 30, 'normal');
+        }
     }
 
     // --- DRAWING ---
@@ -1131,53 +1140,69 @@
         }
         if(levelVictoryAnim && pepper.x > canvas.width + 100) { completeLevel(); levelVictoryAnim = false; }
 
-        // --- UNIFIED SPAWNING LOGIC (ANTI-CLUSTER) ---
+        // --- NEW SPAWNING LOGIC (FIXED OVERLAP) ---
         if(!finishLine && gameActive && !isPaused && !isCountingDown) {
             
-            // Only try to spawn if we are 400px away from the last thing
-            if(canvas.width - lastObjectX > 400) {
-                let spawnChance = Math.random();
-                
-                // OBSTACLES (Higher Priority)
-                if(spawnChance < 0.04) { 
+            // COOLDOWN LOGIC: If a stack spawned recently, force a delay.
+            if (globalSpawnCooldown > 0) {
+                globalSpawnCooldown--;
+            } else {
+                // Only try to spawn if cooldown is 0
+                if(Math.random() < 0.05) { // Spawn Chance per frame when cooled down
                     let r = Math.random(); 
                     let obj = {x: canvas.width, type: 'poo', stack: 1, y: groundY};
+                    let cooldownSet = 40; // Default gap
 
-                    if(currentLevel >= 3 && r > 0.92) { obj.type = 'pond'; } 
-                    else if(currentLevel >= 2 && r > 0.85) { obj.type = 'stack'; obj.stack = 3; } 
-                    else if(r > 0.75) { obj.type = 'hydrant'; }
+                    if(currentLevel >= 3 && r > 0.92) { 
+                        obj.type = 'pond'; cooldownSet = 60;
+                    } 
+                    else if(currentLevel >= 2 && r > 0.85) { 
+                        obj.type = 'stack'; obj.stack = 3; 
+                        cooldownSet = 120; // FORCE HUGE GAP AFTER STACK (approx 2 seconds)
+                    } 
+                    else if(r > 0.75) { 
+                        obj.type = 'hydrant'; cooldownSet = 50;
+                    }
                     else if (r > 0.60) { 
                         obj.type = 'bird'; 
                         obj.y = (Math.random() > 0.5) ? groundY - 40 : groundY - 110;
+                        cooldownSet = 50;
+                        if(Math.random() > 0.3) bones.push({x: canvas.width, y: (obj.y < groundY-80 ? groundY-40 : groundY-150), type: 'white'});
                     }
-                    else { obj.type = 'poo'; obj.stack = Math.floor(Math.random()*2)+1; }
+                    else { 
+                        // Poo
+                        obj.type = 'poo'; obj.stack = Math.floor(Math.random()*2)+1; 
+                        cooldownSet = 40;
+                        if(Math.random() > 0.5) bones.push({x: canvas.width, y: groundY - 120, type: 'white'});
+                    }
                     
                     obstacles.push(obj);
-                    lastObjectX = canvas.width;
+                    globalSpawnCooldown = cooldownSet;
                 }
-                
-                // BONES (Only if no obstacle spawned)
-                else if (spawnChance > 0.95) {
-                     let h = Math.random();
-                     let bY = groundY - 40; 
-                     if(h > 0.5) bY = groundY - 100; 
-                     if(h > 0.85) bY = groundY - 180; 
-                     let bType = 'white';
-                     if(Math.random() > 0.98 && magnetCooldown <= 0) { bType = 'magnet'; magnetCooldown = 2700; } 
-                     else if(Math.random() > 0.9) bType = 'gold';
-                     bones.push({x: canvas.width, y: bY, type: bType});
-                     lastObjectX = canvas.width;
-                }
+            }
+            
+            nextBoneTimer--;
+            if(nextBoneTimer <= 0) {
+                 // Bones can spawn freely, they don't block movement
+                 let h = Math.random();
+                 let bY = groundY - 40; 
+                 if(h > 0.5) bY = groundY - 100; 
+                 if(h > 0.85) bY = groundY - 180; 
+                 let bType = 'white';
+                 if(Math.random() > 0.98 && magnetCooldown <= 0) { bType = 'magnet'; magnetCooldown = 2700; } 
+                 else if(Math.random() > 0.9) bType = 'gold';
+                 bones.push({x: canvas.width, y: bY, type: bType});
+                 nextBoneTimer = 40 + Math.random() * 80; 
+            }
 
-                // STICKS
-                else if (spawnChance > 0.4 && spawnChance < 0.42) {
-                    sticks.push({x: canvas.width, y: groundY - 120});
-                    lastObjectX = canvas.width;
-                }
+            // More frequent sticks
+            nextStickTimer--;
+            if(nextStickTimer <= 0) {
+                if(Math.random() > 0.5) sticks.push({x: canvas.width, y: groundY - 120});
+                nextStickTimer = 150 + Math.random() * 200; // ~2.5 - 5 seconds
             }
         }
 
-        // UPDATE POSITIONS
         for(let i=obstacles.length-1; i>=0; i--) {
             let o = obstacles[i]; if(!levelFinished && gameActive && !isPaused && !isCountingDown) o.x -= speed;
             if(o.type === 'poo') drawDooDoo(ctx, o.x, groundY, o.stack);
@@ -1187,11 +1212,12 @@
             else if(o.type === 'pond') { ctx.fillStyle = "rgba(241, 196, 15, 0.8)"; ctx.beginPath(); ctx.ellipse(o.x, groundY+5, 100, 15, 0, 0, Math.PI*2); ctx.fill(); }
             
             let hit = false;
+            // TIGHTER HITBOXES
             if(o.type === 'bird') { if(Math.abs(150-o.x) < 25 && Math.abs(pepper.y - o.y) < 25) hit = true; }
             if(o.type === 'poo' && Math.abs(150-o.x)<20 && pepper.y > groundY-(o.stack*35)+15) hit=true;
-            if(o.type === 'hydrant' && Math.abs(150-o.x)<15 && pepper.y > groundY-30) hit=true; 
+            if(o.type === 'hydrant' && Math.abs(150-o.x)<15 && pepper.y > groundY-35) hit=true; // Reduced width
             if(o.type === 'stack' && Math.abs(150-o.x)<20 && pepper.y > groundY-105) hit=true; 
-            if(o.type === 'pond' && o.x < 150+10 && o.x > 150-90 && pepper.y > groundY - 5) hit=true;
+            if(o.type === 'pond' && o.x < 150+10 && o.x > 150-90 && pepper.y > groundY - 5) hit=true; // Tighter pond
 
             if(hit && gameActive && !isPaused && !isCountingDown && !levelVictoryAnim) {
                 if(o.type === 'hydrant' || o.type === 'pond') {
@@ -1235,10 +1261,6 @@
                 }
                 bones.splice(i,1);
             } else if(b.x<-100) bones.splice(i,1);
-        }
-
-        if(lastObjectX > -100 && !levelFinished && gameActive && !isPaused && !isCountingDown) {
-             lastObjectX -= speed;
         }
 
         if (gameActive && !isPaused) {
