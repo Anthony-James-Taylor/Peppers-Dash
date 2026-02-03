@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V16</title>
+    <title>Pepper's Doo-Doo Dash V17</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     
@@ -84,9 +84,10 @@
         }
         #game-over, #level-screen, #how-to-screen, #info-modal, #difficulty-screen { display: none; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); }
         
-        #start-screen { background: none; backdrop-filter: none; z-index: 50; }
-
-        .title-box { position: absolute; top: 10%; width: 100%; animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2; pointer-events: none; }
+        /* Start Screen Layout */
+        #start-screen { background: none; backdrop-filter: none; z-index: 50; gap: 20px; }
+        
+        .title-box { animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2; pointer-events: none; margin-bottom: 100px; }
         h1 { 
             color: #fff; font-size: 50px; margin: 0; line-height: 0.9; font-weight: 900; 
             letter-spacing: -3px; text-transform: uppercase;
@@ -100,13 +101,21 @@
 
         .btn { 
             background: white; color: #2d3436; padding: 20px 60px; border-radius: 16px; 
-            font-size: 22px; font-weight: 900; margin-top: 20px; pointer-events: auto;
+            font-size: 22px; font-weight: 900; pointer-events: auto;
             box-shadow: 0 10px 40px rgba(0,0,0,0.4); border: none;
             cursor: pointer; animation: breathe 2s infinite ease-in-out;
             position: relative; z-index: 300; transition: transform 0.2s;
         }
         .btn:active { transform: scale(0.95); background: #dfe6e9; animation: none; }
         .btn:hover { transform: scale(1.05); }
+
+        #start-diff-btn {
+            background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(5px);
+            border: 2px solid rgba(255,255,255,0.5); color: white;
+            padding: 12px 30px; border-radius: 12px; font-size: 14px; font-weight: 700;
+            cursor: pointer; pointer-events: auto; z-index: 300; margin-top: -10px;
+            text-transform: uppercase;
+        }
 
         /* Difficulty Cards */
         .diff-container { display: flex; flex-direction: column; gap: 15px; width: 95%; max-height: 85vh; overflow-y: auto; align-items: center; }
@@ -131,7 +140,7 @@
     <div id="menu-btn">☰</div>
     <div id="menu-content">
         <div class="menu-item" id="menu-mute">🔊 SOUND: ON</div>
-        <div class="menu-item" id="menu-diff">😈 DIFFICULTY</div>
+        <div class="menu-item" id="menu-home">🏠 RETURN TO HOME</div>
         <div class="menu-item" id="menu-help">❓ HOW TO PLAY</div>
     </div>
 
@@ -156,7 +165,8 @@
 
     <div id="start-screen">
         <div class="title-box"><h1>PEPPER'S<br>DOO-DOO DASH</h1></div>
-        <button class="btn" id="start-btn" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">TAP TO START</button>
+        <button class="btn" id="start-btn">TAP TO START</button>
+        <button id="start-diff-btn">DIFFICULTY: BRING 'EM ON</button>
     </div>
 
     <div id="difficulty-screen">
@@ -244,7 +254,7 @@
     const menuBtn = document.getElementById('menu-btn');
     const menuContent = document.getElementById('menu-content');
     const menuMute = document.getElementById('menu-mute');
-    const menuDiff = document.getElementById('menu-diff');
+    const menuHome = document.getElementById('menu-home');
     const menuHelp = document.getElementById('menu-help');
     
     const startScreen = document.getElementById('start-screen');
@@ -256,6 +266,7 @@
     
     // Buttons
     const startBtn = document.getElementById('start-btn');
+    const startDiffBtn = document.getElementById('start-diff-btn');
     const retryBtn = document.getElementById('retry-btn');
     const nextLevelBtn = document.getElementById('next-level-btn');
     const closeHelpBtn = document.getElementById('close-help-btn');
@@ -332,6 +343,7 @@
     let bgTrees = [];
     let bgClouds = [];
     let weatherParticles = [];
+    let stars = [];
     let nextObstacleTimer = 0;
     let finishLine = null; 
 
@@ -349,28 +361,58 @@
 
     // --- INPUT HANDLERS ---
     function attachFastClick(element, action) {
-        element.addEventListener('touchstart', (e) => { e.stopPropagation(); e.preventDefault(); action(); }, {passive:false});
-        element.addEventListener('mousedown', (e) => { e.stopPropagation(); action(); });
+        element.addEventListener('touchstart', (e) => { e.stopPropagation(); e.preventDefault(); playClick(); action(); }, {passive:false});
+        element.addEventListener('mousedown', (e) => { e.stopPropagation(); playClick(); action(); });
     }
+    
+    // Menu Buttons
     attachFastClick(menuBtn, () => { menuOpen = !menuOpen; menuContent.style.display = menuOpen ? "flex" : "none"; menuBtn.innerText = menuOpen ? "✕" : "☰"; });
     attachFastClick(menuMute, () => { isMuted = !isMuted; menuMute.innerText = isMuted ? "🔇 SOUND: OFF" : "🔊 SOUND: ON"; if(isMuted) stopMusic(); else if(gameActive && !isPaused) startMusic(); });
-    attachFastClick(menuDiff, () => { menuContent.style.display = 'none'; menuOpen = false; menuBtn.innerText = "☰"; openDifficultyScreen(); });
+    attachFastClick(menuHome, () => { goHome(); });
     attachFastClick(menuHelp, () => { menuContent.style.display = 'none'; menuOpen = false; menuBtn.innerText = "☰"; howToScreen.style.display = 'flex'; });
+    
+    // Game Buttons
     attachFastClick(closeHelpBtn, () => { howToScreen.style.display = 'none'; });
     attachFastClick(startBtn, () => { startGame(); });
+    attachFastClick(startDiffBtn, () => { openDifficultyScreen(); });
     attachFastClick(retryBtn, () => { if(difficulty === 'baby') restartLevel(); else resetGame(); });
     attachFastClick(nextLevelBtn, () => { goToNextLevel(); });
     attachFastClick(modalBtn, () => { closeModal(); });
     attachFastClick(closeDiffBtn, () => { difficultyScreen.style.display = 'none'; });
 
     function openDifficultyScreen() { difficultyScreen.style.display = 'flex'; renderDiffPreviews(); }
+    
     function setDifficulty(mode) {
         difficulty = mode;
         document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
         document.getElementById('diff-'+mode).classList.add('selected');
+        
+        let label = "DIFFICULTY: BRING 'EM ON";
+        if(mode === 'baby') label = "DIFFICULTY: BABY MODE";
+        if(mode === 'death') label = "DIFFICULTY: DEATH MODE";
+        startDiffBtn.innerText = label;
+
         if(mode === 'death') streakLabel.innerText = "I AM DEATH! (NO SHIELDS)";
         else streakLabel.innerText = "MEGA MODE! DODGE 50 DOO-DOOS TO UNLOCK";
     }
+
+    function goHome() {
+        gameActive = false; isPaused = false;
+        stopMusic();
+        uiLayer.style.display = 'none';
+        menuContent.style.display = 'none';
+        menuOpen = false; 
+        menuBtn.innerText = "☰";
+        
+        startScreen.style.display = 'flex';
+        gameOverScreen.style.display = 'none';
+        levelScreen.style.display = 'none';
+        howToScreen.style.display = 'none';
+        
+        resetGameLogic();
+        pepper.y = groundY; // Fix husky position
+    }
+
     function renderDiffPreviews() {
         ['baby', 'normal', 'death'].forEach(mode => {
             let cvs = document.getElementById('cvs-'+mode);
@@ -379,6 +421,7 @@
             drawHeadPreview(c, 50, 50, mode);
         });
     }
+    
     function drawHeadPreview(c, x, y, mode) {
         c.save(); c.translate(x, y); 
         let bodyC = (mode==='death') ? "#2d3436" : "#1a1a1a";
@@ -392,18 +435,10 @@
         c.fillStyle = "white"; c.beginPath(); c.arc(-12, -7, 2, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(8, -7, 2, 0, Math.PI*2); c.fill();
 
         if(mode === 'normal') { 
-            // Aviator Glasses
-            c.fillStyle = "rgba(0,0,0,0.8)";
-            c.strokeStyle = "#FFD700"; // Gold
-            c.lineWidth = 1.5;
-            
-            // Left Lens
+            c.fillStyle = "rgba(0,0,0,0.8)"; c.strokeStyle = "#FFD700"; c.lineWidth = 1.5;
             c.beginPath(); c.moveTo(-2, -5); c.bezierCurveTo(-15, -5, -18, 5, -10, 10); c.bezierCurveTo(-2, 10, -2, -5, -2, -5); c.fill(); c.stroke();
-            // Right Lens
             c.beginPath(); c.moveTo(2, -5); c.bezierCurveTo(15, -5, 18, 5, 10, 10); c.bezierCurveTo(2, 10, 2, -5, 2, -5); c.fill(); c.stroke();
-            // Bridge
-            c.beginPath(); c.moveTo(-2, -5); c.lineTo(2, -5); c.stroke();
-            c.beginPath(); c.moveTo(-2, -8); c.lineTo(2, -8); c.stroke();
+            c.beginPath(); c.moveTo(-2, -5); c.lineTo(2, -5); c.stroke(); c.beginPath(); c.moveTo(-2, -8); c.lineTo(2, -8); c.stroke();
         }
         if(mode === 'baby') { c.strokeStyle = "pink"; c.lineWidth = 6; c.beginPath(); c.arc(0, -5, 32, Math.PI, 0); c.stroke(); c.fillStyle = "#FFD700"; c.beginPath(); c.arc(0, 18, 6, 0, Math.PI*2); c.fill(); } 
         else { c.strokeStyle = "black"; c.lineWidth = 2; c.beginPath(); c.arc(0, 12, 10, 0, Math.PI); c.stroke(); }
@@ -415,7 +450,8 @@
     function synth(freq, type, vol, decay, wah=false) { if (!audioCtx || isMuted) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); const filter = audioCtx.createBiquadFilter(); osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime); if (wah) { filter.type = 'lowpass'; filter.Q.value = 8; filter.frequency.setValueAtTime(300, audioCtx.currentTime); filter.frequency.linearRampToValueAtTime(1200, audioCtx.currentTime + 0.05); filter.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + decay); } else { filter.type = 'allpass'; } const now = audioCtx.currentTime; gain.gain.setValueAtTime(0, now); gain.gain.linearRampToValueAtTime(vol, now + 0.01); gain.gain.exponentialRampToValueAtTime(0.001, now + decay); osc.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + decay + 0.1); }
     function playSnare() { if (!audioCtx || isMuted) return; const b = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.1, audioCtx.sampleRate); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; const n = audioCtx.createBufferSource(); n.buffer = b; const f = audioCtx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 1500; const g = audioCtx.createGain(); g.gain.setValueAtTime(0.3, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08); n.connect(f); f.connect(g); g.connect(audioCtx.destination); n.start(); }
     function playBark() { if (!audioCtx || isMuted) return; const osc = audioCtx.createOscillator(); osc.type = 'triangle'; const gain = audioCtx.createGain(); osc.frequency.setValueAtTime(300, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.15); gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.2); }
-    
+    function playClick() { if (!audioCtx || isMuted) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.frequency.setValueAtTime(800, audioCtx.currentTime); gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05); osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.06); }
+
     function startMusic() { 
         if (musicInterval || isMuted) return; 
         let track = tracks[currentLevel] || tracks[3]; 
@@ -435,7 +471,7 @@
                 // Dynamic Halfway Music
                 if(levelDistance > levelMaxDistance/2) {
                     let l = track.lead[tick];
-                    if(l) synth(l*2, 'square', 0.1, 0.15); // Funky High Lead
+                    if(l) synth(l*2, 'square', 0.1, 0.15); 
                 }
             } 
             step++; 
@@ -461,7 +497,7 @@
 
         // START SCREEN
         if(!gameActive) {
-            ctx.scale(1.5, 1.5); ctx.translate(0, -30);
+            ctx.scale(1.5, 1.5); ctx.translate(0, -50); // Move husky up to clear buttons
             
             // Shadows
             ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.beginPath(); ctx.ellipse(0, 50, 30, 8, 0, 0, Math.PI*2); ctx.fill();
@@ -483,11 +519,10 @@
             ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(-12, -7, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(8, -7, 2, 0, Math.PI*2); ctx.fill();
             
             if(difficulty === 'normal') { 
-                // Aviators
-                ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 1.5;
-                ctx.beginPath(); ctx.moveTo(-2, -5); ctx.bezierCurveTo(-15, -5, -18, 5, -10, 10); ctx.bezierCurveTo(-2, 10, -2, -5, -2, -5); ctx.fill(); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(2, -5); ctx.bezierCurveTo(15, -5, 18, 5, 10, 10); ctx.bezierCurveTo(2, 10, 2, -5, 2, -5); ctx.fill(); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(-2, -5); ctx.lineTo(2, -5); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-2, -8); ctx.lineTo(2, -8); ctx.stroke();
+                ctx.fillStyle = "black"; 
+                ctx.beginPath(); ctx.moveTo(-18,-8); ctx.lineTo(-2,-8); ctx.lineTo(-2,0); ctx.quadraticCurveTo(-10,4,-18,0); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(18,-8); ctx.lineTo(2,-8); ctx.lineTo(2,0); ctx.quadraticCurveTo(10,4,18,0); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(-2,-8); ctx.quadraticCurveTo(0,-12,2,-8); ctx.stroke();
             }
             if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, -5, 32, Math.PI, 0); ctx.stroke(); ctx.fillStyle="#FFD700"; ctx.beginPath(); ctx.arc(0, 20, 6, 0, Math.PI*2); ctx.fill(); }
             else { ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 12, 10, 0, Math.PI); ctx.stroke(); ctx.fillStyle = "pink"; ctx.beginPath(); ctx.arc(0, 22, 6, 0, Math.PI, false); ctx.fill(); }
@@ -611,6 +646,16 @@
         ctx.fillStyle = "rgba(255,255,255,0.3)";
         bgClouds.forEach(c => { if(!isPaused) c.x -= c.speed; if(c.x < -100) c.x = canvas.width + 100; ctx.beginPath(); ctx.ellipse(c.x, c.y, 40, 20, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(c.x+20, c.y-10, 30, 20, 0, 0, Math.PI*2); ctx.fill(); });
 
+        // Stars (Night Level)
+        if(currentLevel % 3 === 0) {
+            ctx.fillStyle = "white";
+            stars.forEach(s => {
+                let blink = Math.sin(frame*0.1 + s.x) > 0.8 ? 1 : 0.5;
+                ctx.globalAlpha = blink; ctx.fillRect(s.x, s.y, s.size, s.size);
+            });
+            ctx.globalAlpha = 1;
+        }
+
         ctx.fillStyle = curStyle.track; ctx.fillRect(0, groundY, canvas.width, GROUND_H);
         ctx.fillStyle = "rgba(255,255,255,0.05)"; let stripeOffset = (frame * speed) % 100; for(let i = -100; i < canvas.width + 100; i+=100) { ctx.beginPath(); ctx.moveTo(i - stripeOffset, groundY); ctx.lineTo(i - stripeOffset + 40, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 90, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 50, groundY); ctx.fill(); }
         ctx.fillStyle = curStyle.grass; ctx.fillRect(0, groundY, canvas.width, 15);
@@ -685,7 +730,6 @@
             if(o.type === 'hydrant' && Math.abs(150-o.x)<25 && pepper.y > groundY-35) hit=true;
             if(o.type === 'stack' && Math.abs(150-o.x)<25 && pepper.y > groundY-105) hit=true; 
             
-            // Tightened Pond Hitbox
             if(o.type === 'pond' && o.x < 150+10 && o.x > 150-100 && pepper.y > groundY - 5) hit=true;
 
             if(!hit && !o.passed && !o.nearMissAwarded && (o.type === 'poo' || o.type === 'stack')) { if(Math.abs(150-o.x) < 30 && Math.abs(pepper.y - (groundY-(o.stack*35))) < 30) closeCall = true; }
@@ -793,6 +837,7 @@
         bgTrees=[]; for(let i=0; i<5; i++) bgTrees.push({x: i*200});
         bgClouds=[]; for(let i=0; i<5; i++) bgClouds.push({x: Math.random()*canvas.width, y: Math.random()*150, speed: 0.2 + Math.random()*0.3});
         weatherParticles=[]; for(let i=0; i<50; i++) weatherParticles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, speed:2+Math.random()*2, wind:-1+Math.random()*2, size:2+Math.random()*2});
+        stars=[]; for(let i=0; i<50; i++) stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height/2, size:Math.random()*3});
 
         startMusic(); 
     }
