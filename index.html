@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V22</title>
+    <title>Pepper's Doo-Doo Dash V23</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Russo+One&display=swap" rel="stylesheet">
     
@@ -54,7 +54,6 @@
         .hud-top { display: flex; justify-content: space-between; width: 90%; margin-top: 20px; align-items: flex-start; }
         
         .glass-pill {
-            /* High Contrast Background */
             background: rgba(0, 0, 0, 0.75); 
             border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 16px; padding: 8px 20px; 
             color: white; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -65,7 +64,8 @@
         #high-score-box { margin-top: 5px; font-size: 10px; color: #f1c40f; font-weight: 700; letter-spacing: 1px; }
         #level-indicator { color: #00fbff; font-weight: 900; font-size: 12px; margin-bottom: 2px; }
 
-        #stick-canvas { width: 30px; height: 30px; } /* Canvas for dynamic stick drawing */
+        #stick-canvas { width: 40px; height: 40px; } 
+        #stick-text { font-size: 20px; font-weight: 900; margin-top: -5px; }
 
         #progress-wrapper {
             position: absolute; top: 100px; width: 70%; height: 8px;
@@ -74,7 +74,6 @@
         }
         #progress-fill { height: 100%; width: 0%; background: #00fbff; box-shadow: 0 0 10px #00fbff; transition: width 0.1s linear; border-radius: 4px; }
         
-        /* BIGGER FLAG ICON */
         #finish-icon { 
             position: absolute; right: -25px; top: -25px; 
             font-size: 40px; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5));
@@ -82,46 +81,40 @@
         }
         @keyframes wave { from { transform: rotate(-5deg); } to { transform: rotate(15deg); } }
 
-        /* MEGA METER (Back to the Future Style) */
+        /* MEGA MODE UI (Styled like Top HUD) */
         #mega-meter {
-            position: absolute; bottom: 30px; 
-            display: flex; flex-direction: column; align-items: center;
-            transform: skew(-10deg); /* BTTF Speed Look */
+            position: absolute; bottom: 40px; 
+            background: rgba(0, 0, 0, 0.85); 
+            border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 16px; 
+            padding: 10px 30px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            min-width: 200px;
         }
         
-        #mega-label-box {
-            background: #f1c40f; color: #d35400;
-            padding: 5px 20px;
-            font-family: 'Russo One', sans-serif;
-            font-size: 20px;
-            border: 3px solid #e67e22;
-            box-shadow: 5px 5px 0px rgba(0,0,0,0.5);
-            margin-bottom: 5px;
+        #mega-label {
+            color: #00fbff; font-size: 12px; font-weight: 900; letter-spacing: 2px; margin-bottom: 5px;
         }
 
-        #mega-tracker-box {
-            background: black;
-            border: 3px solid #7f8c8d;
-            padding: 5px 15px;
-            width: 250px;
-            display: flex; justify-content: center;
-            box-shadow: 5px 5px 0px rgba(0,0,0,0.5);
+        #mega-bar-container {
+            width: 100%; height: 10px; background: rgba(255,255,255,0.2); 
+            border-radius: 5px; overflow: hidden; margin-bottom: 5px;
+        }
+        
+        #mega-bar-fill {
+            height: 100%; width: 0%; background: #ff00ff; 
+            transition: width 0.2s; box-shadow: 0 0 10px #ff00ff;
         }
 
         #mega-text {
-            color: #e74c3c; /* Digital Red */
-            font-family: 'Courier New', monospace;
-            font-weight: 900;
-            font-size: 18px;
-            letter-spacing: 2px;
-            text-shadow: 0 0 5px #e74c3c;
+            color: #fff; font-size: 18px; font-weight: 900; letter-spacing: 1px;
         }
 
-        .mega-flashing { animation: megaFlash 0.2s infinite alternate; }
-        @keyframes megaFlash { 
-            from { color: #ff00ff; text-shadow: 0 0 10px #ff00ff; background: #2d3436; } 
-            to { color: #00fbff; text-shadow: 0 0 10px #00fbff; background: #000; } 
+        .mega-active {
+            border-color: #ff00ff !important;
+            animation: pulseBorder 0.5s infinite alternate;
         }
+        @keyframes pulseBorder { from { box-shadow: 0 0 10px #ff00ff; } to { box-shadow: 0 0 20px #ff00ff; } }
 
         /* SCREENS */
         #start-screen, #game-over, #level-screen, #how-to-screen, #info-modal, #difficulty-screen { 
@@ -214,17 +207,16 @@
                 <div id="high-score-box">BEST: 0</div>
             </div>
             <div class="glass-pill" id="stick-box">
-                <canvas id="stick-canvas" width="30" height="30"></canvas>
+                <canvas id="stick-canvas" width="40" height="40"></canvas>
                 <span id="stick-text">0/5</span>
             </div>
         </div>
         <div id="progress-wrapper"><div id="progress-fill"></div><div id="finish-icon">🏁</div></div>
         
         <div id="mega-meter">
-            <div id="mega-label-box">MEGA METER</div>
-            <div id="mega-tracker-box">
-                <div id="mega-text">DODGE 50 💩</div>
-            </div>
+            <div id="mega-label">MEGA MODE</div>
+            <div id="mega-bar-container"><div id="mega-bar-fill"></div></div>
+            <div id="mega-text">DODGE 50 💩</div>
         </div>
     </div>
 
@@ -318,7 +310,7 @@
     // Mega Meter Elements
     const megaMeter = document.getElementById('mega-meter');
     const megaText = document.getElementById('mega-text');
-    const megaTrackerBox = document.getElementById('mega-tracker-box');
+    const megaBarFill = document.getElementById('mega-bar-fill');
 
     const menuBtn = document.getElementById('menu-btn');
     const menuContent = document.getElementById('menu-content');
@@ -480,7 +472,6 @@
 
     // --- GAME LOGIC ---
     function resetGameLogic() {
-        // Full Reset
         score = 0; levelStartScore = 0; scoreEl.innerText="0 PTS"; 
         pepper.sticks=0; stickText.innerText="0/5"; 
         pepper.streak=0; 
@@ -491,7 +482,6 @@
     }
 
     function resetLevelState() {
-        // Resets only for the specific level run (keeps score if next level)
         obstacles=[]; sticks=[]; bones=[]; floatTexts=[]; 
         speed = (difficulty === 'death') ? 11 : 9;
         levelDistance=0; levelFinished=false; levelVictoryAnim=false; finishLine=null;
@@ -502,13 +492,13 @@
         pepper.isMega = false; pepper.hasShield = false; pepper.megaTimer = 0;
         pepper.rotation = 0; pepper.x = 100;
 
-        megaTrackerBox.classList.remove('mega-flashing');
+        megaMeter.classList.remove('mega-active');
+        megaBarFill.style.width = "0%";
         if(difficulty === 'death') megaText.innerText = "NO MEGA MODE!";
         else megaText.innerText = "DODGE 50 💩";
 
         nextObstacleTimer = 200; 
         
-        // Gen Background
         bgMountains=[]; for(let i=0; i<3; i++) bgMountains.push({x: i*300});
         bgTrees=[]; for(let i=0; i<5; i++) bgTrees.push({x: i*200});
         bgClouds=[]; for(let i=0; i<5; i++) bgClouds.push({x: Math.random()*canvas.width, y: Math.random()*150, speed: 0.2 + Math.random()*0.3});
@@ -544,27 +534,24 @@
         zoomLevel = 3.5;
     }
 
-    // DRAW STICK ICON
+    // DRAW STICK ICON (FIXED)
     function drawStickIcon() {
         const c = document.getElementById('stick-canvas');
         const x = c.getContext('2d');
-        x.clearRect(0,0,30,30);
-        x.translate(15,15); x.rotate(Math.PI/4);
-        x.strokeStyle = "#8B4513"; x.lineWidth = 4; x.lineCap="round";
-        x.beginPath(); x.moveTo(-10, 0); x.lineTo(10, 0); x.stroke(); // Main
-        x.beginPath(); x.moveTo(-2, 0); x.lineTo(5, -5); x.stroke(); // Branch
-        x.fillStyle = "#00b894"; x.beginPath(); x.arc(5, -6, 2, 0, Math.PI*2); x.fill(); // Leaf
+        x.clearRect(0,0,40,40);
+        x.translate(20,20); x.rotate(Math.PI/4);
+        x.strokeStyle = "#8B4513"; x.lineWidth = 5; x.lineCap="round";
+        x.beginPath(); x.moveTo(-12, 0); x.lineTo(12, 0); x.stroke(); 
+        x.beginPath(); x.moveTo(-3, 0); x.lineTo(6, -6); x.stroke(); 
+        x.fillStyle = "#00b894"; x.beginPath(); x.arc(7, -7, 2.5, 0, Math.PI*2); x.fill();
     }
 
-    // DRAW AVIATORS (Standardized)
+    // DRAW AVIATORS
     function drawAviators(ctx, x, y) {
         ctx.save(); ctx.translate(x, y);
         ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 1.5;
-        // Left Lens
         ctx.beginPath(); ctx.moveTo(-2, -5); ctx.bezierCurveTo(-15, -5, -18, 5, -10, 10); ctx.bezierCurveTo(-2, 10, -2, -5, -2, -5); ctx.fill(); ctx.stroke();
-        // Right Lens
         ctx.beginPath(); ctx.moveTo(2, -5); ctx.bezierCurveTo(15, -5, 18, 5, 10, 10); ctx.bezierCurveTo(2, 10, 2, -5, 2, -5); ctx.fill(); ctx.stroke();
-        // Bridge
         ctx.beginPath(); ctx.moveTo(-2, -5); ctx.lineTo(2, -5); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(-2, -8); ctx.lineTo(2, -8); ctx.stroke();
         ctx.restore();
@@ -588,7 +575,7 @@
         c.fillStyle = bodyC; c.beginPath(); c.moveTo(-20, -10); c.lineTo(-25, -40); c.lineTo(-5, -20); c.fill(); c.beginPath(); c.moveTo(20, -10); c.lineTo(25, -40); c.lineTo(5, -20); c.fill();
         c.fillStyle = "pink"; c.beginPath(); c.moveTo(-18, -15); c.lineTo(-22, -30); c.lineTo(-10, -20); c.fill(); c.beginPath(); c.moveTo(18, -15); c.lineTo(22, -30); c.lineTo(10, -20); c.fill();
         c.fillStyle = "black"; c.beginPath(); c.arc(0, 5, 5, 0, Math.PI*2); c.fill(); 
-        c.fillStyle = eyeC; c.beginPath(); c.arc(-10, -5, 6, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(10, -5, 6, 0, Math.PI*2); c.fill();
+        c.fillStyle = eyeC; c.beginPath(); c.arc(-10, -5, 6, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(10, -5, 6, 0, Math.PI*2); c.fill(); 
         c.fillStyle = "white"; c.beginPath(); c.arc(-12, -7, 2, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(8, -7, 2, 0, Math.PI*2); c.fill();
 
         if(mode === 'normal') { drawAviators(c, 0, 0); }
@@ -646,19 +633,15 @@
         if(difficulty === 'death') { bodyC = "#2d3436"; eyeC = "red"; }
         if(isMega) { let hue = (Date.now() / 5) % 360; bodyC = `hsl(${hue}, 80%, 40%)`; white = `hsl(${(hue+180)%360}, 90%, 80%)`; }
 
-        // START SCREEN (Front Facing Sitting Dog)
         if(!gameActive && !isCountingDown && !levelVictoryAnim) {
             ctx.scale(1.5, 1.5); ctx.translate(0, -50); 
-            // Shadows
             ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.beginPath(); ctx.ellipse(0, 50, 30, 8, 0, 0, Math.PI*2); ctx.fill();
             let pulse = 40 + Math.sin(Date.now()/200)*5;
             ctx.shadowBlur = 30; ctx.shadowColor=eyeC; ctx.fillStyle = "rgba(255,255,255,0.2)"; ctx.beginPath(); ctx.arc(0,0, pulse, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
-            // Sitting Body
             ctx.fillStyle = bodyC; ctx.beginPath(); ctx.ellipse(0, 35, 20, 15, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.moveTo(-15, 35); ctx.lineTo(-10, 10); ctx.lineTo(10, 10); ctx.lineTo(15, 35); ctx.fill(); 
             ctx.fillStyle = white; ctx.beginPath(); ctx.ellipse(0, 20, 12, 18, 0, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = white; ctx.beginPath(); ctx.ellipse(-10, 45, 6, 8, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(10, 45, 6, 8, 0, 0, Math.PI*2); ctx.fill();
             let tw = Math.sin(Date.now()/100) * 0.5; ctx.save(); ctx.translate(20, 35); ctx.rotate(tw); ctx.fillStyle = white; ctx.beginPath(); ctx.ellipse(10, -10, 10, 20, 0.5, 0, Math.PI*2); ctx.fill(); ctx.restore();
-            // Head
             ctx.fillStyle = bodyC; ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = white; ctx.beginPath(); ctx.arc(0, 8, 22, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = bodyC; ctx.beginPath(); ctx.moveTo(-20, -10); ctx.lineTo(-25, -40); ctx.lineTo(-5, -20); ctx.fill(); ctx.beginPath(); ctx.moveTo(20, -10); ctx.lineTo(25, -40); ctx.lineTo(5, -20); ctx.fill();
@@ -666,7 +649,6 @@
             ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(0, 5, 5, 0, Math.PI*2); ctx.fill(); 
             ctx.fillStyle = eyeC; ctx.beginPath(); ctx.arc(-10, -5, 6, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(10, -5, 6, 0, Math.PI*2); ctx.fill(); 
             ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(-12, -7, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(8, -7, 2, 0, Math.PI*2); ctx.fill();
-            // Modifiers
             if(difficulty === 'normal') { drawAviators(ctx, 0, 0); }
             if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, -5, 32, Math.PI, 0); ctx.stroke(); ctx.fillStyle="#FFD700"; ctx.beginPath(); ctx.arc(0, 20, 6, 0, Math.PI*2); ctx.fill(); }
             else { ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 12, 10, 0, Math.PI); ctx.stroke(); ctx.fillStyle = "pink"; ctx.beginPath(); ctx.arc(0, 22, 6, 0, Math.PI, false); ctx.fill(); }
@@ -674,79 +656,32 @@
             return;
         }
 
-        // --- CUTE SIDE VIEW (IN GAME) ---
         pepper.runFrame = (pepper.runFrame || 0) + 0.3; 
-        
-        // Double jump rotation
-        if(!pepper.grounded && pepper.canDoubleJump) { 
-            ctx.rotate(pepper.dy * 0.04);
-        } else if (!pepper.grounded && !pepper.canDoubleJump) {
-            pepper.rotation += 0.3;
-            ctx.rotate(pepper.rotation);
-        } else {
-            pepper.rotation = 0;
-        }
+        if(!pepper.grounded && pepper.canDoubleJump) { ctx.rotate(pepper.dy * 0.04); } 
+        else if (!pepper.grounded && !pepper.canDoubleJump) { pepper.rotation += 0.3; ctx.rotate(pepper.rotation); } 
+        else { pepper.rotation = 0; }
 
-        if(hasShield) { 
-            ctx.save(); ctx.rotate(frame*0.1);
-            ctx.shadowBlur = 20; ctx.shadowColor = "#00fbff";
-            ctx.strokeStyle = "rgba(0,251,255,0.6)"; ctx.lineWidth=3;
-            ctx.beginPath(); for(let i=0; i<6; i++) { let a = (i/6)*Math.PI*2; ctx.lineTo(Math.cos(a)*45, Math.sin(a)*45); } ctx.closePath(); ctx.stroke();
-            ctx.restore();
-        }
+        if(hasShield) { ctx.save(); ctx.rotate(frame*0.1); ctx.shadowBlur = 20; ctx.shadowColor = "#00fbff"; ctx.strokeStyle = "rgba(0,251,255,0.6)"; ctx.lineWidth=3; ctx.beginPath(); for(let i=0; i<6; i++) { let a = (i/6)*Math.PI*2; ctx.lineTo(Math.cos(a)*45, Math.sin(a)*45); } ctx.closePath(); ctx.stroke(); ctx.restore(); }
 
-        // Draw Legs
-        let rf = pepper.runFrame;
-        let yOff = -15; 
-        ctx.fillStyle = white; 
-        if(!pepper.grounded) {
-            ctx.beginPath(); ctx.ellipse(-10, yOff+15, 6, 8, 0.5, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(10, yOff+15, 6, 8, -0.5, 0, Math.PI*2); ctx.fill();
-        } else {
-            let leg1 = Math.sin(rf) * 10;
-            let leg2 = Math.sin(rf + Math.PI) * 10;
-            ctx.beginPath(); ctx.ellipse(-10 + leg1, yOff+18, 5, 5, 0, 0, Math.PI*2); ctx.fill(); 
-            ctx.beginPath(); ctx.ellipse(10 + leg2, yOff+18, 5, 5, 0, 0, Math.PI*2); ctx.fill(); 
-        }
+        let rf = pepper.runFrame; let yOff = -15; ctx.fillStyle = white; 
+        if(!pepper.grounded) { ctx.beginPath(); ctx.ellipse(-10, yOff+15, 6, 8, 0.5, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(10, yOff+15, 6, 8, -0.5, 0, Math.PI*2); ctx.fill(); } 
+        else { let leg1 = Math.sin(rf) * 10; let leg2 = Math.sin(rf + Math.PI) * 10; ctx.beginPath(); ctx.ellipse(-10 + leg1, yOff+18, 5, 5, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(10 + leg2, yOff+18, 5, 5, 0, 0, Math.PI*2); ctx.fill(); }
 
-        // TAIL (Curled Up High)
-        let tailWag = Math.sin(rf*3)*0.2;
-        ctx.save(); ctx.translate(-15, yOff-5); ctx.rotate(tailWag); 
-        ctx.fillStyle = bodyC; 
-        ctx.beginPath(); 
-        ctx.moveTo(0,0);
-        ctx.bezierCurveTo(-15, -10, -10, -30, 5, -25); // Curve up and forward
-        ctx.bezierCurveTo(15, -20, 5, 0, 0, 0); // Curve back down
-        ctx.fill();
-        // White Tip
-        ctx.fillStyle = white;
-        ctx.beginPath(); ctx.arc(2, -22, 5, 0, Math.PI*2); ctx.fill();
-        ctx.restore();
+        let tailWag = Math.sin(rf*3)*0.2; ctx.save(); ctx.translate(-15, yOff-5); ctx.rotate(tailWag); 
+        ctx.fillStyle = bodyC; ctx.beginPath(); ctx.moveTo(0,0); ctx.bezierCurveTo(-15, -10, -10, -30, 5, -25); ctx.bezierCurveTo(15, -20, 5, 0, 0, 0); ctx.fill();
+        ctx.fillStyle = white; ctx.beginPath(); ctx.arc(2, -22, 5, 0, Math.PI*2); ctx.fill(); ctx.restore();
 
-        // Body
         ctx.fillStyle = bodyC; ctx.beginPath(); ctx.ellipse(0, yOff, 22, 14, 0, 0, Math.PI*2); ctx.fill(); 
         ctx.fillStyle = white; ctx.beginPath(); ctx.ellipse(5, yOff+5, 12, 8, 0, 0, Math.PI*2); ctx.fill(); 
 
-        // HEAD (Profile - Tweety Eyes & Snout)
         ctx.save(); ctx.translate(15, yOff-15); 
-        
-        // Ears
         ctx.fillStyle = bodyC; ctx.beginPath(); ctx.moveTo(-5, -5); ctx.lineTo(-8, -22); ctx.lineTo(2, -12); ctx.fill();
         ctx.fillStyle = "pink"; ctx.beginPath(); ctx.moveTo(-4, -6); ctx.lineTo(-7, -18); ctx.lineTo(0, -10); ctx.fill();
-        
-        // Head Base
         ctx.fillStyle = bodyC; ctx.beginPath(); ctx.arc(0, 0, 16, 0, Math.PI*2); ctx.fill();
-        
-        // Snout (Extended)
-        ctx.fillStyle = white; 
-        ctx.beginPath(); ctx.moveTo(5, -8); ctx.lineTo(18, 2); ctx.lineTo(12, 12); ctx.lineTo(0, 10); ctx.lineTo(-5, 0); ctx.fill();
-        
-        // Nose
+        ctx.fillStyle = white; ctx.beginPath(); ctx.moveTo(5, -8); ctx.lineTo(18, 2); ctx.lineTo(12, 12); ctx.lineTo(0, 10); ctx.lineTo(-5, 0); ctx.fill();
         ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(18, 1, 3.5, 0, Math.PI*2); ctx.fill();
 
-        // Eye (Tweety Style - Big Vertical Oval)
         if(difficulty === 'normal') {
-             // Aviators Side View
             ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.strokeStyle="#FFD700"; ctx.lineWidth=1.5;
             ctx.beginPath(); ctx.moveTo(4, -6); ctx.lineTo(14, -6); ctx.lineTo(12, 4); ctx.quadraticCurveTo(6, 6, 4, 4); ctx.fill(); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(4, -6); ctx.lineTo(12, -6); ctx.stroke(); 
@@ -757,13 +692,8 @@
             ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(8.5, -3, 1, 0, Math.PI*2); ctx.fill();
         }
 
-        if(difficulty === 'baby') { 
-            ctx.strokeStyle = "pink"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(-2, -5, 14, Math.PI, 0); ctx.stroke(); 
-            ctx.fillStyle = "#FFD700"; ctx.beginPath(); ctx.arc(14, 8, 4, 0, Math.PI*2); ctx.fill(); 
-        } 
-        
-        ctx.restore();
-        ctx.restore();
+        if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(-2, -5, 14, Math.PI, 0); ctx.stroke(); ctx.fillStyle = "#FFD700"; ctx.beginPath(); ctx.arc(14, 8, 4, 0, Math.PI*2); ctx.fill(); } 
+        ctx.restore(); ctx.restore();
     }
 
     function drawStick(ctx, x, y) { ctx.save(); ctx.translate(x, y + Math.sin(frame*0.1)*5); ctx.strokeStyle = "#8B4513"; ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(-10, 5); ctx.lineTo(10, -5); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(5, 5); ctx.stroke(); ctx.fillStyle = "#00b894"; ctx.beginPath(); ctx.arc(10, -5, 3, 0, Math.PI*2); ctx.fill(); ctx.restore(); }
@@ -803,7 +733,27 @@
         ctx.restore();
     }
 
-    function drawFlies(ctx, x, y) { ctx.save(); ctx.translate(x, y - 120); ctx.fillStyle = "black"; for(let i=0; i<4; i++) { let fx = Math.sin(frame*0.2 + i)*20; let fy = Math.cos(frame*0.3 + i)*15; ctx.beginPath(); ctx.arc(fx, fy, 3, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "rgba(255,255,255,0.7)"; ctx.beginPath(); ctx.ellipse(fx, fy-2, 4, 1.5, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "black"; } ctx.restore(); }
+    // DRAW BETTER BIRDS (Curve shapes)
+    function drawFlies(ctx, x, y) { 
+        ctx.save(); ctx.translate(x, y - 120); 
+        for(let i=0; i<3; i++) { 
+            let fx = Math.sin(frame*0.1 + i)*25; 
+            let fy = Math.cos(frame*0.15 + i)*15; 
+            
+            ctx.save(); ctx.translate(fx, fy);
+            // Body
+            ctx.fillStyle = "#2d3436"; 
+            ctx.beginPath(); ctx.ellipse(0, 0, 8, 5, 0, 0, Math.PI*2); ctx.fill();
+            // Wing
+            ctx.fillStyle = "rgba(255,255,255,0.8)"; 
+            let flap = Math.sin(frame*0.8) * 5;
+            ctx.beginPath(); ctx.moveTo(-2, -2); ctx.quadraticCurveTo(0, -10+flap, 8, -5+flap); ctx.quadraticCurveTo(5, 0, -2, -2); ctx.fill();
+            // Eye
+            ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(-4, -1, 2, 0, Math.PI*2); ctx.fill();
+            ctx.restore();
+        } 
+        ctx.restore(); 
+    }
 
     // --- COUNTDOWN & START SEQUENCE ---
     function startSequence(isFullReset = false) {
@@ -860,13 +810,11 @@
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // Background
         let grad = ctx.createLinearGradient(0, 0, 0, canvas.height); grad.addColorStop(0, curStyle.c1); grad.addColorStop(1, curStyle.c2); ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = "rgba(255,255,255,0.2)"; let celestialY = (currentLevel%3===2) ? canvas.height*0.8 : 100; ctx.beginPath(); ctx.arc(canvas.width*0.8, celestialY, 60, 0, Math.PI*2); ctx.fill();
         ctx.fillStyle = "rgba(255,255,255,0.1)"; bgMountains.forEach(m => { if(!levelFinished && gameActive && !isPaused && !isCountingDown) m.x -= speed * 0.05; if(m.x < -300) m.x = canvas.width + 100; ctx.beginPath(); ctx.moveTo(m.x, groundY); ctx.lineTo(m.x+150, groundY-300); ctx.lineTo(m.x+300, groundY); ctx.fill(); });
         bgTrees.forEach(t => { if(!levelFinished && gameActive && !isPaused && !isCountingDown) t.x -= speed * 0.2; if(t.x < -50) t.x = canvas.width + Math.random()*300; ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.beginPath(); ctx.moveTo(t.x, groundY); ctx.lineTo(t.x+25, groundY-100); ctx.lineTo(t.x+50, groundY); ctx.fill(); });
         
-        // Clouds
         ctx.fillStyle = "rgba(255,255,255,0.3)";
         bgClouds.forEach(c => { if(!isPaused && !isCountingDown) c.x -= c.speed; if(c.x < -100) c.x = canvas.width + 100; ctx.beginPath(); ctx.ellipse(c.x, c.y, 40, 20, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(c.x+20, c.y-10, 30, 20, 0, 0, Math.PI*2); ctx.fill(); });
 
@@ -879,7 +827,6 @@
             ctx.globalAlpha = 1;
         }
 
-        // Draw Ground
         ctx.fillStyle = curStyle.ground; ctx.fillRect(0, groundY, canvas.width, GROUND_H);
         ctx.fillStyle = "rgba(255,255,255,0.05)"; let stripeOffset = (frame * speed) % 100; for(let i = -100; i < canvas.width + 100; i+=100) { ctx.beginPath(); ctx.moveTo(i - stripeOffset, groundY); ctx.lineTo(i - stripeOffset + 40, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 90, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 50, groundY); ctx.fill(); }
         if(!levelFinished && pepper.grounded && (gameActive || levelVictoryAnim)) { ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.beginPath(); ctx.arc(120 - (frame*speed)%20, groundY+2, 5 * Math.random(), 0, Math.PI*2); ctx.fill(); }
@@ -896,19 +843,22 @@
         [particles, floatTexts].forEach(arr => { for(let i=arr.length-1; i>=0; i--) { let p = arr[i]; if(p.text) { p.y-=2; p.life-=0.02; ctx.globalAlpha=p.life; ctx.fillStyle=p.color; ctx.font="900 30px 'Montserrat'"; ctx.fillText(p.text, p.x, p.y); } else { p.x+=p.vx; p.y+=p.vy; p.life-=0.03; ctx.globalAlpha=p.life; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,5,0,Math.PI*2); ctx.fill(); } if(p.life<=0) arr.splice(i,1); } });
         ctx.globalAlpha=1;
 
-        // MEGA MODE LOGIC
         if(difficulty !== 'death') {
             if(pepper.isMega && gameActive && !isPaused && !isCountingDown) {
                 pepper.megaTimer--; 
-                megaTrackerBox.classList.add('mega-flashing');
+                megaMeter.classList.add('mega-active');
+                megaBarFill.style.width = "100%";
                 megaText.innerText = "MEGA MODE!";
                 if(pepper.megaTimer<=0) { 
                     pepper.isMega=false; pepper.streak=0; 
-                    megaTrackerBox.classList.remove('mega-flashing');
+                    megaMeter.classList.remove('mega-active');
+                    megaBarFill.style.width = "0%";
                     megaText.innerText = "DODGE 50 💩";
                 }
             } else if (!pepper.isMega) {
                 let remaining = Math.max(0, MEGA_TRIGGER - pepper.streak);
+                let pct = (pepper.streak / MEGA_TRIGGER) * 100;
+                megaBarFill.style.width = pct + "%";
                 megaText.innerText = "DODGE " + remaining + " 💩";
             }
         }
