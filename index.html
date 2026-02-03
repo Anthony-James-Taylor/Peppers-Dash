@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V27</title>
+    <title>Pepper's Doo-Doo Dash V28</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Russo+One&display=swap" rel="stylesheet">
     
@@ -321,18 +321,18 @@
     const highScoreEl = document.getElementById('high-score-box');
     const countdownLayer = document.getElementById('countdown-layer');
     const countdownText = document.getElementById('countdown-text');
-    
-    // Mega Meter Elements
     const megaMeter = document.getElementById('mega-meter');
     const megaText = document.getElementById('mega-text');
     const megaBarFill = document.getElementById('mega-bar-fill');
 
+    // Menu
     const menuBtn = document.getElementById('menu-btn');
     const menuContent = document.getElementById('menu-content');
     const menuMute = document.getElementById('menu-mute');
     const menuHome = document.getElementById('menu-home');
     const menuHelp = document.getElementById('menu-help');
     
+    // Screens
     const startScreen = document.getElementById('start-screen');
     const difficultyScreen = document.getElementById('difficulty-screen');
     const gameOverScreen = document.getElementById('game-over');
@@ -365,7 +365,7 @@
     }
     window.addEventListener('resize', resize);
 
-    // --- SETTINGS & STATE ---
+    // --- SETTINGS ---
     const GRAVITY = 1.1; 
     const JUMP_FORCE = -19; 
     const DOUBLE_JUMP_FORCE = -15; 
@@ -410,15 +410,15 @@
     let sticks = [];
     let bones = [];
     let particles = [];
-    let bgObjects = []; 
-    let floatTexts = [];
     let bgMountains = [];
     let bgTrees = [];
     let bgClouds = [];
-    let fgBushes = []; // Parallax foreground
+    let fgBushes = [];
     let weatherParticles = [];
     let stars = [];
+    let floatTexts = [];
     let nextObstacleTimer = 0;
+    let nextBoneTimer = 0;
     let finishLine = null; 
 
     // --- AUDIO ---
@@ -433,22 +433,15 @@
     };
     function initAudio() { if (!audioCtx && AudioContext) audioCtx = new AudioContext(); if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }
 
-    // --- INPUT HANDLERS ---
     function attachFastClick(element, action) {
         element.addEventListener('touchstart', (e) => { e.stopPropagation(); e.preventDefault(); playClick(); action(); }, {passive:false});
         element.addEventListener('mousedown', (e) => { e.stopPropagation(); playClick(); action(); });
     }
     
-    // Menu Buttons
     attachFastClick(menuBtn, () => { menuOpen = !menuOpen; menuContent.style.display = menuOpen ? "flex" : "none"; menuBtn.innerText = menuOpen ? "✕" : "☰"; });
     attachFastClick(menuMute, () => { isMuted = !isMuted; menuMute.innerText = isMuted ? "🔇 SOUND: OFF" : "🔊 SOUND: ON"; if(isMuted) stopMusic(); else if(gameActive && !isPaused && !isCountingDown) startMusic(); });
     attachFastClick(menuHome, () => { goHome(); });
-    attachFastClick(menuHelp, () => { 
-        if(gameActive) { isPaused = true; stopMusic(); }
-        menuContent.style.display = 'none'; menuOpen = false; menuBtn.innerText = "☰"; 
-        howToScreen.style.display = 'flex'; 
-    });
-    
+    attachFastClick(menuHelp, () => { if(gameActive) { isPaused = true; stopMusic(); } menuContent.style.display = 'none'; menuOpen = false; menuBtn.innerText = "☰"; howToScreen.style.display = 'flex'; });
     attachFastClick(closeHelpBtn, () => { howToScreen.style.display = 'none'; if(gameActive) { isPaused = false; startMusic(); } });
     attachFastClick(startBtn, () => { startSequence(false); });
     attachFastClick(startDiffBtn, () => { openDifficultyScreen(); });
@@ -471,20 +464,16 @@
         else megaText.innerText = "COLLECT 50 🦴";
     }
 
-    // --- GAME LOGIC ---
     function resetGameLogic() {
         score = 0; levelStartScore = 0; scoreEl.innerText="0 🦴"; 
         pepper.sticks=0; stickText.innerText="0/5"; 
-        pepper.streak=0; 
-        currentLevel=1; 
-        resetLevelState();
-        drawStickIcon();
+        pepper.streak=0; currentLevel=1; 
+        resetLevelState(); drawStickIcon();
     }
 
     function resetLevelState() {
         obstacles=[]; sticks=[]; bones=[]; floatTexts=[]; 
-        baseSpeed = (difficulty === 'death') ? 11 : 9;
-        speed = baseSpeed;
+        baseSpeed = (difficulty === 'death') ? 11 : 9; speed = baseSpeed;
         levelDistance=0; levelFinished=false; levelVictoryAnim=false; finishLine=null;
         
         levelInd.innerText = "LEVEL " + currentLevel; 
@@ -508,25 +497,12 @@
         stars=[]; for(let i=0; i<50; i++) stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height/2, size:Math.random()*3});
     }
 
-    function goToNextLevel() {
-        levelStartScore = score;
-        currentLevel++; levelMaxDistance += 1000; 
-        resetLevelState();
-        levelScreen.style.display = 'none'; 
-        startSequence(false);
-    }
-
-    function goHome() {
-        gameActive = false; isPaused = false; isCountingDown = false; stopMusic();
-        uiLayer.style.display = 'none'; menuContent.style.display = 'none'; menuOpen = false; menuBtn.innerText = "☰";
-        startScreen.style.display = 'flex'; gameOverScreen.style.display = 'none'; levelScreen.style.display = 'none'; howToScreen.style.display = 'none';
-        resetGameLogic(); pepper.y = groundY; pepper.dy = 0; zoomLevel = 3.5;
-    }
+    function goToNextLevel() { levelStartScore = score; currentLevel++; levelMaxDistance += 1000; resetLevelState(); levelScreen.style.display = 'none'; startSequence(false); }
+    function goHome() { gameActive = false; isPaused = false; isCountingDown = false; stopMusic(); uiLayer.style.display = 'none'; menuContent.style.display = 'none'; menuOpen = false; menuBtn.innerText = "☰"; startScreen.style.display = 'flex'; gameOverScreen.style.display = 'none'; levelScreen.style.display = 'none'; howToScreen.style.display = 'none'; resetGameLogic(); pepper.y = groundY; pepper.dy = 0; zoomLevel = 3.5; }
 
     function drawStickIcon() {
         const c = document.getElementById('stick-canvas');
-        const x = c.getContext('2d');
-        x.clearRect(0,0,40,40); x.save();
+        const x = c.getContext('2d'); x.clearRect(0,0,40,40); x.save();
         x.translate(20,20); x.rotate(Math.PI/4);
         x.strokeStyle = "#8B4513"; x.lineWidth = 5; x.lineCap="round";
         x.beginPath(); x.moveTo(-12, 0); x.lineTo(12, 0); x.stroke(); 
@@ -540,8 +516,7 @@
         ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.moveTo(-2, -5); ctx.bezierCurveTo(-15, -5, -18, 5, -10, 10); ctx.bezierCurveTo(-2, 10, -2, -5, -2, -5); ctx.fill(); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(2, -5); ctx.bezierCurveTo(15, -5, 18, 5, 10, 10); ctx.bezierCurveTo(2, 10, 2, -5, 2, -5); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(-2, -5); ctx.lineTo(2, -5); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(-2, -8); ctx.lineTo(2, -8); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-2, -5); ctx.lineTo(2, -5); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-2, -8); ctx.lineTo(2, -8); ctx.stroke();
         ctx.restore();
     }
 
@@ -605,8 +580,7 @@
     
     // Day/Night Cycle Logic
     function getSkyColor() {
-        let t = (frame % 3000) / 3000; // 0 to 1 cycle
-        // 0-0.4 Day, 0.4-0.5 Sunset, 0.5-0.9 Night, 0.9-1.0 Dawn
+        let t = (frame % 3000) / 3000; 
         if(t < 0.4) return { c1: "#81ecec", c2: "#74b9ff", grass: "#00b894", ground: "#5D4037" };
         if(t < 0.5) return { c1: "#ff9f43", c2: "#ee5253", grass: "#e17055", ground: "#3E2723" };
         if(t < 0.9) return { c1: "#2c3e50", c2: "#000000", grass: "#192a56", ground: "#2d3436" };
@@ -616,32 +590,19 @@
     function drawHusky(ctx, x, y, isMega, hasShield) {
         ctx.save(); ctx.translate(x, y);
         let s = isMega ? 1.4 : 1; ctx.scale(s, s);
-        
-        let bodyC = "#1a1a1a"; let white = "#ffffff";
-        let eyeC = "#00fbff";
+        let bodyC = "#1a1a1a"; let white = "#ffffff"; let eyeC = "#00fbff";
         if(difficulty === 'death') { bodyC = "#2d3436"; eyeC = "red"; }
         if(isMega) { let hue = (Date.now() / 5) % 360; bodyC = `hsl(${hue}, 80%, 40%)`; white = `hsl(${(hue+180)%360}, 90%, 80%)`; }
 
-        // DRAW HATS
         function drawHat(ctx) {
             ctx.save(); ctx.translate(5, -25);
-            if(score >= 200) { // Cowboy
-                ctx.fillStyle = "#8B4513"; ctx.beginPath(); ctx.ellipse(0, 0, 20, 5, 0, 0, Math.PI*2); ctx.fill();
-                ctx.fillRect(-10, -15, 20, 15);
-            } else if (score >= 100) { // Top Hat
-                ctx.fillStyle = "#2d3436"; ctx.fillRect(-12, -25, 24, 25); ctx.fillRect(-18, 0, 36, 4);
-                ctx.fillStyle = "red"; ctx.fillRect(-12, -5, 24, 4);
-            } else if (score >= 50) { // Cap
-                ctx.fillStyle = "#d63031"; ctx.beginPath(); ctx.arc(0, 0, 12, Math.PI, 0); ctx.fill();
-                ctx.fillRect(-12, 0, 24, 2); ctx.fillRect(10, 0, 12, 4);
-            }
+            if(score >= 200) { ctx.fillStyle = "#8B4513"; ctx.beginPath(); ctx.ellipse(0, 0, 20, 5, 0, 0, Math.PI*2); ctx.fill(); ctx.fillRect(-10, -15, 20, 15); } 
+            else if (score >= 100) { ctx.fillStyle = "#2d3436"; ctx.fillRect(-12, -25, 24, 25); ctx.fillRect(-18, 0, 36, 4); ctx.fillStyle = "red"; ctx.fillRect(-12, -5, 24, 4); } 
+            else if (score >= 50) { ctx.fillStyle = "#d63031"; ctx.beginPath(); ctx.arc(0, 0, 12, Math.PI, 0); ctx.fill(); ctx.fillRect(-12, 0, 24, 2); ctx.fillRect(10, 0, 12, 4); }
             ctx.restore();
         }
 
-        // ... (Existing Draw Logic adapted) ...
-        // Re-using simplified drawing for brevity but injecting Hat logic
         if(!gameActive && !isCountingDown && !levelVictoryAnim) {
-            // Start Screen Dog
             ctx.scale(1.5, 1.5); ctx.translate(0, -50); 
             ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.beginPath(); ctx.ellipse(0, 50, 30, 8, 0, 0, Math.PI*2); ctx.fill();
             let pulse = 40 + Math.sin(Date.now()/200)*5;
@@ -657,7 +618,7 @@
             ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(0, 5, 5, 0, Math.PI*2); ctx.fill(); 
             ctx.fillStyle = eyeC; ctx.beginPath(); ctx.arc(-10, -5, 6, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(10, -5, 6, 0, Math.PI*2); ctx.fill(); 
             ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(-12, -7, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(8, -7, 2, 0, Math.PI*2); ctx.fill();
-            drawHat(ctx); // Hat on Start Screen
+            drawHat(ctx); 
             if(difficulty === 'normal') { drawAviators(ctx, 0, 0); }
             if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, -5, 32, Math.PI, 0); ctx.stroke(); ctx.fillStyle="#FFD700"; ctx.beginPath(); ctx.arc(0, 20, 6, 0, Math.PI*2); ctx.fill(); }
             else { ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 12, 10, 0, Math.PI); ctx.stroke(); ctx.fillStyle = "pink"; ctx.beginPath(); ctx.arc(0, 22, 6, 0, Math.PI, false); ctx.fill(); }
@@ -694,8 +655,7 @@
         if(difficulty === 'normal') { ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.strokeStyle="#FFD700"; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(4, -6); ctx.lineTo(14, -6); ctx.lineTo(12, 4); ctx.quadraticCurveTo(6, 6, 4, 4); ctx.fill(); ctx.stroke(); ctx.beginPath(); ctx.moveTo(4, -6); ctx.lineTo(12, -6); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-2, -5); ctx.lineTo(4, -5); ctx.stroke(); } 
         else { ctx.fillStyle = "white"; ctx.beginPath(); ctx.ellipse(6, -4, 5, 8, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = eyeC; ctx.beginPath(); ctx.ellipse(8, -2, 2.5, 4, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(8.5, -3, 1, 0, Math.PI*2); ctx.fill(); }
 
-        drawHat(ctx); // In Game Hat
-
+        drawHat(ctx); 
         if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(-2, -5, 14, Math.PI, 0); ctx.stroke(); ctx.fillStyle = "#FFD700"; ctx.beginPath(); ctx.arc(14, 8, 4, 0, Math.PI*2); ctx.fill(); } 
         ctx.restore(); ctx.restore();
     }
@@ -769,7 +729,7 @@
     function canSpawn(x) {
         let allObjects = [...obstacles, ...bones, ...sticks];
         for (let obj of allObjects) {
-            if (Math.abs(obj.x - x) < 300) return false; // Minimum 300px gap
+            if (Math.abs(obj.x - x) < 300) return false; 
         }
         return true;
     }
@@ -884,7 +844,6 @@
                         else obj.y = groundY - 110; // High
                         nextObstacleTimer = Math.max(30, 80 - score*0.3); 
                         
-                        // Smart Spawn Bone under high bird or over low bird
                         if(Math.random() > 0.3) {
                             let bY = (obj.y < groundY - 80) ? groundY - 40 : groundY - 150;
                             bones.push({x: canvas.width, y: bY, type: 'white'});
@@ -892,14 +851,12 @@
                     }
                     else { // Poo
                         obj.type = 'poo'; obj.stack = Math.floor(Math.random()*2)+1; nextObstacleTimer = Math.max(30, 80 - score*0.3);
-                        // Smart Spawn Bone above Poo
                         if(Math.random() > 0.5) bones.push({x: canvas.width, y: groundY - 120, type: 'white'});
                     }
                     obstacles.push(obj);
                 }
             }
             
-            // Random Independent Bones (Rarer)
             nextBoneTimer--;
             if(nextBoneTimer <= 0) {
                  if(canSpawn(canvas.width)) {
@@ -908,7 +865,7 @@
                      if(h > 0.6) bY = groundY - 100; 
                      if(h > 0.9) bY = groundY - 160; 
                      let bType = 'white';
-                     if(Math.random() > 0.98) bType = 'blue'; // Ultra Rare Magnet
+                     if(Math.random() > 0.98) bType = 'blue'; 
                      else if(Math.random() > 0.9) bType = 'gold';
                      
                      bones.push({x: canvas.width, y: bY, type: bType});
@@ -928,15 +885,12 @@
             else if(o.type === 'pond') { ctx.fillStyle = "rgba(241, 196, 15, 0.8)"; ctx.beginPath(); ctx.ellipse(o.x, groundY+5, 100, 15, 0, 0, Math.PI*2); ctx.fill(); }
             
             let hit = false;
-            let nearMiss = false;
-            // Hitboxes
             if(o.type === 'bird') { if(Math.abs(150-o.x) < 30 && Math.abs(pepper.y - o.y) < 30) hit = true; }
             if(o.type === 'poo' && Math.abs(150-o.x)<25 && pepper.y > groundY-(o.stack*35)+15) hit=true;
             if(o.type === 'hydrant' && Math.abs(150-o.x)<25 && pepper.y > groundY-35) hit=true;
             if(o.type === 'stack' && Math.abs(150-o.x)<25 && pepper.y > groundY-105) hit=true; 
             if(o.type === 'pond' && o.x < 150+10 && o.x > 150-100 && pepper.y > groundY - 5) hit=true;
 
-            // Matrix Slow Mo Check (Near Miss)
             if(!hit && !o.passed && Math.abs(150-o.x) < 60 && Math.abs(pepper.y - (o.y || groundY)) < 60) {
                if(slowMoTimer <= 0 && Math.random() > 0.7) slowMoTimer = 15; 
             }
@@ -980,13 +934,19 @@
             } else if(b.x<-100) bones.splice(i,1);
         }
 
-        // Foreground Bushes (Parallax)
+        // New Foreground Bushes (No Blur, Clusters)
         fgBushes.forEach(bush => {
-            bush.x -= currentSpeed * 1.5; if(bush.x < -100) { bush.x = canvas.width + Math.random()*500; }
-            ctx.filter = 'blur(4px)'; ctx.fillStyle = "#2d3436";
-            ctx.beginPath(); ctx.arc(bush.x, canvas.height + 20, 60, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(bush.x+50, canvas.height + 10, 50, 0, Math.PI*2); ctx.fill();
-            ctx.filter = 'none';
+            bush.x -= currentSpeed * 1.5; 
+            if(bush.x < -150) { bush.x = canvas.width + Math.random()*500; }
+            
+            ctx.fillStyle = "#0f1519"; // Very dark green/black
+            
+            // Draw a cluster of circles to look like a bush
+            ctx.beginPath();
+            ctx.arc(bush.x, canvas.height + 20, 60, 0, Math.PI*2);
+            ctx.arc(bush.x+50, canvas.height + 30, 50, 0, Math.PI*2);
+            ctx.arc(bush.x+30, canvas.height - 10, 40, 0, Math.PI*2);
+            ctx.fill();
         });
 
         ctx.restore();
