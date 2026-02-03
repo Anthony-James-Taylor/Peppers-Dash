@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V25</title>
+    <title>Pepper's Doo-Doo Dash V26</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Russo+One&display=swap" rel="stylesheet">
     
@@ -65,7 +65,7 @@
         #level-indicator { color: #00fbff; font-weight: 900; font-size: 12px; margin-bottom: 2px; }
 
         #stick-canvas { width: 40px; height: 40px; } 
-        #stick-text { font-size: 20px; font-weight: 900; margin-top: -5px; } /* Updated to Extra Bold */
+        #stick-text { font-size: 20px; font-weight: 900; margin-top: -5px; } 
 
         #progress-wrapper {
             position: absolute; top: 100px; width: 70%; height: 8px;
@@ -425,6 +425,7 @@
     let weatherParticles = [];
     let stars = [];
     let nextObstacleTimer = 0;
+    let nextBoneTimer = 0;
     let finishLine = null; 
 
     // --- AUDIO ---
@@ -514,6 +515,7 @@
         else megaText.innerText = "COLLECT 50 🦴";
 
         nextObstacleTimer = 200; 
+        nextBoneTimer = 50;
         
         bgMountains=[]; for(let i=0; i<3; i++) bgMountains.push({x: i*300});
         bgTrees=[]; for(let i=0; i<5; i++) bgTrees.push({x: i*200});
@@ -759,35 +761,31 @@
         ctx.restore();
     }
 
-    // DRAW BETTER BIRDS (Cartoon Style)
+    // DRAW BETTER BIRDS (Dark Silhouette Style)
     function drawFlies(ctx, x, y) { 
-        ctx.save(); ctx.translate(x, y - 100); 
-        for(let i=0; i<2; i++) { 
-            let fx = Math.sin(frame*0.05 + i)*40; 
-            let fy = Math.cos(frame*0.1 + i)*20; 
-            
-            ctx.save(); ctx.translate(fx, fy);
-            // Body
-            ctx.fillStyle = "#ffffff"; 
-            ctx.beginPath(); ctx.ellipse(0, 0, 12, 8, 0, 0, Math.PI*2); ctx.fill();
-            ctx.strokeStyle = "#b2bec3"; ctx.lineWidth=1; ctx.stroke();
-            
-            // Wing
-            ctx.fillStyle = "#dfe6e9"; 
-            let flap = Math.sin(frame*0.3 + i)*8;
-            ctx.beginPath(); ctx.moveTo(2, -4); ctx.quadraticCurveTo(8, -15+flap, 18, -2+flap); ctx.quadraticCurveTo(10, 2, 2, -4); ctx.fill(); ctx.stroke();
+        ctx.save(); ctx.translate(x, y); 
+        // Draw 1 single darker bird for clarity
+        let flap = Math.sin(frame*0.4) * 8;
+        
+        ctx.scale(1.5, 1.5); // Bigger
+        ctx.fillStyle = "#2d3436"; // Dark Charcoal
+        
+        // Body
+        ctx.beginPath(); ctx.ellipse(0, 0, 14, 8, 0, 0, Math.PI*2); ctx.fill();
+        
+        // Wings
+        ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(18, -12+flap); ctx.lineTo(8, 2); ctx.fill(); // Right Wing
+        ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(-18, -12+flap); ctx.lineTo(-8, 2); ctx.fill(); // Left Wing
 
-            // Head
-            ctx.fillStyle = "#ffffff"; ctx.beginPath(); ctx.arc(-8, -4, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-            
-            // Beak
-            ctx.fillStyle = "#ff9f43"; ctx.beginPath(); ctx.moveTo(-12, -4); ctx.lineTo(-18, -2); ctx.lineTo(-12, 0); ctx.fill();
-            
-            // Eye
-            ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(-10, -5, 1.5, 0, Math.PI*2); ctx.fill();
-            
-            ctx.restore();
-        } 
+        // Head
+        ctx.beginPath(); ctx.arc(-8, -5, 7, 0, Math.PI*2); ctx.fill();
+        
+        // Beak
+        ctx.fillStyle = "#ff9f43"; ctx.beginPath(); ctx.moveTo(-14, -5); ctx.lineTo(-20, -2); ctx.lineTo(-14, 1); ctx.fill();
+        
+        // Eye
+        ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(-10, -7, 2, 0, Math.PI*2); ctx.fill();
+        
         ctx.restore(); 
     }
 
@@ -951,16 +949,34 @@
                 if(currentLevel >= 3 && r > 0.92) { type = 'pond'; nextObstacleTimer = 60; } 
                 else if(currentLevel >= 2 && r > 0.85) { type = 'stack'; nextObstacleTimer = 100; stack=3; } 
                 else if(r > 0.75) { type = 'hydrant'; nextObstacleTimer = Math.max(30, 80 - score*0.3); }
-                else if (r > 0.60) { type = 'bird'; yPos = groundY - 50 - Math.random()*30; nextObstacleTimer = Math.max(30, 80 - score*0.3); }
+                else if (r > 0.60) { 
+                    type = 'bird'; 
+                    // Randomize Bird Height
+                    let bh = Math.random();
+                    if(bh > 0.5) yPos = groundY - 40; // Low Bird (Jump)
+                    else yPos = groundY - 110; // High Bird (Duck)
+                    nextObstacleTimer = Math.max(30, 80 - score*0.3); 
+                }
                 else { type = 'poo'; stack = Math.floor(Math.random()*2)+1; nextObstacleTimer = Math.max(30, 80 - score*0.3); }
+                
+                // Bird pushes yPos into object
                 obstacles.push({x: canvas.width, type: type, stack: stack, y: yPos, passed: false, sprayed: false});
             }
-            // Spawn Bones more often
-            if(frame % 40 === 0) {
-                 if(Math.random() > 0.9) bones.push({x: canvas.width, y: groundY - 120, type: 'gold'});
-                 else bones.push({x: canvas.width, y: groundY - 120, type: 'white'});
+            
+            // Random Bone Spawning Logic
+            nextBoneTimer--;
+            if(nextBoneTimer <= 0) {
+                 let h = Math.random();
+                 let bY = groundY - 40; // Default Low
+                 if(h > 0.6) bY = groundY - 100; // Mid
+                 if(h > 0.9) bY = groundY - 160; // High
+                 
+                 let bType = (Math.random() > 0.9) ? 'gold' : 'white';
+                 bones.push({x: canvas.width, y: bY, type: bType});
+                 
+                 nextBoneTimer = 20 + Math.random() * 40; // Random interval
             }
-            // Spawn Sticks less often
+
             if(frame % 300 === 0) {
                  if(Math.random() > 0.5) sticks.push({x: canvas.width, y: groundY - 120});
             }
@@ -972,12 +988,19 @@
             
             if(o.type === 'poo') drawDooDoo(ctx, o.x, groundY, o.stack);
             else if(o.type === 'stack') { drawDooDoo(ctx, o.x, groundY, 3); drawFlies(ctx, o.x, groundY); }
-            else if(o.type === 'bird') { drawFlies(ctx, o.x, o.y+50); } // Adjusted height for birds
+            else if(o.type === 'bird') { drawFlies(ctx, o.x, o.y); } 
             else if(o.type === 'hydrant') drawHydrant(ctx, o.x, groundY);
             else if(o.type === 'pond') { ctx.fillStyle = "rgba(241, 196, 15, 0.8)"; ctx.beginPath(); ctx.ellipse(o.x, groundY+5, 100, 15, 0, 0, Math.PI*2); ctx.fill(); }
             
             let hit = false;
-            if(o.type === 'bird' && Math.abs(150-o.x)<30 && Math.abs(pepper.y-30-(o.y+50))<30) hit=true;
+            // Bird Hitbox Logic
+            if(o.type === 'bird') {
+                // If bird is low (groundY-40), hit if pepper is low
+                // If bird is high (groundY-110), hit if pepper is high (jumping)
+                if(Math.abs(150-o.x) < 30) {
+                    if(Math.abs(pepper.y - o.y) < 30) hit = true;
+                }
+            }
             if(o.type === 'poo' && Math.abs(150-o.x)<25 && pepper.y > groundY-(o.stack*35)+15) hit=true;
             if(o.type === 'hydrant' && Math.abs(150-o.x)<25 && pepper.y > groundY-35) hit=true;
             if(o.type === 'stack' && Math.abs(150-o.x)<25 && pepper.y > groundY-105) hit=true; 
