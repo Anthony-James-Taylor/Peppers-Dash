@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V18</title>
+    <title>Pepper's Doo-Doo Dash V19</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     
@@ -224,7 +224,7 @@
         <div style="color:white; text-align:left; font-size:14px; line-height:1.6; width:85%; background:rgba(0,0,0,0.5); padding:15px; border-radius:10px;">
             <b>CONTROLS:</b><br>
             👆 <b>TAP</b> to Jump.<br>
-            🚀 <b>AIR TAP</b> to Double Jump (Available Immediately!)<br>
+            🚀 <b>AIR TAP</b> to Double Jump.<br>
             <hr style="border:0; border-top:1px solid rgba(255,255,255,0.3); margin:10px 0;">
             <b>SCORING:</b><br>
             💩 <b>DOO-DOO</b> = 1 PT | 💩💩 <b>STACK</b> = 2 PTS | 🦴 <b>BONE</b> = 5 PTS<br>
@@ -336,9 +336,9 @@
 
     // Sky colors for levels
     let envStyles = [
-        { c1: "#81ecec", c2: "#74b9ff", grass: "#00b894", track: "#2d3436" }, // Day
-        { c1: "#ff9f43", c2: "#ee5253", grass: "#e17055", track: "#2d3436" }, // Sunset
-        { c1: "#2c3e50", c2: "#000000", grass: "#192a56", track: "#576574" }  // Night
+        { c1: "#81ecec", c2: "#74b9ff", grass: "#00b894", track: "#5D4037" }, // Day
+        { c1: "#ff9f43", c2: "#ee5253", grass: "#e17055", track: "#5D4037" }, // Sunset
+        { c1: "#2c3e50", c2: "#000000", grass: "#192a56", track: "#3E2723" }  // Night
     ];
     let curStyle = envStyles[0];
 
@@ -596,7 +596,7 @@
             ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.strokeStyle="#FFD700"; ctx.lineWidth=1;
             ctx.beginPath(); ctx.moveTo(2, -3); ctx.lineTo(12, -3); ctx.lineTo(10, 4); ctx.quadraticCurveTo(6, 6, 2, 4); ctx.fill(); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(2, -5); ctx.lineTo(10, -5); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(-2, -4); ctx.lineTo(4, -4); ctx.stroke(); // Side arm
+            ctx.beginPath(); ctx.moveTo(-2, -4); ctx.lineTo(4, -4); ctx.stroke(); 
         }
         if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(-2, -5, 16, Math.PI, 0); ctx.stroke(); ctx.fillStyle = "#FFD700"; ctx.beginPath(); ctx.arc(14, 6, 3, 0, Math.PI*2); ctx.fill(); }
         else if(!gameActive) { ctx.strokeStyle="black"; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(6,6,5,0,2.5); ctx.stroke(); } 
@@ -657,13 +657,13 @@
 
     // --- COUNTDOWN & START SEQUENCE ---
     function startSequence(isRestart = false) {
-        if(isRestart) resetGameLogic(); // Don't wipe everything if restarting, handled in logic
+        if(isRestart) resetGameLogic(); 
         else {
             initAudio(); 
             startScreen.style.display = 'none'; 
             gameOverScreen.style.display = 'none';
             uiLayer.style.display = 'flex';
-            resetGameLogic(); // Full reset for clean start
+            resetGameLogic(); 
         }
         
         isCountingDown = true;
@@ -676,11 +676,10 @@
             count--;
             if(count > 0) {
                 countdownText.innerText = count;
-                // Re-trigger animation
                 countdownText.style.animation = 'none';
-                countdownText.offsetHeight; /* trigger reflow */
+                countdownText.offsetHeight; 
                 countdownText.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-                playSnare(); // Use snare as tick sound
+                playSnare(); 
             } else {
                 clearInterval(interval);
                 countdownText.innerText = "GO!";
@@ -697,15 +696,12 @@
 
     function loop() {
         if((gameActive && !isPaused && !isCountingDown)) { frame++; } 
-        // Always draw environment even if paused/menu
         groundY = canvas.height - GROUND_H;
         ctx.save();
         
-        // Zoom Effect
         let targetZoom = (gameActive && pepper.isMega) ? 1.05 : 1.0;
         zoomLevel += (targetZoom - zoomLevel) * 0.05;
         
-        // Center Camera
         ctx.translate(canvas.width/2, canvas.height/2); 
         ctx.scale(zoomLevel, zoomLevel); 
         ctx.translate(-canvas.width/2, -canvas.height/2);
@@ -714,17 +710,14 @@
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // ENV
         let grad = ctx.createLinearGradient(0, 0, 0, canvas.height); grad.addColorStop(0, curStyle.c1); grad.addColorStop(1, curStyle.c2); ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = "rgba(255,255,255,0.2)"; let celestialY = (currentLevel%3===2) ? canvas.height*0.8 : 100; ctx.beginPath(); ctx.arc(canvas.width*0.8, celestialY, 60, 0, Math.PI*2); ctx.fill();
         ctx.fillStyle = "rgba(255,255,255,0.1)"; bgMountains.forEach(m => { if(!levelFinished && gameActive && !isPaused && !isCountingDown) m.x -= speed * 0.05; if(m.x < -300) m.x = canvas.width + 100; ctx.beginPath(); ctx.moveTo(m.x, groundY); ctx.lineTo(m.x+150, groundY-300); ctx.lineTo(m.x+300, groundY); ctx.fill(); });
         bgTrees.forEach(t => { if(!levelFinished && gameActive && !isPaused && !isCountingDown) t.x -= speed * 0.2; if(t.x < -50) t.x = canvas.width + Math.random()*300; ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.beginPath(); ctx.moveTo(t.x, groundY); ctx.lineTo(t.x+25, groundY-100); ctx.lineTo(t.x+50, groundY); ctx.fill(); });
         
-        // Clouds
         ctx.fillStyle = "rgba(255,255,255,0.3)";
         bgClouds.forEach(c => { if(!isPaused && !isCountingDown) c.x -= c.speed; if(c.x < -100) c.x = canvas.width + 100; ctx.beginPath(); ctx.ellipse(c.x, c.y, 40, 20, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(c.x+20, c.y-10, 30, 20, 0, 0, Math.PI*2); ctx.fill(); });
 
-        // Stars (Night Level)
         if(currentLevel % 3 === 0) {
             ctx.fillStyle = "white";
             stars.forEach(s => {
@@ -736,7 +729,7 @@
 
         ctx.fillStyle = curStyle.track; ctx.fillRect(0, groundY, canvas.width, GROUND_H);
         ctx.fillStyle = "rgba(255,255,255,0.05)"; let stripeOffset = (frame * speed) % 100; for(let i = -100; i < canvas.width + 100; i+=100) { ctx.beginPath(); ctx.moveTo(i - stripeOffset, groundY); ctx.lineTo(i - stripeOffset + 40, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 90, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 50, groundY); ctx.fill(); }
-        ctx.fillStyle = curStyle.grass; ctx.fillRect(0, groundY, canvas.width, 15);
+        ctx.fillStyle = curStyle.grass; ctx.fillRect(0, groundY, canvas.width, 20);
 
         if(currentLevel >= 3) { ctx.fillStyle = "rgba(255,255,255,0.5)"; weatherParticles.forEach(p => { if(!isPaused && !isCountingDown) { p.y += p.speed; p.x += p.wind; } if(p.y > canvas.height) p.y = 0; if(p.x > canvas.width) p.x = 0; ctx.fillRect(p.x, p.y, p.size, p.size); }); }
 
@@ -765,7 +758,6 @@
         drawHusky(ctx, 150, pepper.y, pepper.isMega, pepper.hasShield);
         
         if(!gameActive && !isCountingDown) {
-            // Draw Steam Doo-Doo on Start Screen (Moved Left)
             drawSteamDooDoo(ctx, canvas.width * 0.75, groundY-15);
         }
 
@@ -810,7 +802,6 @@
             if(o.type === 'poo' && Math.abs(150-o.x)<25 && pepper.y > groundY-(o.stack*35)+15) hit=true;
             if(o.type === 'hydrant' && Math.abs(150-o.x)<25 && pepper.y > groundY-35) hit=true;
             if(o.type === 'stack' && Math.abs(150-o.x)<25 && pepper.y > groundY-105) hit=true; 
-            
             if(o.type === 'pond' && o.x < 150+10 && o.x > 150-100 && pepper.y > groundY - 5) hit=true;
 
             if(!hit && !o.passed && !o.nearMissAwarded && (o.type === 'poo' || o.type === 'stack')) { if(Math.abs(150-o.x) < 30 && Math.abs(pepper.y - (groundY-(o.stack*35))) < 30) closeCall = true; }
@@ -866,7 +857,6 @@
         requestAnimationFrame(loop);
     }
 
-    
     function handleInput() { 
         if(!gameActive || isPaused || isCountingDown) return; 
         initAudio(); 
@@ -884,10 +874,10 @@
     window.addEventListener('touchstart', (e) => { if(e.target.className.includes('btn') || e.target.className.includes('menu') || menuOpen || e.target.closest('.diff-card')) return; if(e.target !== menuBtn) { e.preventDefault(); handleInput(); } }, {passive: false});
     window.addEventListener('mousedown', (e) => { if(e.target.className.includes('btn') || e.target.className.includes('menu') || menuOpen || e.target.closest('.diff-card')) return; if(e.target !== menuBtn) handleInput(); });
 
-    resize(); ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    // INITIALIZE
+    resize(); 
+    resetGameLogic(); // Ensure background exists on load
     renderDiffPreviews();
-    
-    // Initial Render Loop call
     requestAnimationFrame(loop);
 </script>
 </body>
