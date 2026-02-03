@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V42</title>
+    <title>Pepper's Doo-Doo Dash V43</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         /* CORE RESET & LAYOUT */
@@ -628,7 +628,7 @@
             ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(-12, -7, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(8, -7, 2, 0, Math.PI*2); ctx.fill();
             drawHat(ctx);
             if(difficulty === 'normal') drawAviators(ctx, 0, 0);
-            if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, -5, 32, Math.PI, 0); ctx.stroke(); ctx.fillStyle = "#FFD700"; ctx.beginPath(); ctx.arc(0, 20, 6, 0, Math.PI*2); c.fill(); }
+            if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, -5, 32, Math.PI, 0); ctx.stroke(); ctx.fillStyle = "#FFD700"; ctx.beginPath(); ctx.arc(0, 20, 6, 0, Math.PI*2); ctx.fill(); }
             else { ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 12, 10, 0, Math.PI); ctx.stroke(); }
             ctx.restore(); return;
         }
