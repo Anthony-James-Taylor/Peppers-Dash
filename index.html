@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V37</title>
+    <title>Pepper's Doo-Doo Dash V38</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
     
@@ -170,66 +170,94 @@
         }
         #start-diff-btn:hover { background: rgba(255,255,255,0.25); }
 
-        /* POKEMON MART SHOP DESIGN */
+        /* POKEMON MART SHOP DESIGN (Overhauled) */
         #shop-screen {
-            background: #70a2c2; /* Wall color */
-            justify-content: flex-start;
-            padding-top: 0;
+            background: #74b9ff; /* Sky blue wall */
+            justify-content: flex-end; /* Align contents to bottom */
+            padding: 0;
         }
         
-        #shop-counter-area {
-            width: 100%; height: 35%; 
-            background: #e8e8e8;
-            border-bottom: 8px solid #5a5a5a;
-            display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-            padding-bottom: 20px;
-            position: relative;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
-
-        #shop-keeper {
-            position: absolute; bottom: 20px; right: 20%;
-            /* Can be replaced with a canvas later */
-        }
-
-        #shop-floor {
-            width: 100%; height: 65%;
-            background-color: #f8f8f8;
+        #shop-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 60%;
+            background: #5fabdb; /* Wall */
+            z-index: 1;
+            /* Simple CSS Shelf Pattern */
             background-image: 
-                linear-gradient(45deg, #ccc 25%, transparent 25%), 
-                linear-gradient(-45deg, #ccc 25%, transparent 25%), 
-                linear-gradient(45deg, transparent 75%, #ccc 75%), 
-                linear-gradient(-45deg, transparent 75%, #ccc 75%);
-            background-size: 40px 40px;
-            background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center;
+                linear-gradient(to bottom, #4a89ad 5%, transparent 5%),
+                linear-gradient(to bottom, #4a89ad 5%, transparent 5%),
+                linear-gradient(to right, #4a89ad 1px, transparent 1px);
+            background-size: 100% 80px, 100% 80px, 100px 100%;
+            background-position: 0 20px, 0 60px, 0 0;
         }
 
-        #shop-text-box {
-            width: 90%; max-width: 600px;
-            background: white; border: 4px solid #333; border-radius: 8px;
-            padding: 15px; margin-bottom: 20px; text-align: left;
-            font-family: 'Press Start 2P', monospace; font-size: 12px; color: #333;
-            line-height: 1.8;
-            box-shadow: 5px 5px 0px rgba(0,0,0,0.2);
+        #shop-keeper-area {
+            position: absolute; top: 15%; width: 100%; height: 45%;
+            display: flex; justify-content: center; align-items: flex-end;
+            z-index: 2; pointer-events: none;
         }
 
-        .shop-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; width: 100%; }
-        .shop-item {
-            background: white; border: 4px solid #5a5a5a; border-radius: 4px;
-            padding: 10px; width: 110px; text-align: center; cursor: pointer; 
-            display: flex; flex-direction: column; align-items: center;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        #shop-counter {
+            width: 100%; height: 40%;
+            background: #dcdde1; /* Counter top */
+            border-top: 10px solid #b2bec3;
+            z-index: 3;
             position: relative;
+            display: flex; flex-direction: column; align-items: center;
+            box-shadow: 0 -10px 20px rgba(0,0,0,0.2);
         }
-        .shop-item.selected { border-color: #00fbff; background: #e0fbfc; transform: translateY(-5px); }
-        .shop-item.locked { opacity: 0.6; cursor: not-allowed; background: #ddd; }
+
+        #shop-counter::after {
+            content:''; position: absolute; bottom: 0; width: 100%; height: 70%;
+            background: #7f8fa6; /* Counter front */
+            border-top: 2px solid #57606f;
+        }
+
+        #shop-text-box-container {
+            position: absolute; bottom: 10px; width: 95%; max-width: 600px;
+            background: white; border: 4px solid #2d3436; border-radius: 8px;
+            padding: 15px; z-index: 10;
+            font-family: 'Press Start 2P', monospace; font-size: 12px; color: #2d3436;
+            line-height: 1.6;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        #shop-text { flex-grow: 1; text-align: left; margin-right: 10px; }
         
-        .shop-icon { margin-bottom: 10px; font-size: 30px; }
-        .shop-name { color: #333; font-weight: 900; font-size: 12px; margin-bottom: 5px; font-family: 'Montserrat'; }
-        .shop-perk { color: #0984e3; font-size: 9px; margin-bottom: 5px; font-weight: 700; }
-        .shop-cost { color: #d63031; font-weight: 900; font-size: 12px; }
+        #shop-next-btn {
+            background: #d63031; color: white; border: none; padding: 10px 15px;
+            font-family: 'Press Start 2P', monospace; font-size: 10px; cursor: pointer;
+            border-radius: 4px; box-shadow: 3px 3px 0 #c0392b;
+        }
+        #shop-next-btn:active { transform: scale(0.95); box-shadow: 1px 1px 0 #c0392b; }
+
+        .shop-items-grid {
+            position: absolute; top: -60px; /* Sit ON the counter */
+            display: flex; gap: 15px; z-index: 5;
+            perspective: 500px;
+        }
+
+        .shop-item {
+            background: white; border: 3px solid #2d3436; border-radius: 8px;
+            width: 90px; padding: 8px; text-align: center;
+            cursor: pointer; transition: transform 0.2s;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .shop-item.selected { border-color: #00fbff; background: #e0fbfc; transform: translateY(-10px); }
+        .shop-item.locked { opacity: 0.7; background: #b2bec3; cursor: not-allowed; }
+        
+        .shop-icon { font-size: 24px; margin-bottom: 5px; }
+        .shop-name { font-family: 'Montserrat'; font-weight: 900; font-size: 10px; color: #2d3436; margin-bottom: 2px; }
+        .shop-cost { font-family: 'Press Start 2P'; font-size: 9px; color: #d63031; margin-top: 5px; }
+        .shop-perk { font-size: 8px; color: #0984e3; font-weight: 700; margin-bottom: 2px; }
+
+        .balance-tag {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 20px;
+            color: #f1c40f; font-family: 'Press Start 2P'; font-size: 12px; z-index: 20;
+            border: 2px solid white;
+        }
 
         /* Difficulty Cards */
         .diff-container { display: flex; flex-direction: column; gap: 15px; width: 95%; max-height: 85vh; overflow-y: auto; align-items: center; }
@@ -327,21 +355,20 @@
     </div>
 
     <div id="shop-screen">
-        <div id="shop-counter-area">
-            <h1 style="color:#333; font-size:30px; margin-bottom:5px; text-shadow:none;">PEPPER'S MART</h1>
-            <div class="glass-pill" style="margin-bottom:10px; background:rgba(0,0,0,0.1); border-color:#333; color:#333; box-shadow:none;">
-                <span style="font-size:12px; color:#555;">BALANCE</span>
-                <span id="shop-balance" style="font-size:24px; font-weight:900;">0 🦴</span>
-            </div>
-            <canvas id="shopkeeper-canvas" width="100" height="100" style="position: absolute; bottom: -10px; right: 15%;"></canvas>
+        <div id="shop-bg"></div>
+        <div class="balance-tag" id="shop-balance">0 🦴</div>
+        
+        <div id="shop-keeper-area">
+            <canvas id="shopkeeper-canvas" width="200" height="200"></canvas>
         </div>
-        <div id="shop-floor">
-            <div id="shop-text-box">
-                WELCOME! TAKE A LOOK AT MY WARES.
+
+        <div id="shop-counter">
+            <div class="shop-items-grid" id="shop-container"></div>
+            
+            <div id="shop-text-box-container">
+                <div id="shop-text">WELCOME! TAKE A LOOK AT MY WARES.</div>
+                <button id="shop-next-btn">NEXT LEVEL</button>
             </div>
-            <div class="shop-container" id="shop-container">
-                </div>
-            <button class="btn" id="shop-next-btn" style="margin-top:20px; font-size:16px; padding:10px 30px;">NEXT LEVEL >></button>
         </div>
     </div>
 
@@ -426,7 +453,7 @@
     const flashOverlay = document.getElementById('flash-overlay');
     const shopContainer = document.getElementById('shop-container');
     const shopBalance = document.getElementById('shop-balance');
-    const shopTextBox = document.getElementById('shop-text-box');
+    const shopText = document.getElementById('shop-text');
 
     function resize() { 
         canvas.width = window.innerWidth; 
@@ -464,7 +491,7 @@
     let magnetCooldown = 0;
     let isDead = false;
     
-    // GLOBAL SPAWN COOLDOWN (The fix for overlaps)
+    // SPAWN CONTROL
     let globalSpawnCooldown = 0;
 
     let pepper = {
@@ -565,7 +592,7 @@
         megaBarFill.style.width = "0%";
         updateMegaText();
 
-        globalSpawnCooldown = 100; // Start delay
+        globalSpawnCooldown = 100; 
         
         bgMountains=[]; for(let i=0; i<3; i++) bgMountains.push({x: i*300});
         bgTrees=[]; for(let i=0; i<5; i++) bgTrees.push({x: i*200});
@@ -611,11 +638,34 @@
         shopScreen.style.display = 'flex';
         shopBalance.innerText = score + " 🦴";
         
-        // Draw shopkeeper
+        // Draw shopkeeper animation
         let sk = document.getElementById('shopkeeper-canvas');
         let skCtx = sk.getContext('2d');
-        skCtx.clearRect(0,0,100,100);
-        drawHeadPreview(skCtx, 50, 50, 'normal');
+        
+        let skFrame = 0;
+        function animateShopkeeper() {
+            if(shopScreen.style.display !== 'flex') return;
+            skFrame++;
+            skCtx.clearRect(0,0,200,200);
+            
+            // Breathe
+            let breathe = Math.sin(skFrame*0.05) * 2;
+            
+            // Draw big pepper
+            skCtx.save();
+            skCtx.translate(100, 100 + breathe);
+            skCtx.scale(2.5, 2.5); // Big!
+            
+            // Simple Body
+            skCtx.fillStyle = "#1a1a1a";
+            skCtx.beginPath(); skCtx.ellipse(0, 40, 25, 15, 0, 0, Math.PI*2); skCtx.fill();
+            
+            drawHeadPreview(skCtx, 0, 0, 'normal');
+            skCtx.restore();
+            
+            requestAnimationFrame(animateShopkeeper);
+        }
+        animateShopkeeper();
 
         renderShop();
     }
@@ -630,11 +680,9 @@
             div.className = 'shop-item';
             if (pepper.hat === k) div.classList.add('selected');
             
-            // Logic Fix: Explicitly check score vs cost for class
             let isAffordable = score >= item.cost;
             let alreadyOwn = pepper.hat === k; 
             
-            // If not affordable AND not the one you already have, lock it
             if (!isAffordable && !alreadyOwn && k !== 'none') {
                 div.classList.add('locked');
             } else {
@@ -650,17 +698,17 @@
                 ${iconHtml}
                 <div class="shop-name">${item.name}</div>
                 <div class="shop-perk">${item.perk}</div>
-                <div class="shop-cost">${item.cost > 0 ? item.cost + ' 🦴' : 'OWNED'}</div>
+                <div class="shop-cost">${alreadyOwn ? 'OWNED' : (item.cost > 0 ? item.cost + ' 🦴' : 'FREE')}</div>
             `;
             
             div.onclick = () => {
                 if (k === 'none') { 
                     pepper.hat = 'none'; 
-                    shopTextBox.innerText = "SOMETIMES NATURAL IS BEST!";
+                    shopText.innerText = "SOMETIMES NATURAL IS BEST!";
                     renderShop(); return; 
                 }
                 if (pepper.hat === k) {
-                    shopTextBox.innerText = "YOU ARE ALREADY WEARING THAT!";
+                    shopText.innerText = "YOU ARE ALREADY WEARING THAT!";
                     return; 
                 }
                 
@@ -669,18 +717,17 @@
                     pepper.hat = k;
                     shopBalance.innerText = score + " 🦴";
                     scoreEl.innerText = score + " 🦴";
-                    shopTextBox.innerText = "GREAT CHOICE! LOOKING SHARP!";
+                    shopText.innerText = "GREAT CHOICE! LOOKING SHARP!";
                     renderShop();
                     playSfx('collect');
                 } else {
-                    shopTextBox.innerText = "YOU DON'T HAVE ENOUGH BONES!";
+                    shopText.innerText = "YOU DON'T HAVE ENOUGH BONES!";
                     playSfx('crash'); 
                 }
             };
             shopContainer.appendChild(div);
         });
 
-        // Draw "No Hat" Pepper face in the grid
         let c = document.getElementById('shop-cvs-none');
         if(c) {
             let x = c.getContext('2d');
@@ -729,7 +776,7 @@
         c.fillStyle = eyeC; c.beginPath(); c.arc(-10, -5, 6, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(10, -5, 6, 0, Math.PI*2); c.fill(); 
         c.fillStyle = "white"; c.beginPath(); c.arc(-12, -7, 2, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(8, -7, 2, 0, Math.PI*2); c.fill();
         if(mode === 'normal') { drawAviators(c, 0, 0); }
-        if(mode === 'baby') { c.strokeStyle = "pink"; c.lineWidth = 6; c.beginPath(); c.arc(0, -5, 32, Math.PI, 0); c.stroke(); c.fillStyle = "#FFD700"; c.beginPath(); c.arc(0, 18, 6, 0, Math.PI*2); c.fill(); } 
+        if(mode === 'baby') { c.strokeStyle = "pink"; c.lineWidth = 6; c.beginPath(); c.arc(0, -5, 32, Math.PI, 0); c.stroke(); c.fillStyle = "#FFD700"; c.beginPath(); c.arc(0, 20, 6, 0, Math.PI*2); c.fill(); } 
         else { c.strokeStyle = "black"; c.lineWidth = 2; c.beginPath(); c.arc(0, 12, 10, 0, Math.PI); c.stroke(); }
         c.restore();
     }
