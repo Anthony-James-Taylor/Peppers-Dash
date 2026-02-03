@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V13</title>
+    <title>Pepper's Doo-Doo Dash V14</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     
@@ -108,15 +108,15 @@
         .btn:active { transform: scale(0.95); background: #dfe6e9; animation: none; }
 
         /* Difficulty Cards */
-        .diff-container { display: flex; flex-direction: column; gap: 15px; width: 90%; max-height: 80vh; overflow-y: auto; align-items: center; }
+        .diff-container { display: flex; flex-direction: column; gap: 15px; width: 95%; max-height: 85vh; overflow-y: auto; align-items: center; }
         .diff-card { 
             background: rgba(255,255,255,0.1); border: 2px solid transparent; border-radius: 12px; 
-            padding: 10px; width: 100%; max-width: 320px; text-align: left; display: flex; align-items: center; gap: 15px;
+            padding: 15px; width: 100%; max-width: 380px; text-align: left; display: flex; align-items: center; gap: 15px;
             cursor: pointer; transition: all 0.2s;
         }
         .diff-card.selected { border-color: #00fbff; background: rgba(0,251,255,0.1); }
-        .diff-info h3 { margin: 0 0 5px 0; font-size: 18px; color: #ffeaa7; }
-        .diff-info p { margin: 0; font-size: 12px; color: #b2bec3; line-height: 1.3; }
+        .diff-info h3 { margin: 0 0 5px 0; font-size: 18px; color: #ffeaa7; text-transform: uppercase; letter-spacing: 1px;}
+        .diff-info p { margin: 0; font-size: 12px; color: #b2bec3; line-height: 1.4; }
 
         @keyframes slideUp { 0% { transform: translateY(50px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
         @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
@@ -155,31 +155,31 @@
 
     <div id="start-screen">
         <div class="title-box"><h1>PEPPER'S<br>DOO-DOO DASH</h1></div>
-        <button class="btn" id="start-btn" style="position: absolute; top: 50%; transform: translateY(-50%);">TAP TO START</button>
+        <button class="btn" id="start-btn" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">TAP TO START</button>
     </div>
 
     <div id="difficulty-screen">
         <h2 style="color:white; margin-bottom: 20px;">SELECT DIFFICULTY</h2>
         <div class="diff-container">
             <div class="diff-card" id="diff-baby" onclick="setDifficulty('baby')">
-                <canvas id="cvs-baby" width="60" height="60"></canvas>
+                <canvas id="cvs-baby" width="100" height="100"></canvas>
                 <div class="diff-info">
                     <h3>Can I play, Daddy?</h3>
-                    <p>Baby Bonnet Mode. Progress Saved.<br>Restart from current level on death.</p>
+                    <p>Restart from the same level, because I don't like to lose.</p>
                 </div>
             </div>
             <div class="diff-card selected" id="diff-normal" onclick="setDifficulty('normal')">
-                <canvas id="cvs-normal" width="60" height="60"></canvas>
+                <canvas id="cvs-normal" width="100" height="100"></canvas>
                 <div class="diff-info">
                     <h3>Bring 'em on.</h3>
-                    <p>Sunglasses Mode. The Standard Experience.<br>Restart from Level 1.</p>
+                    <p>I kick it old school, take me back to where it all began.</p>
                 </div>
             </div>
             <div class="diff-card" id="diff-death" onclick="setDifficulty('death')">
-                <canvas id="cvs-death" width="60" height="60"></canvas>
+                <canvas id="cvs-death" width="100" height="100"></canvas>
                 <div class="diff-info">
                     <h3 style="color:#ff7675">I am Death incarnate!</h3>
-                    <p>Red Eyes. 10% Faster.<br>NO SHIELDS ALLOWED.</p>
+                    <p>Fast play. No shields. Max adrenaline.</p>
                 </div>
             </div>
         </div>
@@ -203,7 +203,8 @@
             💩 <b>POO</b> = 1 PT | 💩💩 <b>STACK</b> = 2 PTS | 🦴 <b>BONE</b> = 5 PTS<br>
             <hr style="border:0; border-top:1px solid rgba(255,255,255,0.3); margin:10px 0;">
             <b>ITEMS:</b><br>
-            🪵 <b>5 STICKS</b> = SHIELD | 🌈 <b>MEGA MODE</b> = Invincible!<br>
+            🪵 <b>5 STICKS</b> = SHIELD (Extra Hit)<br>
+            🌈 <b>MEGA MODE</b> = Invincible Speed!<br>
             ❌ <b>RED HYDRANT</b> = GAME OVER
         </div>
         <div class="btn" id="close-help-btn" style="margin-top:15px; padding:15px 40px;">GOT IT</div>
@@ -303,10 +304,11 @@
     let menuOpen = false;
     let megaUnlockedOnce = false;
 
+    // Sky colors for levels
     let envStyles = [
-        { c1: "#81ecec", c2: "#74b9ff", grass: "#00b894", track: "#2d3436" }, 
-        { c1: "#ff9f43", c2: "#ee5253", grass: "#e17055", track: "#2d3436" }, 
-        { c1: "#2c3e50", c2: "#000000", grass: "#192a56", track: "#576574" }  
+        { c1: "#81ecec", c2: "#74b9ff", grass: "#00b894", track: "#2d3436" }, // Day
+        { c1: "#ff9f43", c2: "#ee5253", grass: "#e17055", track: "#2d3436" }, // Sunset
+        { c1: "#2c3e50", c2: "#000000", grass: "#192a56", track: "#576574" }  // Night
     ];
     let curStyle = envStyles[0];
 
@@ -363,37 +365,56 @@
         difficulty = mode;
         document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
         document.getElementById('diff-'+mode).classList.add('selected');
-        // Visual indicator on HUD?
         if(mode === 'death') streakLabel.innerText = "I AM DEATH! (NO SHIELDS)";
+        else streakLabel.innerText = "MEGA MODE! DODGE 50 DOO-DOOS TO UNLOCK";
     }
     function renderDiffPreviews() {
         ['baby', 'normal', 'death'].forEach(mode => {
             let cvs = document.getElementById('cvs-'+mode);
             let c = cvs.getContext('2d');
-            c.clearRect(0,0,60,60);
-            drawHeadPreview(c, 30, 30, mode);
+            c.clearRect(0,0,100,100);
+            drawHeadPreview(c, 50, 50, mode);
         });
     }
     function drawHeadPreview(c, x, y, mode) {
-        c.save(); c.translate(x, y); c.scale(0.8, 0.8);
+        c.save(); c.translate(x, y); 
         let bodyC = (mode==='death') ? "#2d3436" : "#1a1a1a";
         let eyeC = (mode==='death') ? "red" : "#00fbff";
         
-        c.fillStyle = bodyC; c.beginPath(); c.arc(0, 0, 15, 0, Math.PI*2); c.fill(); // Head
-        c.fillStyle = "white"; c.beginPath(); c.arc(0, 4, 11, 0, Math.PI*2); c.fill(); 
-        c.fillStyle = "black"; c.beginPath(); c.arc(12, 2, 2.5, 0, Math.PI*2); c.fill(); // Nose
+        // Head Base
+        c.fillStyle = bodyC; c.beginPath(); c.arc(0, 0, 30, 0, Math.PI*2); c.fill();
+        c.fillStyle = "white"; c.beginPath(); c.arc(0, 8, 22, 0, Math.PI*2); c.fill();
         
-        // Eyes
+        // Ears
+        c.fillStyle = bodyC; 
+        c.beginPath(); c.moveTo(-20, -10); c.lineTo(-25, -40); c.lineTo(-5, -20); c.fill();
+        c.beginPath(); c.moveTo(20, -10); c.lineTo(25, -40); c.lineTo(5, -20); c.fill();
+        c.fillStyle = "pink";
+        c.beginPath(); c.moveTo(-18, -15); c.lineTo(-22, -30); c.lineTo(-10, -20); c.fill();
+        c.beginPath(); c.moveTo(18, -15); c.lineTo(22, -30); c.lineTo(10, -20); c.fill();
+
+        // Face
+        c.fillStyle = "black"; c.beginPath(); c.arc(0, 5, 5, 0, Math.PI*2); c.fill(); // Nose
         c.fillStyle = eyeC; 
-        if(mode === 'normal') c.fillStyle = "black"; // Sunglasses
-        c.beginPath(); c.arc(2, -3, 3.5, 0, Math.PI*2); c.fill();
-        
-        if(mode === 'normal') { // Glasses
-            c.fillStyle = "black"; c.fillRect(-2, -6, 12, 5);
+        c.beginPath(); c.arc(-10, -5, 6, 0, Math.PI*2); c.fill(); 
+        c.beginPath(); c.arc(10, -5, 6, 0, Math.PI*2); c.fill();
+        c.fillStyle = "white"; c.beginPath(); c.arc(-12, -7, 2, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(8, -7, 2, 0, Math.PI*2); c.fill();
+
+        if(mode === 'normal') { // Sunglasses
+            c.fillStyle = "black"; 
+            c.beginPath(); c.arc(-10, -5, 8, 0, Math.PI*2); c.fill(); // Left Lens
+            c.beginPath(); c.arc(10, -5, 8, 0, Math.PI*2); c.fill(); // Right Lens
+            c.fillRect(-10, -12, 20, 4); // Top Bar
+            c.beginPath(); c.moveTo(-18,-5); c.quadraticCurveTo(-10, 5, -2, -5); c.fill(); // Shape
+            c.beginPath(); c.moveTo(18,-5); c.quadraticCurveTo(10, 5, 2, -5); c.fill();
         }
         if(mode === 'baby') { // Bonnet & Dummy
-            c.strokeStyle = "pink"; c.lineWidth = 4; c.beginPath(); c.arc(0,0,15,Math.PI,0); c.stroke();
-            c.fillStyle = "cyan"; c.beginPath(); c.arc(8, 10, 4, 0, Math.PI*2); c.fill();
+            c.strokeStyle = "pink"; c.lineWidth = 6; c.beginPath(); c.arc(0, -5, 32, Math.PI, 0); c.stroke();
+            c.fillStyle = "cyan"; c.beginPath(); c.arc(0, 18, 6, 0, Math.PI*2); c.fill(); // Dummy
+            c.fillStyle = "white"; c.beginPath(); c.arc(0, 18, 2, 0, Math.PI*2); c.fill();
+        } else {
+            // Smile
+            c.strokeStyle = "black"; c.lineWidth = 2; c.beginPath(); c.arc(0, 12, 10, 0, Math.PI); c.stroke();
         }
         c.restore();
     }
@@ -434,6 +455,7 @@
             ctx.fillStyle = white; ctx.beginPath(); ctx.ellipse(0, 20, 12, 18, 0, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = white; ctx.beginPath(); ctx.ellipse(-10, 45, 6, 8, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(10, 45, 6, 8, 0, 0, Math.PI*2); ctx.fill();
             let tw = Math.sin(Date.now()/100) * 0.5; ctx.save(); ctx.translate(20, 35); ctx.rotate(tw); ctx.fillStyle = white; ctx.beginPath(); ctx.ellipse(10, -10, 10, 20, 0.5, 0, Math.PI*2); ctx.fill(); ctx.restore();
+            
             // Head
             ctx.fillStyle = bodyC; ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI*2); ctx.fill();
             ctx.fillStyle = white; ctx.beginPath(); ctx.arc(0, 8, 22, 0, Math.PI*2); ctx.fill();
@@ -441,8 +463,16 @@
             ctx.fillStyle = "pink"; ctx.beginPath(); ctx.moveTo(-18, -15); ctx.lineTo(-22, -30); ctx.lineTo(-10, -20); ctx.fill(); ctx.beginPath(); ctx.moveTo(18, -15); ctx.lineTo(22, -30); ctx.lineTo(10, -20); ctx.fill();
             ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(0, 5, 5, 0, Math.PI*2); ctx.fill(); 
             ctx.fillStyle = eyeC; ctx.beginPath(); ctx.arc(-10, -5, 6, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(10, -5, 6, 0, Math.PI*2); ctx.fill(); 
+            
             // Modifiers
-            if(difficulty === 'normal') { ctx.fillStyle = "black"; ctx.fillRect(-18, -10, 36, 12); }
+            if(difficulty === 'normal') { 
+                ctx.fillStyle = "black"; 
+                ctx.beginPath(); ctx.arc(-10, -5, 8, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(10, -5, 8, 0, Math.PI*2); ctx.fill();
+                ctx.fillRect(-10, -12, 20, 4);
+                ctx.beginPath(); ctx.moveTo(-18,-5); ctx.quadraticCurveTo(-10, 5, -2, -5); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(18,-5); ctx.quadraticCurveTo(10, 5, 2, -5); ctx.fill();
+            }
             if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, -5, 32, Math.PI, 0); ctx.stroke(); ctx.fillStyle="cyan"; ctx.beginPath(); ctx.arc(0, 20, 6, 0, Math.PI*2); ctx.fill(); }
             else { ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 12, 10, 0, Math.PI); ctx.stroke(); ctx.fillStyle = "pink"; ctx.beginPath(); ctx.arc(0, 22, 6, 0, Math.PI, false); ctx.fill(); }
             ctx.restore();
@@ -453,7 +483,11 @@
         pepper.runFrame = (pepper.runFrame || 0) + 0.3; let legOffset = Math.sin(pepper.runFrame);
         if(!pepper.grounded && !pepper.canDoubleJump) ctx.rotate(legOffset * 0.2); else if(!pepper.grounded) ctx.rotate(pepper.dy * 0.04);
 
-        if(hasShield) { ctx.shadowColor = "#00fbff"; ctx.shadowBlur = 20; ctx.beginPath(); ctx.arc(0, -10, 35, 0, Math.PI*2); ctx.strokeStyle = "rgba(0,251,255,0.4)"; ctx.lineWidth=2; ctx.stroke(); ctx.shadowBlur = 0; }
+        if(hasShield) { 
+            let pulse = 35 + Math.sin(frame*0.2)*3;
+            let alpha = 0.4 + Math.sin(frame*0.2)*0.2;
+            ctx.fillStyle = `rgba(0,251,255,${alpha})`; ctx.beginPath(); ctx.arc(0, -10, pulse, 0, Math.PI*2); ctx.fill();
+        }
 
         ctx.fillStyle = white; ctx.beginPath(); ctx.ellipse(-2, -12, 22, 12, 0, 0, Math.PI*2); ctx.fill(); 
         ctx.fillStyle = bodyC; ctx.beginPath(); ctx.ellipse(-2, -18, 22, 12, 0, 0, Math.PI*2); ctx.fill(); 
@@ -468,7 +502,11 @@
         ctx.fillStyle = eyeC; ctx.beginPath(); ctx.arc(2, -3, 3.5, 0, Math.PI*2); ctx.fill(); 
         
         // Modifiers Side View
-        if(difficulty === 'normal') { ctx.fillStyle = "black"; ctx.fillRect(2, -6, 8, 6); }
+        if(difficulty === 'normal') { 
+            ctx.fillStyle = "black"; 
+            ctx.beginPath(); ctx.arc(2, -3, 6, 0, Math.PI*2); ctx.fill();
+            ctx.fillRect(2, -9, 8, 2);
+        }
         if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(-2, -5, 16, Math.PI, 0); ctx.stroke(); ctx.fillStyle = "cyan"; ctx.beginPath(); ctx.arc(14, 6, 3, 0, Math.PI*2); ctx.fill(); }
         else if(!gameActive) { ctx.strokeStyle="black"; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(6,6,5,0,2.5); ctx.stroke(); } 
 
@@ -477,7 +515,19 @@
     }
 
     function drawStick(ctx, x, y) { ctx.save(); ctx.translate(x, y + Math.sin(frame*0.1)*5); ctx.strokeStyle = "#8B4513"; ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(-10, 5); ctx.lineTo(10, -5); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(5, 5); ctx.stroke(); ctx.fillStyle = "#00b894"; ctx.beginPath(); ctx.arc(10, -5, 3, 0, Math.PI*2); ctx.fill(); ctx.restore(); }
-    function drawBone(ctx, x, y) { ctx.save(); ctx.translate(x, y + Math.sin(frame*0.1)*5); ctx.fillStyle = "#ffffff"; ctx.fillRect(-10, -4, 20, 8); ctx.beginPath(); ctx.arc(-10, -5, 5, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(-10, 5, 5, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(10, -5, 5, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(10, 5, 5, 0, Math.PI*2); ctx.fill(); ctx.restore(); }
+    
+    function drawBone(ctx, x, y) { 
+        ctx.save(); ctx.translate(x, y + Math.sin(frame*0.1)*5); 
+        ctx.fillStyle = "#ffffff"; ctx.strokeStyle = "#b2bec3"; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(-10, -4); ctx.lineTo(10, -4); ctx.lineTo(10, 4); ctx.lineTo(-10, 4); ctx.fill();
+        ctx.beginPath(); ctx.arc(-12, -6, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(-12, 6, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(12, -6, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(12, 6, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+        ctx.fillRect(-10, -4, 20, 8); // Cover strokes
+        ctx.restore(); 
+    }
+    
     function drawHydrant(ctx, x, y) { ctx.fillStyle = "#d63031"; ctx.fillRect(x-15, y-40, 30, 40); ctx.fillRect(x-20, y-10, 40, 10); ctx.fillRect(x-20, y-35, 10, 10); ctx.fillRect(x+10, y-35, 10, 10); ctx.beginPath(); ctx.arc(x, y-40, 15, Math.PI, 0); ctx.fill(); ctx.fillStyle = "#b2bec3"; ctx.fillRect(x-5, y-45, 10, 5); }
     
     function drawPoo(ctx, x, y, stack) {
@@ -487,10 +537,8 @@
     }
     
     function drawSteamPoo(ctx, x, y) {
-        // Giant Poo for Start Screen
         ctx.save(); ctx.translate(x, y); ctx.scale(2, 2);
         drawPoo(ctx, 0, 0, 1);
-        // Steam
         ctx.fillStyle = "rgba(200,200,200,0.5)";
         let t = Date.now()/500;
         for(let i=0; i<3; i++) {
@@ -563,7 +611,7 @@
         
         if(!gameActive) {
             // Draw Steam Poo on Start Screen
-            drawSteamPoo(ctx, 350, groundY-50);
+            drawSteamPoo(ctx, canvas.width*0.8, groundY-50);
         }
 
         if(finishLine && gameActive && !isPaused) {
@@ -607,7 +655,7 @@
             if(o.type === 'poo' && Math.abs(150-o.x)<25 && pepper.y > groundY-(o.stack*35)+15) hit=true;
             if(o.type === 'hydrant' && Math.abs(150-o.x)<25 && pepper.y > groundY-35) hit=true;
             if(o.type === 'stack' && Math.abs(150-o.x)<25 && pepper.y > groundY-105) hit=true; 
-            if(o.type === 'pond' && o.x < 150+20 && o.x > 150-200 && pepper.y > groundY - 10) hit=true;
+            if(o.type === 'pond' && o.x < 150 && o.x > 150-180 && pepper.y > groundY - 5) hit=true;
 
             if(!hit && !o.passed && !o.nearMissAwarded && (o.type === 'poo' || o.type === 'stack')) { if(Math.abs(150-o.x) < 30 && Math.abs(pepper.y - (groundY-(o.stack*35))) < 30) closeCall = true; }
 
@@ -667,13 +715,12 @@
     function goToNextLevel() {
         levelStartScore = score;
         currentLevel++; updateEnvStyle(); levelMaxDistance += 1000; 
-        speed += 0.5; // VERY gentle speed curve for Level 2
+        speed += 0.5; 
         levelDistance = 0; finishLine = null; obstacles = []; levelFinished = false; levelScreen.style.display = 'none'; levelInd.innerText = "LEVEL " + currentLevel; pepper.x = -50; startMusic();
         let runIn = setInterval(() => { pepper.x += 5; if(pepper.x >= 100) { clearInterval(runIn); pepper.x = 100; checkLevelIntro(); } }, 16);
         nextObstacleTimer = 180;
     }
     
-    // BABY MODE RESTART
     function restartLevel() {
         score = levelStartScore; scoreEl.innerText = score + " PTS";
         gameOverScreen.style.display = 'none';
@@ -694,11 +741,7 @@
         if(score > highScore) { highScore = score; localStorage.setItem('pepperHighScore', highScore); highScoreEl.innerText = "BEST: " + highScore; } 
         endScoreEl.innerText = score; 
         
-        if(difficulty === 'baby') {
-            retryBtn.innerText = "RETRY LEVEL (BABY MODE)";
-        } else {
-            retryBtn.innerText = "TRY AGAIN";
-        }
+        if(difficulty === 'baby') { retryBtn.innerText = "RETRY LEVEL (BABY MODE)"; } else { retryBtn.innerText = "TRY AGAIN"; }
 
         if(reason === 'mega-hydrant') { goTitle.innerText = "STINKY!"; goMsg.innerText = "EVEN MEGA PEPPER HAS TO HOP A HYDRANT!"; goCanvas.style.display = 'block'; let gCtx = goCanvas.getContext('2d'); gCtx.clearRect(0,0,150,100); drawHydrant(gCtx, 75, 80); } else { goTitle.innerText = "GAME OVER!"; goMsg.innerText = ""; goCanvas.style.display = 'none'; } 
         gameOverScreen.style.display = 'flex'; 
@@ -709,7 +752,7 @@
     function resetGameLogic() { 
         resize(); score = 0; levelStartScore = 0; scoreEl.innerText="0 PTS"; pepper.sticks=0; stickText.innerText="0/5"; pepper.streak=0; streakFill.style.width="0%"; obstacles=[]; sticks=[]; bones=[]; floatTexts=[]; speed=9; levelDistance=0; levelFinished=false; finishLine=null; currentLevel=1; updateEnvStyle(); levelInd.innerText = "LEVEL 1"; pepper.y = groundY; pepper.dy=0; pepper.grounded=true; pepper.doubleJumpUnlocked = false; 
         
-        if(difficulty === 'death') speed = 10; // Faster start
+        if(difficulty === 'death') speed = 10; 
 
         nextObstacleTimer = 180; 
         
