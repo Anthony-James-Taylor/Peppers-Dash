@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V28</title>
+    <title>Pepper's Doo-Doo Dash V29</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Russo+One&display=swap" rel="stylesheet">
     
@@ -113,7 +113,6 @@
             color: #fff; font-size: 18px; font-weight: 900; letter-spacing: 1px;
         }
 
-        /* POPPY MEGA MODE COLORS */
         .mega-active {
             border-color: transparent !important;
             background: linear-gradient(135deg, rgba(20,0,20,0.9), rgba(50,0,50,0.9));
@@ -121,7 +120,7 @@
             animation: shake 0.5s infinite;
         }
         .mega-active #mega-bar-fill {
-            background: linear-gradient(90deg, #ff00de, #00ffff, #ffff00, #ff00de); /* Poppy: Hot Pink, Cyan, Yellow */
+            background: linear-gradient(90deg, #ff00de, #00ffff, #ffff00, #ff00de); 
             background-size: 200%;
             animation: rainbowMove 0.3s linear infinite;
         }
@@ -131,13 +130,13 @@
         @keyframes shake { 0% { transform: translate(0,0); } 25% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -1px); } 75% { transform: translate(-1px, 1px); } 100% { transform: translate(1px, -1px); } }
 
         /* SCREENS */
-        #start-screen, #game-over, #level-screen, #how-to-screen, #info-modal, #difficulty-screen { 
+        #start-screen, #game-over, #shop-screen, #how-to-screen, #info-modal, #difficulty-screen { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
             display: flex; flex-direction: column; justify-content: center; align-items: center; 
             z-index: 200; text-align: center; 
         }
-        #game-over, #level-screen, #how-to-screen, #info-modal, #difficulty-screen { display: none; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); }
+        #game-over, #shop-screen, #how-to-screen, #info-modal, #difficulty-screen { display: none; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); }
         
         #start-screen { background: none; backdrop-filter: none; z-index: 50; gap: 20px; }
         
@@ -171,6 +170,20 @@
             text-transform: uppercase; transition: background 0.2s;
         }
         #start-diff-btn:hover { background: rgba(255,255,255,0.25); }
+
+        /* SHOP */
+        .shop-container { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; width: 95%; max-width: 800px; }
+        .shop-item {
+            background: rgba(255,255,255,0.1); border: 2px solid transparent; border-radius: 12px;
+            padding: 15px; width: 140px; text-align: center; cursor: pointer; transition: all 0.2s;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .shop-item.selected { border-color: #00fbff; background: rgba(0,251,255,0.1); }
+        .shop-item.locked { opacity: 0.5; cursor: not-allowed; }
+        .shop-icon { font-size: 40px; margin-bottom: 10px; }
+        .shop-name { color: #fff; font-weight: 900; font-size: 14px; margin-bottom: 5px; }
+        .shop-perk { color: #00fbff; font-size: 10px; margin-bottom: 5px; font-weight: 700; }
+        .shop-cost { color: #f1c40f; font-weight: 900; font-size: 14px; }
 
         /* Difficulty Cards */
         .diff-container { display: flex; flex-direction: column; gap: 15px; width: 95%; max-height: 85vh; overflow-y: auto; align-items: center; }
@@ -268,6 +281,19 @@
         <button class="btn" id="close-diff-btn" style="margin-top:20px;">CONFIRM</button>
     </div>
 
+    <div id="shop-screen">
+        <h1 style="color:#f1c40f; font-size:40px; margin-bottom:10px;">SHOP</h1>
+        <div class="glass-pill" style="margin-bottom:20px;">
+            <span style="font-size:12px; color:#b2bec3;">BALANCE</span>
+            <span id="shop-balance" style="font-size:24px; font-weight:900;">0 🦴</span>
+        </div>
+        
+        <div class="shop-container" id="shop-container">
+            </div>
+
+        <button class="btn" id="shop-next-btn" style="margin-top:30px;">NEXT LEVEL >></button>
+    </div>
+
     <div id="info-modal">
         <h2 id="modal-title" style="color:#00fbff; font-size:35px; margin:0; text-transform:uppercase;">TITLE</h2>
         <div id="modal-text" style="color:white; font-size:16px; width:80%; margin-top:10px;">Description</div>
@@ -285,19 +311,19 @@
             <b>SCORING:</b><br>
             🦴 <b>WHITE BONE</b> = 1 🦴<br>
             🦴 <b>GOLD BONE</b> = 5 🦴<br>
-            🧲 <b>BLUE BONE</b> = MAGNET!<br>
+            🧲 <b>MAGNET</b> = Sucks Bones!<br>
             💩 <b>DOO-DOO</b> = AVOID!<br>
             <hr style="border:0; border-top:1px solid rgba(255,255,255,0.3); margin:10px 0;">
-            <b>UNLOCKS:</b><br>
-            50 🦴 = Cap | 100 🦴 = Top Hat | 200 🦴 = Cowboy
+            <b>SHOP:</b><br>
+            Spend bones between levels to buy Hats with perks!
         </div>
         <div class="btn" id="close-help-btn" style="margin-top:15px; padding:15px 40px;">GOT IT</div>
     </div>
 
     <div id="level-screen">
         <h1 style="color:#00fbff; font-size:40px;">LEVEL COMPLETE!</h1>
-        <div class="glass-pill" style="margin: 20px 0;"><span id="score-label">NEXT CHALLENGE AWAITS</span></div>
-        <div class="btn" id="next-level-btn">NEXT LEVEL >></div>
+        <div class="glass-pill" style="margin: 20px 0;"><span id="score-label">NEXT STOP: THE SHOP</span></div>
+        <div class="btn" id="go-to-shop-btn">GO TO SHOP >></div>
     </div>
 
     <div id="game-over">
@@ -337,6 +363,7 @@
     const difficultyScreen = document.getElementById('difficulty-screen');
     const gameOverScreen = document.getElementById('game-over');
     const levelScreen = document.getElementById('level-screen');
+    const shopScreen = document.getElementById('shop-screen');
     const howToScreen = document.getElementById('how-to-screen');
     const infoModal = document.getElementById('info-modal');
     
@@ -344,7 +371,8 @@
     const startBtn = document.getElementById('start-btn');
     const startDiffBtn = document.getElementById('start-diff-btn');
     const retryBtn = document.getElementById('retry-btn');
-    const nextLevelBtn = document.getElementById('next-level-btn');
+    const nextLevelBtn = document.getElementById('shop-next-btn');
+    const goToShopBtn = document.getElementById('go-to-shop-btn');
     const closeHelpBtn = document.getElementById('close-help-btn');
     const modalBtn = document.getElementById('modal-btn');
     const closeDiffBtn = document.getElementById('close-diff-btn');
@@ -354,8 +382,8 @@
     const goMsg = document.getElementById('go-msg');
     const goCanvas = document.getElementById('go-canvas');
     const flashOverlay = document.getElementById('flash-overlay');
-    const modalCanvas = document.getElementById('modal-canvas');
-    const modalCtx = modalCanvas.getContext('2d');
+    const shopContainer = document.getElementById('shop-container');
+    const shopBalance = document.getElementById('shop-balance');
 
     function resize() { 
         canvas.width = window.innerWidth; 
@@ -370,7 +398,6 @@
     const JUMP_FORCE = -19; 
     const DOUBLE_JUMP_FORCE = -15; 
     const GROUND_H = 140; 
-    const MEGA_MAX_TIME = 900; 
     const MEGA_TRIGGER = 50; 
     
     let difficulty = 'normal';
@@ -379,7 +406,7 @@
     let isCountingDown = false;
     let levelVictoryAnim = false;
     let frame = 0;
-    let score = 0;
+    let score = 0; // Total Bones
     let levelStartScore = 0;
     let highScore = localStorage.getItem('pepperHighScore') || 0;
     let speed = 9;
@@ -393,17 +420,17 @@
     let levelFinished = false; 
     let isMuted = false;
     let menuOpen = false;
-    let megaUnlockedOnce = false;
     let slowMoTimer = 0;
 
     let pepper = {
         x: 100, y: 0, dy: 0,
         grounded: true, canDoubleJump: false, isMega: false,
-        streak: 0, megaTimer: 0, sticks: 0, hasShield: false, size: 1,
+        streak: 0, megaTimer: 0, sticks: 0, hasShield: false,
         doubleJumpUnlocked: true,
         runFrame: 0,
         rotation: 0,
-        magnetTimer: 0
+        magnetTimer: 0,
+        hat: 'none' // none, cap, tophat, cowboy
     };
 
     let obstacles = [];
@@ -446,6 +473,7 @@
     attachFastClick(startBtn, () => { startSequence(false); });
     attachFastClick(startDiffBtn, () => { openDifficultyScreen(); });
     attachFastClick(retryBtn, () => { if(difficulty === 'baby') { resetLevelState(); startSequence(false); } else { resetGameLogic(); startSequence(false); } });
+    attachFastClick(goToShopBtn, () => { openShop(); });
     attachFastClick(nextLevelBtn, () => { goToNextLevel(); });
     attachFastClick(modalBtn, () => { closeModal(); });
     attachFastClick(closeDiffBtn, () => { difficultyScreen.style.display = 'none'; });
@@ -468,6 +496,7 @@
         score = 0; levelStartScore = 0; scoreEl.innerText="0 🦴"; 
         pepper.sticks=0; stickText.innerText="0/5"; 
         pepper.streak=0; currentLevel=1; 
+        pepper.hat = 'none';
         resetLevelState(); drawStickIcon();
     }
 
@@ -479,8 +508,12 @@
         levelInd.innerText = "LEVEL " + currentLevel; 
         
         pepper.y = groundY; pepper.dy=0; pepper.grounded=true; 
-        pepper.isMega = false; pepper.hasShield = false; pepper.megaTimer = 0; pepper.magnetTimer = 0;
+        pepper.isMega = false; pepper.megaTimer = 0; pepper.magnetTimer = 0;
         pepper.rotation = 0; pepper.x = 100;
+        
+        // Hat Perks
+        if(pepper.hat === 'tophat') { pepper.hasShield = true; pepper.sticks = 5; stickText.innerText="5/5"; } 
+        else { pepper.hasShield = false; pepper.sticks = 0; stickText.innerText="0/5"; }
 
         megaMeter.classList.remove('mega-active');
         megaBarFill.style.width = "0%";
@@ -492,14 +525,82 @@
         bgMountains=[]; for(let i=0; i<3; i++) bgMountains.push({x: i*300});
         bgTrees=[]; for(let i=0; i<5; i++) bgTrees.push({x: i*200});
         bgClouds=[]; for(let i=0; i<5; i++) bgClouds.push({x: Math.random()*canvas.width, y: Math.random()*150, speed: 0.2 + Math.random()*0.3});
-        fgBushes=[]; for(let i=0; i<3; i++) fgBushes.push({x: Math.random()*canvas.width, type: Math.floor(Math.random()*3)});
+        fgBushes=[]; for(let i=0; i<3; i++) fgBushes.push({x: Math.random()*canvas.width});
         weatherParticles=[]; for(let i=0; i<50; i++) weatherParticles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, speed:2+Math.random()*2, wind:-1+Math.random()*2, size:2+Math.random()*2});
         stars=[]; for(let i=0; i<50; i++) stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height/2, size:Math.random()*3});
     }
 
-    function goToNextLevel() { levelStartScore = score; currentLevel++; levelMaxDistance += 1000; resetLevelState(); levelScreen.style.display = 'none'; startSequence(false); }
-    function goHome() { gameActive = false; isPaused = false; isCountingDown = false; stopMusic(); uiLayer.style.display = 'none'; menuContent.style.display = 'none'; menuOpen = false; menuBtn.innerText = "☰"; startScreen.style.display = 'flex'; gameOverScreen.style.display = 'none'; levelScreen.style.display = 'none'; howToScreen.style.display = 'none'; resetGameLogic(); pepper.y = groundY; pepper.dy = 0; zoomLevel = 3.5; }
+    function goToNextLevel() { 
+        shopScreen.style.display = 'none';
+        levelStartScore = score; currentLevel++; levelMaxDistance += 1000; 
+        resetLevelState(); levelScreen.style.display = 'none'; 
+        startSequence(false); 
+    }
 
+    function goHome() {
+        gameActive = false; isPaused = false; isCountingDown = false; stopMusic();
+        uiLayer.style.display = 'none'; menuContent.style.display = 'none'; menuOpen = false; menuBtn.innerText = "☰";
+        startScreen.style.display = 'flex'; gameOverScreen.style.display = 'none'; levelScreen.style.display = 'none'; howToScreen.style.display = 'none'; shopScreen.style.display = 'none';
+        resetGameLogic(); pepper.y = groundY; pepper.dy = 0; zoomLevel = 3.5;
+    }
+
+    // --- SHOP SYSTEM ---
+    const hatData = {
+        none: { name: "No Hat", cost: 0, perk: "None" },
+        cap: { name: "Red Cap", cost: 50, perk: "Double Bones", icon: "🧢" },
+        tophat: { name: "Top Hat", cost: 100, perk: "Start w/ Shield", icon: "🎩" },
+        cowboy: { name: "Cowboy", cost: 200, perk: "Longer Mega", icon: "🤠" }
+    };
+
+    function openShop() {
+        levelScreen.style.display = 'none';
+        shopScreen.style.display = 'flex';
+        shopBalance.innerText = score + " 🦴";
+        renderShop();
+    }
+
+    function renderShop() {
+        shopContainer.innerHTML = '';
+        const keys = ['none', 'cap', 'tophat', 'cowboy'];
+        
+        keys.forEach(k => {
+            let item = hatData[k];
+            let div = document.createElement('div');
+            div.className = 'shop-item';
+            if (pepper.hat === k) div.classList.add('selected');
+            
+            let isAffordable = score >= item.cost;
+            let alreadyOwn = pepper.hat === k; 
+            // In this simple loop, you rebuy hats every level or just select. 
+            // Let's allow selecting any affordable hat.
+            if (!isAffordable && !alreadyOwn && k !== 'none') div.classList.add('locked');
+
+            div.innerHTML = `
+                <div class="shop-icon">${item.icon || '🐕'}</div>
+                <div class="shop-name">${item.name}</div>
+                <div class="shop-perk">${item.perk}</div>
+                <div class="shop-cost">${item.cost > 0 ? item.cost + ' 🦴' : 'FREE'}</div>
+            `;
+            
+            div.onclick = () => {
+                if (k === 'none') { pepper.hat = 'none'; renderShop(); return; }
+                if (pepper.hat === k) return; // Already selected
+                if (score >= item.cost) {
+                    score -= item.cost; // Pay
+                    pepper.hat = k;
+                    shopBalance.innerText = score + " 🦴";
+                    scoreEl.innerText = score + " 🦴";
+                    renderShop();
+                    playSfx('collect');
+                } else {
+                    playSfx('crash'); // Can't afford
+                }
+            };
+            shopContainer.appendChild(div);
+        });
+    }
+
+    // --- DRAWING ---
     function drawStickIcon() {
         const c = document.getElementById('stick-canvas');
         const x = c.getContext('2d'); x.clearRect(0,0,40,40); x.save();
@@ -578,14 +679,32 @@
     function shakeScreen(amount) { shakeAmount = amount; }
     function flashScreen(color='white') { flashOverlay.style.background = color; flashOverlay.style.opacity = 0.5; setTimeout(() => flashOverlay.style.opacity = 0, 100); }
     
-    // Day/Night Cycle Logic
-    function getSkyColor() {
-        let t = (frame % 3000) / 3000; 
-        if(t < 0.4) return { c1: "#81ecec", c2: "#74b9ff", grass: "#00b894", ground: "#5D4037" };
-        if(t < 0.5) return { c1: "#ff9f43", c2: "#ee5253", grass: "#e17055", ground: "#3E2723" };
-        if(t < 0.9) return { c1: "#2c3e50", c2: "#000000", grass: "#192a56", ground: "#2d3436" };
-        return { c1: "#fdcb6e", c2: "#81ecec", grass: "#00b894", ground: "#5D4037" };
+    // Smooth Sky Color Interpolation
+    function lerpColor(c1, c2, t) {
+        let r1 = parseInt(c1.substring(1,3),16), g1 = parseInt(c1.substring(3,5),16), b1 = parseInt(c1.substring(5,7),16);
+        let r2 = parseInt(c2.substring(1,3),16), g2 = parseInt(c2.substring(3,5),16), b2 = parseInt(c2.substring(5,7),16);
+        let r = Math.round(r1 + (r2-r1)*t), g = Math.round(g1 + (g2-g1)*t), b = Math.round(b1 + (b2-b1)*t);
+        return `rgb(${r},${g},${b})`;
     }
+
+    function getSkyColor() {
+        let t = Math.min(levelDistance / levelMaxDistance, 1);
+        let s = envStyles[(currentLevel-1) % envStyles.length];
+        let e = envStyles[currentLevel % envStyles.length];
+        return { 
+            c1: lerpColor(s.c1, e.c1, t), 
+            c2: lerpColor(s.c2, e.c2, t), 
+            grass: lerpColor(s.grass, e.grass, t), 
+            ground: lerpColor(s.ground, e.ground, t) 
+        };
+    }
+    
+    let envStyles = [
+        { c1: "#81ecec", c2: "#74b9ff", grass: "#00b894", ground: "#5D4037" }, // Day
+        { c1: "#ff9f43", c2: "#ee5253", grass: "#e17055", ground: "#3E2723" }, // Sunset
+        { c1: "#2c3e50", c2: "#000000", grass: "#192a56", ground: "#2d3436" }, // Night
+        { c1: "#81ecec", c2: "#74b9ff", grass: "#00b894", ground: "#5D4037" }  // Loop back
+    ];
 
     function drawHusky(ctx, x, y, isMega, hasShield) {
         ctx.save(); ctx.translate(x, y);
@@ -596,9 +715,9 @@
 
         function drawHat(ctx) {
             ctx.save(); ctx.translate(5, -25);
-            if(score >= 200) { ctx.fillStyle = "#8B4513"; ctx.beginPath(); ctx.ellipse(0, 0, 20, 5, 0, 0, Math.PI*2); ctx.fill(); ctx.fillRect(-10, -15, 20, 15); } 
-            else if (score >= 100) { ctx.fillStyle = "#2d3436"; ctx.fillRect(-12, -25, 24, 25); ctx.fillRect(-18, 0, 36, 4); ctx.fillStyle = "red"; ctx.fillRect(-12, -5, 24, 4); } 
-            else if (score >= 50) { ctx.fillStyle = "#d63031"; ctx.beginPath(); ctx.arc(0, 0, 12, Math.PI, 0); ctx.fill(); ctx.fillRect(-12, 0, 24, 2); ctx.fillRect(10, 0, 12, 4); }
+            if(pepper.hat === 'cowboy') { ctx.fillStyle = "#8B4513"; ctx.beginPath(); ctx.ellipse(0, 0, 20, 5, 0, 0, Math.PI*2); ctx.fill(); ctx.fillRect(-10, -15, 20, 15); } 
+            else if (pepper.hat === 'tophat') { ctx.fillStyle = "#2d3436"; ctx.fillRect(-12, -25, 24, 25); ctx.fillRect(-18, 0, 36, 4); ctx.fillStyle = "red"; ctx.fillRect(-12, -5, 24, 4); } 
+            else if (pepper.hat === 'cap') { ctx.fillStyle = "#d63031"; ctx.beginPath(); ctx.arc(0, 0, 12, Math.PI, 0); ctx.fill(); ctx.fillRect(-12, 0, 24, 2); ctx.fillRect(10, 0, 12, 4); }
             ctx.restore();
         }
 
@@ -632,7 +751,16 @@
         else { pepper.rotation = 0; }
 
         if(hasShield) { ctx.save(); ctx.rotate(frame*0.1); ctx.shadowBlur = 20; ctx.shadowColor = "#00fbff"; ctx.strokeStyle = "rgba(0,251,255,0.6)"; ctx.lineWidth=3; ctx.beginPath(); for(let i=0; i<6; i++) { let a = (i/6)*Math.PI*2; ctx.lineTo(Math.cos(a)*45, Math.sin(a)*45); } ctx.closePath(); ctx.stroke(); ctx.restore(); }
-        if(pepper.magnetTimer > 0) { ctx.save(); ctx.rotate(-frame*0.2); ctx.strokeStyle = "rgba(52, 152, 219, 0.5)"; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,0,60,0,Math.PI*2); ctx.stroke(); ctx.restore(); }
+        
+        // Magnet Visual
+        if(pepper.magnetTimer > 0) { 
+            ctx.save(); ctx.rotate(-frame*0.1); 
+            ctx.strokeStyle = "rgba(231, 76, 60, 0.7)"; ctx.lineWidth=2; 
+            let r = 40 + Math.sin(frame*0.2)*10;
+            ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.stroke(); 
+            ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.beginPath(); ctx.arc(0,0,r-10,0,Math.PI*2); ctx.stroke();
+            ctx.restore(); 
+        }
 
         let rf = pepper.runFrame; let yOff = -15; ctx.fillStyle = white; 
         if(!pepper.grounded) { ctx.beginPath(); ctx.ellipse(-10, yOff+15, 6, 8, 0.5, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(10, yOff+15, 6, 8, -0.5, 0, Math.PI*2); ctx.fill(); } 
@@ -660,24 +788,38 @@
         ctx.restore(); ctx.restore();
     }
 
-    function drawStick(ctx, x, y) { ctx.save(); ctx.translate(x, y + Math.sin(frame*0.1)*5); ctx.strokeStyle = "#8B4513"; ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(-10, 5); ctx.lineTo(10, -5); ctx.stroke(); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(5, 5); ctx.stroke(); ctx.fillStyle = "#00b894"; ctx.beginPath(); ctx.arc(10, -5, 3, 0, Math.PI*2); ctx.fill(); ctx.restore(); }
+    function drawStick(ctx, x, y) { 
+        ctx.save(); ctx.translate(x, y + Math.sin(frame*0.1)*5); 
+        ctx.scale(1.5, 1.5); // Bigger Sticks
+        ctx.strokeStyle = "#8B4513"; ctx.lineWidth = 5; ctx.lineCap = "round"; 
+        ctx.beginPath(); ctx.moveTo(-10, 5); ctx.lineTo(10, -5); ctx.stroke(); 
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(5, 5); ctx.stroke(); 
+        ctx.fillStyle = "#00b894"; ctx.beginPath(); ctx.arc(10, -5, 3, 0, Math.PI*2); ctx.fill(); 
+        ctx.restore(); 
+    }
     
     function drawBone(ctx, x, y, type) { 
         ctx.save(); ctx.translate(x, y + Math.sin(frame*0.1)*5); 
-        if(type === 'blue') { ctx.fillStyle = "#3498db"; ctx.strokeStyle = "#2980b9"; }
-        else { ctx.fillStyle = (type === 'gold') ? "#FFD700" : "#ffffff"; ctx.strokeStyle = (type === 'gold') ? "#DAA520" : "#b2bec3"; }
-        ctx.lineWidth=2;
-        ctx.beginPath(); ctx.moveTo(-10, -4); ctx.lineTo(10, -4); ctx.lineTo(10, 4); ctx.lineTo(-10, 4); ctx.fill();
-        ctx.beginPath(); ctx.arc(-12, -6, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.arc(-12, 6, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.arc(12, -6, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.arc(12, 6, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-        ctx.fillRect(-10, -4, 20, 8); 
         
-        if(type === 'gold' || type === 'blue') {
-            ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 10;
-            ctx.fillStyle = "white"; ctx.globalAlpha=0.5;
-            ctx.beginPath(); ctx.moveTo(-5, -2); ctx.lineTo(5, -2); ctx.lineTo(3, 2); ctx.lineTo(-7, 2); ctx.fill();
+        if(type === 'magnet') {
+            // Draw Magnet
+            ctx.fillStyle = "#e74c3c"; ctx.strokeStyle = "#bdc3c7"; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.arc(0, -5, 12, Math.PI, 0); ctx.lineTo(12, 10); ctx.lineTo(5, 10); ctx.lineTo(5, -5); ctx.arc(0, -5, 5, 0, Math.PI, true); ctx.lineTo(-5, 10); ctx.lineTo(-12, 10); ctx.closePath(); ctx.fill();
+            ctx.fillStyle = "#bdc3c7"; ctx.fillRect(-12, 5, 7, 5); ctx.fillRect(5, 5, 7, 5);
+        } else {
+            ctx.fillStyle = (type === 'gold') ? "#FFD700" : "#ffffff"; ctx.strokeStyle = (type === 'gold') ? "#DAA520" : "#b2bec3"; 
+            ctx.lineWidth=2;
+            ctx.beginPath(); ctx.moveTo(-10, -4); ctx.lineTo(10, -4); ctx.lineTo(10, 4); ctx.lineTo(-10, 4); ctx.fill();
+            ctx.beginPath(); ctx.arc(-12, -6, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.arc(-12, 6, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.arc(12, -6, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.arc(12, 6, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.fillRect(-10, -4, 20, 8); 
+            if(type === 'gold') {
+                ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 10;
+                ctx.fillStyle = "white"; ctx.globalAlpha=0.5;
+                ctx.beginPath(); ctx.moveTo(-5, -2); ctx.lineTo(5, -2); ctx.lineTo(3, 2); ctx.lineTo(-7, 2); ctx.fill();
+            }
         }
         ctx.restore(); 
     }
@@ -737,10 +879,8 @@
     function loop() {
         if((gameActive && !isPaused && !isCountingDown)) { frame++; } 
         
-        // Slow Mo Logic
         let timeScale = 1.0;
         if(slowMoTimer > 0) { slowMoTimer--; timeScale = 0.3; }
-        
         let currentSpeed = speed * timeScale;
         if(levelVictoryAnim) { frame++; pepper.x += currentSpeed * 1.5; }
 
@@ -751,7 +891,7 @@
         zoomLevel += (targetZoom - zoomLevel) * 0.05;
         
         ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(zoomLevel, zoomLevel); ctx.translate(-canvas.width/2, -canvas.height/2);
-        if(shakeAmount > 0) { ctx.translate((Math.random()-0.5)*shakeAmount, (Math.random()-0.5)*shakeAmount); shakeAmount*=0.9; }
+        if(shakeAmount > 0) { ctx.translate((Math.floor(Math.random()*shakeAmount)-shakeAmount/2), (Math.floor(Math.random()*shakeAmount)-shakeAmount/2)); shakeAmount*=0.9; }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         // Dynamic Sky
@@ -759,8 +899,8 @@
         let grad = ctx.createLinearGradient(0, 0, 0, canvas.height); grad.addColorStop(0, sky.c1); grad.addColorStop(1, sky.c2); ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
         
         ctx.fillStyle = "rgba(255,255,255,0.2)"; let celestialY = (currentLevel%3===2) ? canvas.height*0.8 : 100; ctx.beginPath(); ctx.arc(canvas.width*0.8, celestialY, 60, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "rgba(255,255,255,0.1)"; bgMountains.forEach(m => { if(!levelFinished && gameActive && !isPaused && !isCountingDown) m.x -= currentSpeed * 0.05; if(m.x < -300) m.x = canvas.width + 100; ctx.beginPath(); ctx.moveTo(m.x, groundY); ctx.lineTo(m.x+150, groundY-300); ctx.lineTo(m.x+300, groundY); ctx.fill(); });
-        bgTrees.forEach(t => { if(!levelFinished && gameActive && !isPaused && !isCountingDown) t.x -= currentSpeed * 0.2; if(t.x < -50) t.x = canvas.width + Math.random()*300; ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.beginPath(); ctx.moveTo(t.x, groundY); ctx.lineTo(t.x+25, groundY-100); ctx.lineTo(t.x+50, groundY); ctx.fill(); });
+        ctx.fillStyle = "rgba(255,255,255,0.1)"; bgMountains.forEach(m => { if(!levelFinished && gameActive && !isPaused && !isCountingDown) m.x -= currentSpeed * 0.05; if(m.x < -300) m.x = canvas.width + 100; ctx.beginPath(); ctx.moveTo(Math.floor(m.x), groundY); ctx.lineTo(Math.floor(m.x+150), groundY-300); ctx.lineTo(Math.floor(m.x+300), groundY); ctx.fill(); });
+        bgTrees.forEach(t => { if(!levelFinished && gameActive && !isPaused && !isCountingDown) t.x -= currentSpeed * 0.2; if(t.x < -50) t.x = canvas.width + Math.random()*300; ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.beginPath(); ctx.moveTo(Math.floor(t.x), groundY); ctx.lineTo(Math.floor(t.x+25), groundY-100); ctx.lineTo(Math.floor(t.x+50), groundY); ctx.fill(); });
         
         ctx.fillStyle = "rgba(255,255,255,0.3)";
         bgClouds.forEach(c => { if(!isPaused && !isCountingDown) c.x -= c.speed; if(c.x < -100) c.x = canvas.width + 100; ctx.beginPath(); ctx.ellipse(c.x, c.y, 40, 20, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(c.x+20, c.y-10, 30, 20, 0, 0, Math.PI*2); ctx.fill(); });
@@ -768,7 +908,7 @@
         if(currentLevel % 3 === 0 || (frame % 3000 > 1500)) { ctx.fillStyle = "white"; stars.forEach(s => { let blink = Math.sin(frame*0.1 + s.x) > 0.8 ? 1 : 0.5; ctx.globalAlpha = blink; ctx.fillRect(s.x, s.y, s.size, s.size); }); ctx.globalAlpha = 1; }
 
         ctx.fillStyle = sky.ground; ctx.fillRect(0, groundY, canvas.width, GROUND_H);
-        ctx.fillStyle = "rgba(255,255,255,0.05)"; let stripeOffset = (frame * currentSpeed) % 100; for(let i = -100; i < canvas.width + 100; i+=100) { ctx.beginPath(); ctx.moveTo(i - stripeOffset, groundY); ctx.lineTo(i - stripeOffset + 40, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 90, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 50, groundY); ctx.fill(); }
+        ctx.fillStyle = "rgba(255,255,255,0.05)"; let stripeOffset = Math.floor((frame * currentSpeed) % 100); for(let i = -100; i < canvas.width + 100; i+=100) { ctx.beginPath(); ctx.moveTo(i - stripeOffset, groundY); ctx.lineTo(i - stripeOffset + 40, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 90, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 50, groundY); ctx.fill(); }
         if(!levelFinished && pepper.grounded && (gameActive || levelVictoryAnim)) { ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.beginPath(); ctx.arc(120 - (frame*currentSpeed)%20, groundY+2, 5 * Math.random(), 0, Math.PI*2); ctx.fill(); }
         ctx.fillStyle = sky.grass; ctx.fillRect(0, groundY, canvas.width, 20);
 
@@ -803,7 +943,7 @@
             bones.forEach(b => {
                 let dx = 150 - b.x; let dy = pepper.y - b.y;
                 let dist = Math.sqrt(dx*dx + dy*dy);
-                if(dist < 400) { b.x += dx * 0.1; b.y += dy * 0.1; }
+                if(dist < 400) { b.x += dx * 0.15; b.y += dy * 0.15; }
             });
         }
 
@@ -838,10 +978,17 @@
                     else if(currentLevel >= 2 && r > 0.85) { obj.type = 'stack'; obj.stack = 3; nextObstacleTimer = 100; } 
                     else if(r > 0.75) { obj.type = 'hydrant'; nextObstacleTimer = Math.max(30, 80 - score*0.3); }
                     else if (r > 0.60) { 
-                        obj.type = 'bird'; 
-                        let bh = Math.random();
-                        if(bh > 0.5) obj.y = groundY - 40; // Low
-                        else obj.y = groundY - 110; // High
+                        // Prevent low bird immediately after stack
+                        let lastObj = obstacles[obstacles.length-1];
+                        if(lastObj && lastObj.type === 'stack' && Math.abs(lastObj.x - canvas.width) < 400) {
+                            // Skip or force High Bird
+                            obj.type = 'bird'; obj.y = groundY - 110; 
+                        } else {
+                            obj.type = 'bird'; 
+                            let bh = Math.random();
+                            if(bh > 0.5) obj.y = groundY - 40; 
+                            else obj.y = groundY - 110; 
+                        }
                         nextObstacleTimer = Math.max(30, 80 - score*0.3); 
                         
                         if(Math.random() > 0.3) {
@@ -849,7 +996,7 @@
                             bones.push({x: canvas.width, y: bY, type: 'white'});
                         }
                     }
-                    else { // Poo
+                    else { 
                         obj.type = 'poo'; obj.stack = Math.floor(Math.random()*2)+1; nextObstacleTimer = Math.max(30, 80 - score*0.3);
                         if(Math.random() > 0.5) bones.push({x: canvas.width, y: groundY - 120, type: 'white'});
                     }
@@ -862,14 +1009,14 @@
                  if(canSpawn(canvas.width)) {
                      let h = Math.random();
                      let bY = groundY - 40; 
-                     if(h > 0.6) bY = groundY - 100; 
-                     if(h > 0.9) bY = groundY - 160; 
+                     if(h > 0.5) bY = groundY - 100; 
+                     if(h > 0.85) bY = groundY - 180; // Super High (Double Jump)
                      let bType = 'white';
-                     if(Math.random() > 0.98) bType = 'blue'; 
+                     if(Math.random() > 0.98) bType = 'magnet'; 
                      else if(Math.random() > 0.9) bType = 'gold';
                      
                      bones.push({x: canvas.width, y: bY, type: bType});
-                     nextBoneTimer = 40 + Math.random() * 60; 
+                     nextBoneTimer = 40 + Math.random() * 80; 
                  }
             }
 
@@ -923,31 +1070,31 @@
         for(let i=bones.length-1; i>=0; i--) {
             let b = bones[i]; if(!levelFinished && gameActive && !isPaused && !isCountingDown) b.x -= currentSpeed; drawBone(ctx, b.x, b.y, b.type);
             if(gameActive && !isPaused && Math.abs(150-b.x)<40 && Math.abs(pepper.y-25-b.y)<40) {
-                if(b.type === 'blue') { pepper.magnetTimer = 600; playSfx('magnet'); spawnPopup("MAGNET!", b.x, b.y, "#3498db"); }
+                if(b.type === 'magnet') { pepper.magnetTimer = 600; playSfx('magnet'); spawnPopup("MAGNET!", b.x, b.y, "#e74c3c"); }
                 else {
                     let val = (b.type === 'gold') ? 5 : 1;
+                    if(pepper.hat === 'cap') val *= 2; // CAP PERK
                     score+=val; scoreEl.innerText = score + " 🦴"; 
                     playSfx('collect'); spawnParticles(b.x, b.y, "gold", 15); spawnPopup("+"+val, b.x, b.y, "gold"); 
-                    if(!pepper.isMega && difficulty !== 'death') { pepper.streak += val; if(pepper.streak>=MEGA_TRIGGER){ pepper.isMega=true; pepper.megaTimer=MEGA_MAX_TIME; spawnPopup("MEGA MODE!", canvas.width/2, canvas.height/3, "#ff00ff"); flashScreen('white'); } }
+                    let megaVal = (pepper.hat === 'cap') ? val : 1;
+                    if(!pepper.isMega && difficulty !== 'death') { pepper.streak += megaVal; if(pepper.streak>=MEGA_TRIGGER){ pepper.isMega=true; pepper.megaTimer = (pepper.hat==='cowboy') ? 1350 : 900; spawnPopup("MEGA MODE!", canvas.width/2, canvas.height/3, "#ff00ff"); flashScreen('white'); } }
                 }
                 bones.splice(i,1);
             } else if(b.x<-100) bones.splice(i,1);
         }
 
-        // New Foreground Bushes (No Blur, Clusters)
-        fgBushes.forEach(bush => {
-            bush.x -= currentSpeed * 1.5; 
-            if(bush.x < -150) { bush.x = canvas.width + Math.random()*500; }
-            
-            ctx.fillStyle = "#0f1519"; // Very dark green/black
-            
-            // Draw a cluster of circles to look like a bush
-            ctx.beginPath();
-            ctx.arc(bush.x, canvas.height + 20, 60, 0, Math.PI*2);
-            ctx.arc(bush.x+50, canvas.height + 30, 50, 0, Math.PI*2);
-            ctx.arc(bush.x+30, canvas.height - 10, 40, 0, Math.PI*2);
-            ctx.fill();
-        });
+        if (gameActive && !isPaused) {
+            fgBushes.forEach(bush => {
+                bush.x -= currentSpeed * 1.5; 
+                if(bush.x < -150) { bush.x = canvas.width + Math.random()*500; }
+                ctx.fillStyle = "#0f1519"; 
+                ctx.beginPath();
+                ctx.arc(bush.x, canvas.height + 20, 60, 0, Math.PI*2);
+                ctx.arc(bush.x+50, canvas.height + 30, 50, 0, Math.PI*2);
+                ctx.arc(bush.x+30, canvas.height - 10, 40, 0, Math.PI*2);
+                ctx.fill();
+            });
+        }
 
         ctx.restore();
         requestAnimationFrame(loop);
@@ -970,8 +1117,8 @@
     }
 
     highScoreEl.innerText = "BEST: " + highScore + " 🦴";
-    window.addEventListener('touchstart', (e) => { if(e.target.className.includes('btn') || e.target.className.includes('menu') || menuOpen || e.target.closest('.diff-card')) return; if(e.target !== menuBtn) { e.preventDefault(); handleInput(); } }, {passive: false});
-    window.addEventListener('mousedown', (e) => { if(e.target.className.includes('btn') || e.target.className.includes('menu') || menuOpen || e.target.closest('.diff-card')) return; if(e.target !== menuBtn) handleInput(); });
+    window.addEventListener('touchstart', (e) => { if(e.target.className.includes('btn') || e.target.className.includes('menu') || menuOpen || e.target.closest('.diff-card') || e.target.closest('.shop-item')) return; if(e.target !== menuBtn) { e.preventDefault(); handleInput(); } }, {passive: false});
+    window.addEventListener('mousedown', (e) => { if(e.target.className.includes('btn') || e.target.className.includes('menu') || menuOpen || e.target.closest('.diff-card') || e.target.closest('.shop-item')) return; if(e.target !== menuBtn) handleInput(); });
 
     // INITIALIZE
     resize(); resetGameLogic(); renderDiffPreviews(); drawStickIcon(); requestAnimationFrame(loop);
