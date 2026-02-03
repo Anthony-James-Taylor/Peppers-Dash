@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V20</title>
+    <title>Pepper's Doo-Doo Dash V21</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     
@@ -63,14 +63,21 @@
 
         #progress-wrapper {
             position: absolute; top: 100px; width: 70%; height: 8px;
-            background: rgba(0,0,0,0.5); border-radius: 4px; overflow: hidden;
+            background: rgba(0,0,0,0.5); border-radius: 4px; /* overflow: hidden; removed to let flag pop out */
             border: 1px solid rgba(255,255,255,0.3);
         }
-        #progress-fill { height: 100%; width: 0%; background: #00fbff; box-shadow: 0 0 10px #00fbff; transition: width 0.1s linear; }
-        #finish-icon { position: absolute; right: -10px; top: -8px; font-size: 20px; }
+        #progress-fill { height: 100%; width: 0%; background: #00fbff; box-shadow: 0 0 10px #00fbff; transition: width 0.1s linear; border-radius: 4px; }
+        
+        /* BIGGER FLAG ICON */
+        #finish-icon { 
+            position: absolute; right: -15px; top: -18px; 
+            font-size: 32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            animation: wave 1s infinite ease-in-out alternate;
+        }
+        @keyframes wave { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
 
         #power-wrapper { position: absolute; bottom: 40px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        #streak-label { color: white; font-size: 12px; font-weight: 900; letter-spacing: 3px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); text-transform: uppercase;}
+        #streak-label { color: white; font-size: 14px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); text-transform: uppercase;}
         #streak-container { width: 80%; max-width: 300px; height: 12px; background: rgba(0,0,0,0.6); border-radius: 6px; overflow: hidden; position: relative; }
         #streak-fill { position: absolute; top: 0; left: 0; height: 100%; background: #ff00ff; width: 0%; transition: width 0.2s cubic-bezier(0.4, 2, 0.5, 1); box-shadow: 0 0 10px #ff00ff; }
         #mega-fill { position: absolute; top: 0; left: 0; height: 100%; width: 0%; display: block; background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff); background-size: 200%; animation: rainbow 0.5s linear infinite; transition: none; }
@@ -173,7 +180,7 @@
         </div>
         <div id="progress-wrapper"><div id="progress-fill"></div><div id="finish-icon">🏁</div></div>
         <div id="power-wrapper">
-            <div id="streak-label">MEGA MODE! DODGE 50 DOO-DOOS TO UNLOCK</div>
+            <div id="streak-label">DODGE 50 DOO-DOOS TO UNLOCK MEGA MODE</div>
             <div id="streak-container"><div id="streak-fill"></div><div id="mega-fill"></div></div>
         </div>
     </div>
@@ -318,6 +325,7 @@
     let gameActive = false;
     let isPaused = false;
     let isCountingDown = false;
+    let levelVictoryAnim = false; // New state for running off screen
     let frame = 0;
     let score = 0;
     let levelStartScore = 0;
@@ -419,7 +427,7 @@
         startDiffBtn.innerText = label;
 
         if(mode === 'death') streakLabel.innerText = "I AM DEATH! (NO SHIELDS)";
-        else streakLabel.innerText = "MEGA MODE! DODGE 50 DOO-DOOS TO UNLOCK";
+        else streakLabel.innerText = "DODGE 50 DOO-DOOS TO UNLOCK MEGA MODE";
     }
 
     // --- GAME LOGIC ---
@@ -428,11 +436,13 @@
         pepper.sticks=0; stickText.innerText="0/5"; pepper.streak=0; streakFill.style.width="0%"; 
         obstacles=[]; sticks=[]; bones=[]; floatTexts=[]; 
         speed = (difficulty === 'death') ? 11 : 9;
-        levelDistance=0; levelFinished=false; finishLine=null; currentLevel=1; 
+        levelDistance=0; levelFinished=false; levelVictoryAnim=false; finishLine=null; currentLevel=1; 
         updateEnvStyle(); levelInd.innerText = "LEVEL 1"; 
         pepper.y = groundY; pepper.dy=0; pepper.grounded=true; 
         pepper.isMega = false; pepper.hasShield = false;
-        pepper.rotation = 0;
+        pepper.rotation = 0; pepper.x = 100;
+
+        streakLabel.innerText = "DODGE 50 DOO-DOOS TO UNLOCK MEGA MODE";
 
         nextObstacleTimer = 200; 
         
@@ -447,10 +457,10 @@
         levelStartScore = score;
         currentLevel++; updateEnvStyle(); levelMaxDistance += 1000; 
         speed += 0.5; 
-        levelDistance = 0; finishLine = null; obstacles = []; levelFinished = false; 
+        levelDistance = 0; finishLine = null; obstacles = []; levelFinished = false; levelVictoryAnim=false;
         levelScreen.style.display = 'none'; levelInd.innerText = "LEVEL " + currentLevel; 
+        pepper.x = 100;
         
-        // Use Start Sequence to ensure cleaner transition
         startSequence(true);
     }
 
@@ -467,22 +477,18 @@
         levelScreen.style.display = 'none';
         howToScreen.style.display = 'none';
         
-        // Reset everything
         resetGameLogic();
         pepper.y = groundY; 
         pepper.dy = 0;
         zoomLevel = 3.5;
     }
 
-    // DRAW AVIATORS (Standardized)
+    // DRAW AVIATORS
     function drawAviators(ctx, x, y) {
         ctx.save(); ctx.translate(x, y);
         ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 1.5;
-        // Left Lens
         ctx.beginPath(); ctx.moveTo(-2, -5); ctx.bezierCurveTo(-15, -5, -18, 5, -10, 10); ctx.bezierCurveTo(-2, 10, -2, -5, -2, -5); ctx.fill(); ctx.stroke();
-        // Right Lens
         ctx.beginPath(); ctx.moveTo(2, -5); ctx.bezierCurveTo(15, -5, 18, 5, 10, 10); ctx.bezierCurveTo(2, 10, 2, -5, 2, -5); ctx.fill(); ctx.stroke();
-        // Bridge
         ctx.beginPath(); ctx.moveTo(-2, -5); ctx.lineTo(2, -5); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(-2, -8); ctx.lineTo(2, -8); ctx.stroke();
         ctx.restore();
@@ -538,7 +544,6 @@
                 if (b) synth(b, 'sawtooth', 0.25, 0.25, true); 
                 if (tick === 4 || tick === 12) playSnare(); 
                 if (tick % 2 === 0) synth(4000, 'square', 0.03, 0.02); 
-                // Dynamic Halfway Music
                 if(levelDistance > levelMaxDistance/2) {
                     let l = track.lead[tick];
                     if(l) synth(l*2, 'square', 0.1, 0.15); 
@@ -565,43 +570,13 @@
         if(difficulty === 'death') { bodyC = "#2d3436"; eyeC = "red"; }
         if(isMega) { let hue = (Date.now() / 5) % 360; bodyC = `hsl(${hue}, 80%, 40%)`; white = `hsl(${(hue+180)%360}, 90%, 80%)`; }
 
-        // START SCREEN
-        if(!gameActive && !isCountingDown && !levelFinished) {
-            ctx.scale(1.5, 1.5); ctx.translate(0, -50); 
-            // Shadows
-            ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.beginPath(); ctx.ellipse(0, 50, 30, 8, 0, 0, Math.PI*2); ctx.fill();
-            let pulse = 40 + Math.sin(Date.now()/200)*5;
-            ctx.shadowBlur = 30; ctx.shadowColor=eyeC; ctx.fillStyle = "rgba(255,255,255,0.2)"; ctx.beginPath(); ctx.arc(0,0, pulse, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
-            // Sitting Body
-            ctx.fillStyle = bodyC; ctx.beginPath(); ctx.ellipse(0, 35, 20, 15, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.moveTo(-15, 35); ctx.lineTo(-10, 10); ctx.lineTo(10, 10); ctx.lineTo(15, 35); ctx.fill(); 
-            ctx.fillStyle = white; ctx.beginPath(); ctx.ellipse(0, 20, 12, 18, 0, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = white; ctx.beginPath(); ctx.ellipse(-10, 45, 6, 8, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(10, 45, 6, 8, 0, 0, Math.PI*2); ctx.fill();
-            let tw = Math.sin(Date.now()/100) * 0.5; ctx.save(); ctx.translate(20, 35); ctx.rotate(tw); ctx.fillStyle = white; ctx.beginPath(); ctx.ellipse(10, -10, 10, 20, 0.5, 0, Math.PI*2); ctx.fill(); ctx.restore();
-            // Head
-            ctx.fillStyle = bodyC; ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = white; ctx.beginPath(); ctx.arc(0, 8, 22, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = bodyC; ctx.beginPath(); ctx.moveTo(-20, -10); ctx.lineTo(-25, -40); ctx.lineTo(-5, -20); ctx.fill(); ctx.beginPath(); ctx.moveTo(20, -10); ctx.lineTo(25, -40); ctx.lineTo(5, -20); ctx.fill();
-            ctx.fillStyle = "pink"; ctx.beginPath(); ctx.moveTo(-18, -15); ctx.lineTo(-22, -30); ctx.lineTo(-10, -20); ctx.fill(); ctx.beginPath(); ctx.moveTo(18, -15); ctx.lineTo(22, -30); ctx.lineTo(10, -20); ctx.fill();
-            ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(0, 5, 5, 0, Math.PI*2); ctx.fill(); 
-            ctx.fillStyle = eyeC; ctx.beginPath(); ctx.arc(-10, -5, 6, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(10, -5, 6, 0, Math.PI*2); ctx.fill(); 
-            ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(-12, -7, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(8, -7, 2, 0, Math.PI*2); ctx.fill();
-            // Modifiers
-            if(difficulty === 'normal') { drawAviators(ctx, 0, 0); }
-            if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, -5, 32, Math.PI, 0); ctx.stroke(); ctx.fillStyle="#FFD700"; ctx.beginPath(); ctx.arc(0, 20, 6, 0, Math.PI*2); ctx.fill(); }
-            else { ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 12, 10, 0, Math.PI); ctx.stroke(); ctx.fillStyle = "pink"; ctx.beginPath(); ctx.arc(0, 22, 6, 0, Math.PI, false); ctx.fill(); }
-            ctx.restore();
-            return;
-        }
-
         // --- CUTE SIDE VIEW (IN GAME) ---
         pepper.runFrame = (pepper.runFrame || 0) + 0.3; 
         
         // Double jump rotation
         if(!pepper.grounded && pepper.canDoubleJump) { 
-            // Normal jump tilt
             ctx.rotate(pepper.dy * 0.04);
         } else if (!pepper.grounded && !pepper.canDoubleJump) {
-            // Double jump spin
             pepper.rotation += 0.3;
             ctx.rotate(pepper.rotation);
         } else {
@@ -621,65 +596,68 @@
         let yOff = -15; // Lift body
         ctx.fillStyle = white; 
         if(!pepper.grounded) {
-            // Jump Legs
             ctx.beginPath(); ctx.ellipse(-10, yOff+15, 6, 8, 0.5, 0, Math.PI*2); ctx.fill();
             ctx.beginPath(); ctx.ellipse(10, yOff+15, 6, 8, -0.5, 0, Math.PI*2); ctx.fill();
         } else {
-            // Run Cycle
             let leg1 = Math.sin(rf) * 10;
             let leg2 = Math.sin(rf + Math.PI) * 10;
-            ctx.beginPath(); ctx.ellipse(-10 + leg1, yOff+18, 5, 5, 0, 0, Math.PI*2); ctx.fill(); // Back L
-            ctx.beginPath(); ctx.ellipse(10 + leg2, yOff+18, 5, 5, 0, 0, Math.PI*2); ctx.fill(); // Front L
-            
-            ctx.fillStyle = bodyC; // Darker back legs behind? No, keep style simple
+            ctx.beginPath(); ctx.ellipse(-10 + leg1, yOff+18, 5, 5, 0, 0, Math.PI*2); ctx.fill(); 
+            ctx.beginPath(); ctx.ellipse(10 + leg2, yOff+18, 5, 5, 0, 0, Math.PI*2); ctx.fill(); 
         }
 
-        // Tail
+        // FLUFFY TAIL
         let tailWag = Math.sin(rf*2)*0.3;
         ctx.save(); ctx.translate(-20, yOff); ctx.rotate(tailWag - 0.5); 
-        ctx.fillStyle = bodyC; ctx.beginPath(); ctx.ellipse(-10, 0, 15, 6, 0, 0, Math.PI*2); ctx.fill(); 
-        ctx.fillStyle = white; ctx.beginPath(); ctx.arc(-22, 0, 4, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = bodyC; 
+        // Draw cloud of circles for fluffy effect
+        ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-8, -2, 7, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-14, -5, 6, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-18, -10, 5, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = white; 
+        ctx.beginPath(); ctx.arc(-22, -12, 4, 0, Math.PI*2); ctx.fill();
         ctx.restore();
 
         // Body
         ctx.fillStyle = bodyC; ctx.beginPath(); ctx.ellipse(0, yOff, 22, 14, 0, 0, Math.PI*2); ctx.fill(); 
         ctx.fillStyle = white; ctx.beginPath(); ctx.ellipse(5, yOff+5, 12, 8, 0, 0, Math.PI*2); ctx.fill(); // Chest
 
-        // Head (New Cute Side Profile)
+        // HEAD (Husky Style)
         ctx.save(); ctx.translate(15, yOff-15); 
-        // Ears
-        ctx.fillStyle = bodyC; ctx.beginPath(); ctx.moveTo(-5, -5); ctx.lineTo(-10, -20); ctx.lineTo(5, -10); ctx.fill();
-        ctx.fillStyle = "pink"; ctx.beginPath(); ctx.moveTo(-4, -6); ctx.lineTo(-8, -16); ctx.lineTo(2, -9); ctx.fill();
+        // Ears (Pointy)
+        ctx.fillStyle = bodyC; ctx.beginPath(); ctx.moveTo(-5, -5); ctx.lineTo(-8, -20); ctx.lineTo(0, -10); ctx.fill(); // Left
+        ctx.beginPath(); ctx.moveTo(5, -5); ctx.lineTo(8, -20); ctx.lineTo(0, -10); ctx.fill(); // Right
+        ctx.fillStyle = "pink"; ctx.beginPath(); ctx.moveTo(-4, -6); ctx.lineTo(-7, -16); ctx.lineTo(-1, -9); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(4, -6); ctx.lineTo(7, -16); ctx.lineTo(1, -9); ctx.fill();
         
-        // Head Base
-        ctx.fillStyle = bodyC; ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI*2); ctx.fill();
+        // Head Base (Black Mask)
+        ctx.fillStyle = bodyC; ctx.beginPath(); ctx.arc(0, 0, 16, 0, Math.PI*2); ctx.fill();
         
-        // Face Mask & Snout
+        // Face Mask (White Snout & Forehead)
         ctx.fillStyle = white; 
-        ctx.beginPath(); ctx.arc(5, 5, 12, 0, Math.PI*2); ctx.fill(); // Snout area
-        ctx.beginPath(); ctx.ellipse(-2, 0, 12, 14, 0, 0, Math.PI*2); ctx.fill(); // Forehead
+        ctx.beginPath(); ctx.moveTo(0, -10); ctx.quadraticCurveTo(8, -10, 12, 0); ctx.lineTo(12, 10); ctx.lineTo(0, 10); ctx.lineTo(-5, 0); ctx.fill();
+        ctx.beginPath(); ctx.arc(8, 6, 8, 0, Math.PI*2); ctx.fill(); // Snout bulb
         
         // Nose
         ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(16, 2, 3, 0, Math.PI*2); ctx.fill();
 
-        // Eye (Side View)
-        ctx.fillStyle = eyeC; ctx.beginPath(); ctx.ellipse(6, -2, 5, 6, 0, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(8, -4, 2, 0, Math.PI*2); ctx.fill();
+        // Eye (Side View - Blue)
+        ctx.fillStyle = eyeC; ctx.beginPath(); ctx.ellipse(4, -2, 4, 5, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(5, -4, 1.5, 0, Math.PI*2); ctx.fill();
 
         // Modifiers
         if(difficulty === 'normal') { 
             // Side Aviators
             ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.strokeStyle="#FFD700"; ctx.lineWidth=1.5;
-            ctx.beginPath(); ctx.moveTo(6, -2); ctx.lineTo(14, -2); ctx.lineTo(12, 5); ctx.quadraticCurveTo(8, 7, 6, 5); ctx.fill(); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(6, -4); ctx.lineTo(14, -4); ctx.stroke(); // Top bar
-            ctx.beginPath(); ctx.moveTo(0, -3); ctx.lineTo(6, -3); ctx.stroke(); // Arm
+            ctx.beginPath(); ctx.moveTo(4, -2); ctx.lineTo(12, -2); ctx.lineTo(10, 5); ctx.quadraticCurveTo(6, 7, 4, 5); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(4, -4); ctx.lineTo(12, -4); ctx.stroke(); 
+            ctx.beginPath(); ctx.moveTo(-2, -3); ctx.lineTo(4, -3); ctx.stroke();
         }
         if(difficulty === 'baby') { 
-            ctx.strokeStyle = "pink"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(-2, -5, 14, Math.PI, 0); ctx.stroke(); // Bonnet
-            ctx.fillStyle = "#FFD700"; ctx.beginPath(); ctx.arc(14, 8, 4, 0, Math.PI*2); ctx.fill(); // Dummy
+            ctx.strokeStyle = "pink"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(-2, -5, 14, Math.PI, 0); ctx.stroke(); 
+            ctx.fillStyle = "#FFD700"; ctx.beginPath(); ctx.arc(14, 8, 4, 0, Math.PI*2); ctx.fill(); 
         } 
-        else if(!gameActive) { ctx.strokeStyle="black"; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(10,8,4,0,2); ctx.stroke(); } // Smile
-
+        
         ctx.restore();
         ctx.restore();
     }
@@ -730,8 +708,20 @@
         modalCtx.fillStyle = grad; modalCtx.fillRect(0,0,280,150);
         modalCtx.fillStyle = "#2d3436"; modalCtx.fillRect(0, ground, 280, 20);
         modalCtx.fillStyle = "#00b894"; modalCtx.fillRect(0, ground, 280, 5);
-        if(type === 'level2') { drawHusky(modalCtx, 60, 60, false, false); drawDooDoo(modalCtx, 200, ground, 3); drawFlies(modalCtx, 200, ground); modalCtx.fillStyle = "white"; modalCtx.font = "900 14px Montserrat"; modalCtx.fillText("DOUBLE JUMP!", 25, 110); }
-        if(type === 'mega') { let rGrad = modalCtx.createLinearGradient(0,0,280,150); rGrad.addColorStop(0,"rgba(255,0,0,0.5)"); rGrad.addColorStop(0.2,"rgba(255,165,0,0.5)"); rGrad.addColorStop(0.4,"rgba(255,255,0,0.5)"); rGrad.addColorStop(0.6,"rgba(0,255,0,0.5)"); rGrad.addColorStop(1,"rgba(0,0,255,0.5)"); modalCtx.fillStyle = rGrad; modalCtx.fillRect(0,0,280,150); drawHusky(modalCtx, 140, 100, true, false); drawDooDoo(modalCtx, 50, 80, 1); drawDooDoo(modalCtx, 230, 60, 1); }
+        if(type === 'level2') { 
+            // Reuse Husky Draw logic but simple
+            drawHusky(modalCtx, 60, 60, false, false); 
+            drawDooDoo(modalCtx, 200, ground, 3); 
+            drawFlies(modalCtx, 200, ground); 
+            modalCtx.fillStyle = "white"; modalCtx.font = "900 14px Montserrat"; modalCtx.fillText("DOUBLE JUMP!", 25, 110); 
+        }
+        if(type === 'mega') { 
+            let rGrad = modalCtx.createLinearGradient(0,0,280,150); rGrad.addColorStop(0,"rgba(255,0,0,0.5)"); rGrad.addColorStop(0.2,"rgba(255,165,0,0.5)"); rGrad.addColorStop(0.4,"rgba(255,255,0,0.5)"); rGrad.addColorStop(0.6,"rgba(0,255,0,0.5)"); rGrad.addColorStop(1,"rgba(0,0,255,0.5)"); 
+            modalCtx.fillStyle = rGrad; modalCtx.fillRect(0,0,280,150); 
+            drawHusky(modalCtx, 140, 100, true, false); 
+            drawDooDoo(modalCtx, 50, 80, 1); 
+            drawDooDoo(modalCtx, 230, 60, 1); 
+        }
     }
 
     // --- COUNTDOWN & START SEQUENCE ---
@@ -774,7 +764,11 @@
     }
 
     function loop() {
+        // Main Loop Counter
         if((gameActive && !isPaused && !isCountingDown)) { frame++; } 
+        // Run-off logic
+        if(levelVictoryAnim) { frame++; pepper.x += speed * 1.5; }
+
         groundY = canvas.height - GROUND_H;
         ctx.save();
         
@@ -789,11 +783,13 @@
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
+        // Background
         let grad = ctx.createLinearGradient(0, 0, 0, canvas.height); grad.addColorStop(0, curStyle.c1); grad.addColorStop(1, curStyle.c2); ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = "rgba(255,255,255,0.2)"; let celestialY = (currentLevel%3===2) ? canvas.height*0.8 : 100; ctx.beginPath(); ctx.arc(canvas.width*0.8, celestialY, 60, 0, Math.PI*2); ctx.fill();
         ctx.fillStyle = "rgba(255,255,255,0.1)"; bgMountains.forEach(m => { if(!levelFinished && gameActive && !isPaused && !isCountingDown) m.x -= speed * 0.05; if(m.x < -300) m.x = canvas.width + 100; ctx.beginPath(); ctx.moveTo(m.x, groundY); ctx.lineTo(m.x+150, groundY-300); ctx.lineTo(m.x+300, groundY); ctx.fill(); });
         bgTrees.forEach(t => { if(!levelFinished && gameActive && !isPaused && !isCountingDown) t.x -= speed * 0.2; if(t.x < -50) t.x = canvas.width + Math.random()*300; ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.beginPath(); ctx.moveTo(t.x, groundY); ctx.lineTo(t.x+25, groundY-100); ctx.lineTo(t.x+50, groundY); ctx.fill(); });
         
+        // Clouds
         ctx.fillStyle = "rgba(255,255,255,0.3)";
         bgClouds.forEach(c => { if(!isPaused && !isCountingDown) c.x -= c.speed; if(c.x < -100) c.x = canvas.width + 100; ctx.beginPath(); ctx.ellipse(c.x, c.y, 40, 20, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(c.x+20, c.y-10, 30, 20, 0, 0, Math.PI*2); ctx.fill(); });
 
@@ -806,12 +802,16 @@
             ctx.globalAlpha = 1;
         }
 
-        // Draw Ground (Dirt/Earth)
+        // Draw Ground
         ctx.fillStyle = curStyle.ground; ctx.fillRect(0, groundY, canvas.width, GROUND_H);
         
-        // Speckles
-        ctx.fillStyle = "rgba(0,0,0,0.2)";
-        for(let i=0; i<canvas.width; i+=50) ctx.fillRect(i - (frame*speed)%50, groundY+20, 4, 4);
+        // Dust & Stripes
+        ctx.fillStyle = "rgba(255,255,255,0.05)"; let stripeOffset = (frame * speed) % 100; for(let i = -100; i < canvas.width + 100; i+=100) { ctx.beginPath(); ctx.moveTo(i - stripeOffset, groundY); ctx.lineTo(i - stripeOffset + 40, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 90, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 50, groundY); ctx.fill(); }
+        
+        if(!levelFinished && pepper.grounded && (gameActive || levelVictoryAnim)) {
+            ctx.fillStyle = "rgba(255,255,255,0.3)";
+            ctx.beginPath(); ctx.arc(120 - (frame*speed)%20, groundY+2, 5 * Math.random(), 0, Math.PI*2); ctx.fill();
+        }
 
         // Grass Top
         ctx.fillStyle = curStyle.grass; ctx.fillRect(0, groundY, canvas.width, 20);
@@ -827,41 +827,54 @@
         [particles, floatTexts].forEach(arr => { for(let i=arr.length-1; i>=0; i--) { let p = arr[i]; if(p.text) { p.y-=2; p.life-=0.02; ctx.globalAlpha=p.life; ctx.fillStyle=p.color; ctx.font="900 30px 'Montserrat'"; ctx.fillText(p.text, p.x, p.y); } else { p.x+=p.vx; p.y+=p.vy; p.life-=0.03; ctx.globalAlpha=p.life; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,5,0,Math.PI*2); ctx.fill(); } if(p.life<=0) arr.splice(i,1); } });
         ctx.globalAlpha=1;
 
+        // MEGA MODE LOGIC
         if(pepper.isMega && gameActive && !isPaused && !isCountingDown) {
             pepper.megaTimer--; streakFill.style.width="100%"; megaFill.style.display="block";
             let pct = (pepper.megaTimer / MEGA_MAX_TIME) * 100; if(pct < 0) pct = 0; megaFill.style.width = pct + "%";
-            streakLabel.innerText = "MEGA MODE!"; streakLabel.style.color = "#00fbff";
-            if(pepper.megaTimer<=0) { pepper.isMega=false; pepper.streak=0; streakFill.style.width="0%"; megaFill.style.display="none"; streakLabel.innerText = "MEGA MODE! DODGE 50 DOO-DOOS TO UNLOCK"; streakLabel.style.color = "white"; }
+            streakLabel.innerText = "MEGA MODE ACTIVE!"; streakLabel.style.color = "#00fbff";
+            if(pepper.megaTimer<=0) { 
+                pepper.isMega=false; pepper.streak=0; streakFill.style.width="0%"; megaFill.style.display="none"; 
+                streakLabel.innerText = "DODGE 50 DOO-DOOS TO UNLOCK MEGA MODE"; streakLabel.style.color = "white"; 
+            }
         }
 
         if(gameActive && !isPaused && !isCountingDown) { 
             pepper.dy += GRAVITY; pepper.y += pepper.dy; 
             if(pepper.y >= groundY) { pepper.y=groundY; pepper.dy=0; pepper.grounded=true; pepper.canDoubleJump = false; } 
         } 
-        else if (!gameActive && !isCountingDown) { pepper.y = groundY; }
+        else if (!gameActive && !isCountingDown && !levelVictoryAnim) { pepper.y = groundY; }
 
-        drawHusky(ctx, 150, pepper.y, pepper.isMega, pepper.hasShield);
+        // Draw Player
+        // If Victory Anim, draw at x
+        let drawX = levelVictoryAnim ? pepper.x : 150;
+        if(!gameActive && !isCountingDown) drawX = 150; // Menu position
+
+        drawHusky(ctx, drawX, pepper.y, pepper.isMega, pepper.hasShield);
         
-        if(!gameActive && !isCountingDown) {
+        if(!gameActive && !isCountingDown && !levelVictoryAnim) {
             drawSteamDooDoo(ctx, canvas.width * 0.75, groundY-15);
         }
 
-        if(finishLine && gameActive && !isPaused && !isCountingDown) {
+        if(finishLine) {
             finishLine.x -= speed;
             ctx.save(); ctx.translate(finishLine.x, groundY - 150); 
-            
-            // Checkered Flag
             let wave = Math.sin(frame*0.2) * 10;
             ctx.fillStyle = "white"; ctx.fillRect(0, 0, 10, 150); 
-            for(let r=0; r<4; r++) { 
-                for(let c=0; c<6; c++) { 
-                    ctx.fillStyle = (r+c)%2===0 ? "white" : "black"; 
-                    ctx.fillRect(10 + c*20, r*20 + (c*wave*0.1), 20, 20); 
-                } 
-            } 
+            for(let r=0; r<4; r++) { for(let c=0; c<6; c++) { ctx.fillStyle = (r+c)%2===0 ? "white" : "black"; ctx.fillRect(10 + c*20, r*20 + (c*wave*0.1), 20, 20); } } 
             ctx.restore();
             
-            if(finishLine.x < 150) completeLevel();
+            // Fix: Transition logic
+            if(finishLine.x < 150 && !levelFinished) {
+                levelFinished = true;
+                levelVictoryAnim = true; // Start running off screen
+                pepper.x = 150; // Sync X
+            }
+        }
+        
+        // Handle Auto-Run off screen
+        if(levelVictoryAnim && pepper.x > canvas.width + 100) {
+            completeLevel();
+            levelVictoryAnim = false;
         }
 
         if(!finishLine && gameActive && !isPaused && !isCountingDown) {
@@ -903,7 +916,7 @@
 
             if(!hit && !o.passed && !o.nearMissAwarded && (o.type === 'poo' || o.type === 'stack')) { if(Math.abs(150-o.x) < 30 && Math.abs(pepper.y - (groundY-(o.stack*35))) < 30) closeCall = true; }
 
-            if(hit && gameActive && !isPaused && !isCountingDown) {
+            if(hit && gameActive && !isPaused && !isCountingDown && !levelVictoryAnim) {
                 if(o.type === 'hydrant' || o.type === 'pond') {
                     if(o.type === 'hydrant' && pepper.isMega) { gameOver('mega-hydrant'); } 
                     else { let color = o.type==='hydrant' ? "#00fbff" : "#f1c40f"; spawnParticles(150, groundY, color, 40); playSfx('splash'); playSfx('crash'); flashScreen(color); gameOver('standard'); }
@@ -923,8 +936,11 @@
                 score += pts; scoreEl.innerText = score + " PTS"; 
                 if(score % 50 === 0) playBark();
                 if(closeCall) { o.nearMissAwarded = true; score += 10; scoreEl.innerText = score + " PTS"; spawnPopup("CLOSE CALL! +10", 150, pepper.y-80, "#ffeaa7"); }
-                if(!pepper.isMega) {
+                if(!pepper.isMega && difficulty !== 'death') {
                     pepper.streak += pts; let fillPct = (pepper.streak / MEGA_TRIGGER) * 100; streakFill.style.width = fillPct+"%";
+                    // Update Text
+                    let remaining = MEGA_TRIGGER - pepper.streak;
+                    streakLabel.innerText = `DODGE ${remaining} MORE!`;
                     if(pepper.streak>=MEGA_TRIGGER){ pepper.isMega=true; pepper.megaTimer=MEGA_MAX_TIME; megaFill.style.display="block"; if(!megaUnlockedOnce) { megaUnlockedOnce = true; pauseAndShowModal('mega'); } else { spawnPopup("MEGA MODE!", canvas.width/2, canvas.height/3, "#ff00ff"); flashScreen('white'); } }
                 }
             }
@@ -954,8 +970,26 @@
         requestAnimationFrame(loop);
     }
 
+    function completeLevel() {
+        levelFinished = true; // Ensure logic stops
+        playSfx('levelup'); 
+        levelScreen.style.display = 'flex'; 
+        stopMusic();
+    }
+
+    function gameOver(reason) { 
+        gameActive = false; stopMusic(); 
+        if(score > highScore) { highScore = score; localStorage.setItem('pepperHighScore', highScore); highScoreEl.innerText = "BEST: " + highScore; } 
+        endScoreEl.innerText = score; 
+        
+        if(difficulty === 'baby') { retryBtn.innerText = "RETRY LEVEL (BABY MODE)"; } else { retryBtn.innerText = "TRY AGAIN"; }
+
+        if(reason === 'mega-hydrant') { goTitle.innerText = "STINKY!"; goMsg.innerText = "EVEN MEGA PEPPER HAS TO HOP A HYDRANT!"; goCanvas.style.display = 'block'; let gCtx = goCanvas.getContext('2d'); gCtx.clearRect(0,0,150,100); drawHydrant(gCtx, 75, 80); } else { goTitle.innerText = "GAME OVER!"; goMsg.innerText = ""; goCanvas.style.display = 'none'; } 
+        gameOverScreen.style.display = 'flex'; 
+    }
+
     function handleInput() { 
-        if(!gameActive || isPaused || isCountingDown) return; 
+        if(!gameActive || isPaused || isCountingDown || levelVictoryAnim) return; 
         initAudio(); 
         if(pepper.grounded) { 
             pepper.dy = JUMP_FORCE; pepper.grounded = false; playSfx('jump'); 
