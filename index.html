@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V41</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
+    <title>Pepper's Doo-Doo Dash V42</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         /* CORE RESET & LAYOUT */
         body { margin: 0; overflow: hidden; background: #1a1a1a; font-family: 'Montserrat', sans-serif; touch-action: none; user-select: none; -webkit-user-select: none; }
@@ -64,9 +64,9 @@
         .shelf-row { width: 100%; height: 10px; background: #636e72; position: absolute; left: 0; }
         #shop-keeper-area { position: absolute; bottom: 35%; width: 100%; height: 30%; display: flex; justify-content: center; align-items: flex-end; z-index: 2; pointer-events: none; }
         #shop-counter { width: 100%; height: 35%; background: #b2bec3; border-top: 8px solid #636e72; z-index: 5; position: relative; display: flex; flex-direction: column; align-items: center; box-shadow: 0 -10px 20px rgba(0,0,0,0.2); }
-        #shop-text-box-container { position: absolute; bottom: 20px; width: 90%; max-width: 600px; background: white; border: 4px solid #2d3436; border-radius: 8px; padding: 15px; z-index: 10; font-family: 'Press Start 2P', monospace; font-size: 12px; color: #2d3436; line-height: 1.6; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        #shop-text-box-container { position: absolute; bottom: 20px; width: 90%; max-width: 600px; background: white; border: 4px solid #2d3436; border-radius: 8px; padding: 15px; z-index: 10; font-family: 'Montserrat', sans-serif; font-size: 12px; color: #2d3436; line-height: 1.6; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 20px rgba(0,0,0,0.5); font-weight: 700; }
         #shop-text { flex-grow: 1; text-align: left; margin-right: 10px; }
-        #shop-next-btn { background: #d63031; color: white; border: none; padding: 10px 15px; font-family: 'Press Start 2P', monospace; font-size: 10px; cursor: pointer; border-radius: 4px; box-shadow: 3px 3px 0 #c0392b; }
+        #shop-next-btn { background: #d63031; color: white; border: none; padding: 10px 15px; font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 12px; cursor: pointer; border-radius: 4px; box-shadow: 3px 3px 0 #c0392b; }
         #shop-next-btn:active { transform: scale(0.95); box-shadow: 1px 1px 0 #c0392b; }
         .shop-container { display: flex; gap: 30px; z-index: 5; position: absolute; top: 15%; width: 100%; justify-content: center; }
         .shop-item { background: white; border: 3px solid #2d3436; border-radius: 4px; width: 80px; padding: 8px; text-align: center; cursor: pointer; transition: transform 0.2s; box-shadow: 0 5px 0px rgba(0,0,0,0.3); display: flex; flex-direction: column; align-items: center; }
@@ -74,9 +74,9 @@
         .shop-item.locked { opacity: 0.7; background: #b2bec3; cursor: not-allowed; }
         .shop-icon { font-size: 24px; margin-bottom: 5px; }
         .shop-name { font-family: 'Montserrat'; font-weight: 900; font-size: 10px; color: #2d3436; margin-bottom: 2px; }
-        .shop-cost { font-family: 'Press Start 2P'; font-size: 9px; color: #d63031; margin-top: 5px; }
+        .shop-cost { font-family: 'Montserrat'; font-weight: 700; font-size: 10px; color: #d63031; margin-top: 5px; }
         .shop-perk { font-size: 8px; color: #0984e3; font-weight: 700; margin-bottom: 2px; }
-        .balance-tag { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 20px; color: #f1c40f; font-family: 'Press Start 2P'; font-size: 12px; z-index: 20; border: 2px solid white; }
+        .balance-tag { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 20px; color: #f1c40f; font-family: 'Montserrat'; font-weight: 900; font-size: 14px; z-index: 20; border: 2px solid white; }
 
         /* DIFFICULTY SCREEN */
         .diff-container { display: flex; flex-direction: column; gap: 15px; width: 95%; max-height: 85vh; overflow-y: auto; align-items: center; }
@@ -273,21 +273,21 @@
     let frame = 0;
     let score = 0; 
     let levelStartScore = 0;
-    let speed = 11; // INCREASED SPEED
-    let baseSpeed = 11;
+    let speed = 13.5; // INCREASED SPEED
+    let baseSpeed = 13.5;
     let groundY = 0; 
     let shakeAmount = 0;
     let zoomLevel = 3.5;
     let currentLevel = 1;
     let levelDistance = 0;
-    let levelMaxDistance = 3000; // INCREASED LENGTH
+    let levelMaxDistance = 3000; 
     let isMuted = false;
     let menuOpen = false;
     let magnetCooldown = 0;
 
     // --- SPAWN LOGIC VARS ---
     let nextSpawnAllowedX = 0; 
-    let minSpawnGap = 300;     
+    let minSpawnGap = 200; // REDUCED GAP FOR MORE ITEMS
     
     let pepper = {
         x: 100, y: 0, dy: 0,
@@ -371,8 +371,8 @@
 
     function resetLevelState() {
         obstacles=[]; sticks=[]; bones=[]; floatTexts=[];
-        baseSpeed = (difficulty === 'death') ? 14 : 11.0; speed = baseSpeed;
-        if(difficulty === 'baby') speed = 8.5;
+        baseSpeed = (difficulty === 'death') ? 16.5 : 13.5; speed = baseSpeed;
+        if(difficulty === 'baby') speed = 9.5;
         
         levelDistance=0; finishLine=null;
         levelInd.innerText = "LEVEL " + currentLevel; 
@@ -628,7 +628,7 @@
             ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(-12, -7, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(8, -7, 2, 0, Math.PI*2); ctx.fill();
             drawHat(ctx);
             if(difficulty === 'normal') drawAviators(ctx, 0, 0);
-            if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, -5, 32, Math.PI, 0); ctx.stroke(); ctx.fillStyle = "#FFD700"; ctx.beginPath(); ctx.arc(0, 20, 6, 0, Math.PI*2); ctx.fill(); }
+            if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(0, -5, 32, Math.PI, 0); ctx.stroke(); ctx.fillStyle = "#FFD700"; ctx.beginPath(); ctx.arc(0, 20, 6, 0, Math.PI*2); c.fill(); }
             else { ctx.strokeStyle = "black"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 12, 10, 0, Math.PI); ctx.stroke(); }
             ctx.restore(); return;
         }
@@ -856,7 +856,8 @@
             }
 
             if (spawnedType) {
-                let rngGap = 300 + Math.random() * 600; 
+                // REDUCED GAP FOR MORE ITEMS
+                let rngGap = 200 + Math.random() * 400; 
                 nextSpawnAllowedX = canvas.width + objectWidth + rngGap;
                 if(spawnedType === 'obstacle' && objectWidth > 100) nextSpawnAllowedX += 200; 
             }
