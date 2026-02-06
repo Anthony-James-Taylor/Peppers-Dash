@@ -186,10 +186,31 @@
     
     // UI Elements
     const uiLayer = document.getElementById('ui-layer');
+    const scoreEl = document.getElementById('score');
+    const stickText = document.getElementById('stick-text');
+    const progressFill = document.getElementById('progress-fill');
+    const megaMeter = document.getElementById('mega-meter');
+    const megaBarFill = document.getElementById('mega-bar-fill');
+
+    // Screens
     const startScreen = document.getElementById('start-screen');
-    const shopScreen = document.getElementById('shop-screen');
     const gameOverScreen = document.getElementById('game-over');
+    const shopScreen = document.getElementById('shop-screen');
     
+    // Buttons
+    const startBtn = document.getElementById('start-btn');
+    const startDiffBtn = document.getElementById('start-diff-btn');
+    const retryBtn = document.getElementById('retry-btn');
+    const nextLevelBtn = document.getElementById('shop-next-btn');
+    const closeDiffBtn = document.getElementById('close-diff-btn');
+
+    const endScoreEl = document.getElementById('end-score');
+    const goTitle = document.getElementById('go-title');
+    const goMsg = document.getElementById('go-msg');
+    const flashOverlay = document.getElementById('flash-overlay');
+    const shopGrid = document.getElementById('shop-grid');
+    const shopBalance = document.getElementById('shop-balance');
+
     // Resize
     let width, height, groundY;
     const GROUND_HEIGHT = 140;
@@ -505,7 +526,7 @@
     }
 
     function flashScreen(color) {
-        const f = document.getElementById('flash');
+        const f = document.getElementById('flash-overlay');
         f.style.background = color;
         f.style.opacity = 0.5;
         setTimeout(() => f.style.opacity = 0, 100);
@@ -645,9 +666,9 @@
         ctx.save();
         ctx.translate(i.x, i.y + Math.sin(frame*0.1)*5);
         if (i.type === 'stick') {
-            ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 4;
+            ctx.strokeStyle = "#8B4513"; ctx.lineWidth = 4;
             ctx.beginPath(); ctx.moveTo(-10, 5); ctx.lineTo(10, -5); ctx.stroke();
-            ctx.fillStyle = '#00b894'; ctx.beginPath(); ctx.arc(10, -5, 4, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "#00b894"; ctx.beginPath(); ctx.arc(10, -5, 4, 0, Math.PI*2); ctx.fill();
         } else {
             ctx.fillStyle = (i.type === 'gold') ? '#f1c40f' : 'white';
             ctx.fillRect(-8,-3,16,6);
@@ -658,107 +679,25 @@
     }
 
     // --- INPUT ---
-    function jumpInput(e) {
-        if (!gameActive) return;
+    function jump(e) {
+        if(!gameActive) return;
         if(e.target.tagName === 'BUTTON') return;
+        if(e.type === 'touchstart') e.preventDefault();
         
-        let jumpForce = (pepper.hat === 'space') ? -10 : -15; // Adjusted physics
-        
-        if (pepper.grounded) {
-            pepper.dy = jumpForce;
-            pepper.grounded = false;
-            pepper.canDouble = true;
-            playSound('jump');
-        } else if (pepper.canDouble) {
-            pepper.dy = jumpForce * 0.8;
-            pepper.canDouble = false;
-            playSound('jump');
+        initAudio();
+        if(pepper.grounded) {
+            pepper.dy = JUMP_FORCE; pepper.grounded=false; pepper.canDoubleJump=true; playSfx('jump');
+        } else if(pepper.canDoubleJump) {
+            pepper.dy = (pepper.hat==='space'?-10:-15); pepper.canDoubleJump=false; playSfx('doublejump');
         }
     }
-    window.addEventListener('mousedown', jumpInput);
-    window.addEventListener('touchstart', (e) => { e.preventDefault(); jumpInput(e); }, {passive:false});
+    window.addEventListener('mousedown', jump);
+    window.addEventListener('touchstart', jump, {passive:false});
 
-    // --- BUTTONS ---
-    document.getElementById('start-btn').onclick = startGame;
-    document.getElementById('retry-btn').onclick = () => {
-        gameOverScreen.style.display = 'none';
-        if (difficulty === 'baby') {
-            gameActive = true; resetLevel(); loop(); // Keep score
-        } else {
-            startGame(); // Full reset
-        }
-    };
-    document.getElementById('home-btn').onclick = () => {
-        gameOverScreen.style.display = 'none';
-        startScreen.style.display = 'flex';
-    };
-    document.getElementById('next-level-btn').onclick = () => {
-        level++;
-        shopScreen.style.display = 'none';
-        uiLayer.style.display = 'flex';
-        resetLevel();
-        gameActive = true;
-        loop();
-    };
-
-    function openShop() {
-        shopScreen.style.display = 'flex';
-        uiLayer.style.display = 'none';
-        renderShop();
-    }
-
-    function renderShop() {
-        const grid = document.getElementById('shop-grid');
-        document.getElementById('shop-balance').innerText = bonesBank;
-        grid.innerHTML = '';
-
-        Object.values(HATS).forEach(hat => {
-            const isOwned = inventory.includes(hat.id);
-            const isEquipped = equipped === hat.id;
-            const canAfford = bonesBank >= hat.cost;
-
-            const el = document.createElement('div');
-            el.className = `shop-card ${isOwned?'owned':''} ${isEquipped?'equipped':''} ${(!isOwned && !canAfford)?'locked':''}`;
-            
-            let btnText = isEquipped ? 'EQUIPPED' : (isOwned ? 'EQUIP' : `BUY ${hat.cost}`);
-            let btnColor = isEquipped ? '#0984e3' : (isOwned ? '#00b894' : '#d63031');
-
-            el.innerHTML = `
-                <div style="font-weight:900">${hat.name}</div>
-                <div style="font-size:10px; color:#636e72; margin:10px 0;">${hat.perk}</div>
-                <canvas id="cvs-${hat.id}" width="60" height="60"></canvas>
-                <button class="shop-btn" style="background:${btnColor}">${btnText}</button>
-            `;
-            
-            // Preview
-            setTimeout(() => {
-                const cx = document.getElementById(`cvs-${hat.id}`).getContext('2d');
-                Draw.ctx = cx; // Hack swap context
-                cx.translate(30, 50); 
-                Draw.hat(hat.id);
-                // Draw simple head
-                cx.fillStyle='#2d3436'; cx.beginPath(); cx.arc(0,0,15,0,Math.PI*2); cx.fill();
-                Draw.ctx = ctx; // Restore
-            }, 0);
-
-            el.onclick = () => {
-                if(isEquipped) return;
-                if(isOwned) {
-                    equipped = hat.id;
-                    playSound('collect');
-                } else if(canAfford) {
-                    bonesBank -= hat.cost;
-                    inventory.push(hat.id);
-                    equipped = hat.id;
-                    playSound('mega');
-                } else {
-                    playSound('crash');
-                }
-                renderShop();
-            };
-            grid.appendChild(el);
-        });
-    }
+    // Start
+    resize();
+    renderDiffPreviews();
+    drawStickIcon();
 
 </script>
 </body>
