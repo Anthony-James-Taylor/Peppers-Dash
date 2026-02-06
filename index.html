@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V44</title>
+    <title>Pepper's Doo-Doo Dash V35</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
     
@@ -14,36 +14,49 @@
             touch-action: none; user-select: none; -webkit-user-select: none; 
         }
         
-        /* UI LAYERS */
         #ui-layer { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             pointer-events: none; display: none; 
             flex-direction: column; align-items: center; z-index: 10; 
         }
+        
+        #flash-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; opacity: 0; pointer-events: none; z-index: 100;
+            transition: opacity 0.1s ease-out;
+        }
 
-        /* HUD PILLS */
+        /* HUD */
         .hud-top { display: flex; justify-content: space-between; width: 90%; margin-top: 20px; align-items: flex-start; }
         
         .glass-pill {
             background: rgba(0, 0, 0, 0.8); 
-            border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 16px; padding: 10px 25px; 
+            border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 16px; padding: 8px 20px; 
             color: white; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); backdrop-filter: blur(5px);
         }
         
-        #score { font-size: 24px; font-weight: 900; color: #fff; }
-        #stick-text { font-size: 20px; font-weight: 900; color: #00b894; }
+        #score { font-size: 24px; font-weight: 900; line-height: 1; color: #fff; }
+        #level-indicator { color: #00fbff; font-weight: 900; font-size: 12px; margin-bottom: 2px; }
 
-        /* PROGRESS BAR */
+        #stick-canvas { width: 40px; height: 40px; } 
+        #stick-text { font-size: 20px; font-weight: 900; margin-top: -5px; } 
+
         #progress-wrapper {
-            position: absolute; top: 100px; width: 70%; height: 10px;
-            background: rgba(0,0,0,0.6); border-radius: 5px;
-            border: 2px solid rgba(255,255,255,0.2);
+            position: absolute; top: 100px; width: 70%; height: 8px;
+            background: rgba(0,0,0,0.6); border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.4);
         }
-        #progress-fill { height: 100%; width: 0%; background: #00fbff; box-shadow: 0 0 10px #00fbff; border-radius: 4px; }
-        #finish-icon { position: absolute; right: -30px; top: -30px; font-size: 40px; }
+        #progress-fill { height: 100%; width: 0%; background: #00fbff; box-shadow: 0 0 10px #00fbff; transition: width 0.1s linear; border-radius: 4px; }
+        
+        #finish-icon { 
+            position: absolute; right: -25px; top: -25px; 
+            font-size: 40px; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5));
+            animation: wave 1s infinite ease-in-out alternate;
+        }
+        @keyframes wave { from { transform: rotate(-5deg); } to { transform: rotate(15deg); } }
 
-        /* MEGA METER */
+        /* MEGA MODE UI */
         #mega-meter {
             position: absolute; bottom: 40px; 
             background: rgba(0, 0, 0, 0.9); 
@@ -51,85 +64,204 @@
             padding: 10px 30px; 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-            transition: all 0.2s;
+            min-width: 220px;
+            transition: all 0.3s;
         }
-        #mega-label { color: #00fbff; font-size: 12px; font-weight: 900; margin-bottom: 5px; }
-        #mega-bar-container { width: 200px; height: 12px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; }
-        #mega-bar-fill { height: 100%; width: 0%; background: #ff00ff; transition: width 0.1s; }
         
-        .mega-active { border-color: #ff00ff !important; box-shadow: 0 0 20px #ff00ff !important; transform: scale(1.05); }
+        #mega-label {
+            color: #00fbff; font-size: 12px; font-weight: 900; letter-spacing: 2px; margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        #mega-bar-container {
+            width: 100%; height: 12px; background: rgba(255,255,255,0.1); 
+            border-radius: 6px; overflow: hidden; margin-bottom: 5px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        #mega-bar-fill {
+            height: 100%; width: 0%; background: #ff00ff; 
+            transition: width 0.2s; box-shadow: 0 0 10px #ff00ff;
+        }
+
+        #mega-text {
+            color: #fff; font-size: 18px; font-weight: 900; letter-spacing: 1px;
+        }
+
+        .mega-active {
+            border-color: transparent !important;
+            background: linear-gradient(135deg, rgba(20,0,20,0.9), rgba(50,0,50,0.9));
+            box-shadow: 0 0 20px #ff00de, 0 0 40px #00ffff;
+            animation: shake 0.5s infinite;
+        }
+        .mega-active #mega-bar-fill {
+            background: linear-gradient(90deg, #ff00de, #00ffff, #ffff00, #ff00de); 
+            background-size: 200%;
+            animation: rainbowMove 0.3s linear infinite;
+        }
+        .mega-active #mega-label { color: #ffff00; text-shadow: 0 0 5px #ff00de; }
+
+        @keyframes rainbowMove { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+        @keyframes shake { 0% { transform: translate(0,0); } 25% { transform: translate(1px, 1px); } 50% { transform: translate(-1px, -1px); } 75% { transform: translate(-1px, 1px); } 100% { transform: translate(1px, -1px); } }
 
         /* SCREENS */
-        .screen { 
+        #start-screen, #game-over, #shop-screen, #difficulty-screen { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
-            display: none; flex-direction: column; justify-content: center; align-items: center; 
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; 
             z-index: 200; text-align: center; 
         }
+        #game-over, #shop-screen, #difficulty-screen { display: none; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); }
         
-        #start-screen { display: flex; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); }
+        #start-screen { background: none; backdrop-filter: none; z-index: 50; gap: 20px; }
         
+        .title-box { animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2; pointer-events: none; margin-bottom: 80px; }
         h1 { 
-            color: #fff; font-size: 50px; margin: 0 0 40px 0; line-height: 1; font-weight: 900; 
-            text-shadow: 0 5px 0 #000; text-transform: uppercase;
+            color: #fff; font-size: 50px; margin: 0; line-height: 0.9; font-weight: 900; 
+            letter-spacing: -3px; text-transform: uppercase;
+            text-shadow: 0 4px 0 #2d3436, 0 0 20px rgba(0, 251, 255, 0.5);
+        }
+
+        .visual-example {
+            margin: 10px 0; border-radius: 12px; border: 2px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .btn { 
-            background: white; color: #2d3436; padding: 20px 60px; border-radius: 30px; 
-            font-size: 22px; font-weight: 900; border: none; cursor: pointer; 
-            box-shadow: 0 8px 0 #b2bec3; transition: transform 0.1s; margin-top: 10px;
+            background: white; color: #2d3436; padding: 20px 60px; border-radius: 16px; 
+            font-size: 22px; font-weight: 900; pointer-events: auto;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4); border: none;
+            cursor: pointer; animation: breathe 2s infinite ease-in-out;
+            position: relative; z-index: 300; transition: transform 0.2s;
         }
-        .btn:active { transform: translateY(4px); box-shadow: 0 4px 0 #b2bec3; }
+        .btn:active { transform: scale(0.95); background: #dfe6e9; animation: none; }
+        .btn:hover { transform: scale(1.05); }
 
-        /* DIFFICULTY CARDS */
-        .diff-container { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; justify-content: center; }
+        #start-diff-btn {
+            background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(5px);
+            border: 2px solid rgba(255,255,255,0.5); color: white;
+            padding: 12px 30px; border-radius: 12px; font-size: 14px; font-weight: 700;
+            cursor: pointer; pointer-events: auto; z-index: 300; margin-top: -10px;
+            text-transform: uppercase; transition: background 0.2s;
+        }
+        #start-diff-btn:hover { background: rgba(255,255,255,0.25); }
+
+        /* CLASSIC SHOP DESIGN (Desk Style) */
+        #shop-screen {
+            background: #74b9ff;
+            justify-content: flex-end; 
+            padding: 0;
+        }
+        
+        #shop-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 60%;
+            background: #5fabdb;
+            z-index: 1;
+            background-image: 
+                linear-gradient(to bottom, #4a89ad 5%, transparent 5%),
+                linear-gradient(to bottom, #4a89ad 5%, transparent 5%),
+                linear-gradient(to right, #4a89ad 1px, transparent 1px);
+            background-size: 100% 80px, 100% 80px, 100px 100%;
+            background-position: 0 20px, 0 60px, 0 0;
+        }
+
+        #shop-keeper-area {
+            position: absolute; top: 15%; width: 100%; height: 45%;
+            display: flex; justify-content: center; align-items: flex-end;
+            z-index: 2; pointer-events: none;
+        }
+
+        #shop-counter {
+            width: 100%; height: 40%;
+            background: #dcdde1; border-top: 10px solid #b2bec3;
+            z-index: 3;
+            position: relative;
+            display: flex; flex-direction: column; align-items: center;
+            box-shadow: 0 -10px 20px rgba(0,0,0,0.2);
+        }
+
+        #shop-counter::after {
+            content:''; position: absolute; bottom: 0; width: 100%; height: 70%;
+            background: #7f8fa6; border-top: 2px solid #57606f;
+        }
+
+        #shop-text-box-container {
+            position: absolute; bottom: 10px; width: 95%; max-width: 600px;
+            background: white; border: 4px solid #2d3436; border-radius: 8px;
+            padding: 15px; z-index: 10;
+            font-family: 'Press Start 2P', monospace; font-size: 12px; color: #2d3436;
+            line-height: 1.6;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        #shop-text { flex-grow: 1; text-align: left; margin-right: 10px; }
+        
+        #shop-next-btn {
+            background: #d63031; color: white; border: none; padding: 10px 15px;
+            font-family: 'Press Start 2P', monospace; font-size: 10px; cursor: pointer;
+            border-radius: 4px; box-shadow: 3px 3px 0 #c0392b;
+        }
+        #shop-next-btn:active { transform: scale(0.95); box-shadow: 1px 1px 0 #c0392b; }
+
+        .shop-items-grid {
+            position: absolute; top: -60px; /* Sit ON the counter */
+            display: flex; gap: 15px; z-index: 5;
+            perspective: 500px;
+        }
+
+        .shop-item {
+            background: white; border: 3px solid #2d3436; border-radius: 8px;
+            width: 90px; padding: 8px; text-align: center;
+            cursor: pointer; transition: transform 0.2s;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .shop-item.selected { border-color: #00fbff; background: #e0fbfc; transform: translateY(-10px); }
+        .shop-item.locked { opacity: 0.7; background: #b2bec3; cursor: not-allowed; }
+        
+        .shop-icon { font-size: 24px; margin-bottom: 5px; }
+        .shop-name { font-family: 'Montserrat'; font-weight: 900; font-size: 10px; color: #2d3436; margin-bottom: 2px; }
+        .shop-cost { font-family: 'Press Start 2P'; font-size: 9px; color: #d63031; margin-top: 5px; }
+        .shop-perk { font-size: 8px; color: #0984e3; font-weight: 700; margin-bottom: 2px; }
+
+        .balance-tag {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 20px;
+            color: #f1c40f; font-family: 'Press Start 2P'; font-size: 12px; z-index: 20;
+            border: 2px solid white;
+        }
+
+        /* Difficulty Cards */
+        .diff-container { display: flex; flex-direction: column; gap: 15px; width: 95%; max-height: 85vh; overflow-y: auto; align-items: center; }
         .diff-card { 
             background: rgba(255,255,255,0.1); border: 2px solid transparent; border-radius: 12px; 
-            padding: 20px; width: 200px; text-align: left; cursor: pointer; transition: 0.2s;
+            padding: 15px; width: 100%; max-width: 380px; text-align: left; display: flex; align-items: center; gap: 15px;
+            cursor: pointer; transition: all 0.2s;
         }
-        .diff-card:hover { background: rgba(255,255,255,0.2); }
-        .diff-card.selected { border-color: #00fbff; background: rgba(0,251,255,0.15); }
-        .diff-card h3 { color: #ffeaa7; margin: 0 0 5px 0; font-size: 16px; text-transform: uppercase; }
-        .diff-card p { color: #ccc; font-size: 11px; margin: 0; line-height: 1.4; }
+        .diff-card.selected { border-color: #00fbff; background: rgba(0,251,255,0.1); }
+        .diff-info h3 { margin: 0 0 5px 0; font-size: 18px; color: #ffeaa7; text-transform: uppercase; letter-spacing: 1px;}
+        .diff-info p { margin: 0; font-size: 12px; color: #b2bec3; line-height: 1.4; }
 
-        /* SHOP (V40 STYLE GRID) */
-        #shop-screen { background: linear-gradient(135deg, #74b9ff, #0984e3); justify-content: flex-start; padding-top: 20px; }
-        #shop-header { display: flex; justify-content: space-between; width: 90%; align-items: center; margin-bottom: 20px; }
-        
-        #shop-grid { 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); 
-            gap: 20px; width: 90%; max-width: 800px; padding-bottom: 100px; overflow-y: auto;
-        }
-
-        .shop-card {
-            background: white; border-radius: 15px; border: 4px solid #b2bec3;
-            padding: 10px; display: flex; flex-direction: column; align-items: center;
-            cursor: pointer; transition: transform 0.2s; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        .shop-card.owned { border-color: #00b894; background: #e3faf5; }
-        .shop-card.equipped { border-color: #0984e3; transform: scale(1.05); box-shadow: 0 0 20px #00fbff; }
-        .shop-card.locked { opacity: 0.6; filter: grayscale(1); }
-
-        .shop-btn { width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: none; font-weight: 900; cursor: pointer; color: white; font-size: 10px; }
-
-        /* FLASH OVERLAY */
-        #flash { position: absolute; top:0; left:0; width:100%; height:100%; background:white; opacity:0; pointer-events:none; z-index:999; transition: opacity 0.1s; }
+        @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes slideUp { 0% { transform: translateY(50px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+        @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
     </style>
 </head>
 <body>
 
     <canvas id="gameCanvas"></canvas>
-    <div id="flash"></div>
-
+    <div id="flash-overlay"></div>
+    
     <div id="ui-layer">
         <div class="hud-top">
-            <div class="glass-pill">
-                <div style="font-size:10px; color:#00fbff; font-weight:900;">SCORE</div>
-                <div id="score">0 🦴</div>
+            <div class="glass-pill" id="score-box">
+                <div id="level-indicator">LEVEL 1</div>
+                <span id="score">0 🦴</span>
             </div>
-            <div class="glass-pill">
-                <div style="font-size:10px; color:#00b894; font-weight:900;">SHIELD</div>
-                <div id="stick-text">0/5</div>
+            <div class="glass-pill" id="stick-box">
+                <canvas id="stick-canvas" width="40" height="40"></canvas>
+                <span id="stick-text">0/5</span>
             </div>
         </div>
         <div id="progress-wrapper"><div id="progress-fill"></div><div id="finish-icon">🏁</div></div>
@@ -137,63 +269,87 @@
         <div id="mega-meter">
             <div id="mega-label">MEGA MODE</div>
             <div id="mega-bar-container"><div id="mega-bar-fill"></div></div>
+            <div id="mega-text">COLLECT 50 🦴</div>
         </div>
     </div>
 
-    <div id="start-screen" class="screen" style="display:flex;">
-        <h1>Pepper's<br>Doo-Doo Dash</h1>
-        
+    <div id="start-screen">
+        <div class="title-box"><h1>PEPPER'S<br>DOO-DOO DASH</h1></div>
+        <button class="btn" id="start-btn">TAP TO START</button>
+        <button id="start-diff-btn">DIFFICULTY: BRING 'EM ON</button>
+    </div>
+
+    <div id="difficulty-screen">
+        <h2 style="color:white; margin-bottom: 20px;">SELECT DIFFICULTY</h2>
         <div class="diff-container">
-            <div class="diff-card" onclick="setDifficulty('baby', this)">
-                <h3>Baby Mode</h3>
-                <p>Restart same level if you die.</p>
+            <div class="diff-card" id="diff-baby" onclick="setDifficulty('baby')">
+                <canvas id="cvs-baby" width="100" height="100"></canvas>
+                <div class="diff-info">
+                    <h3>Can I play, Daddy?</h3>
+                    <p>Restart from the same level, because I don't like to lose.</p>
+                </div>
             </div>
-            <div class="diff-card selected" onclick="setDifficulty('normal', this)">
-                <h3>Normal</h3>
-                <p>Standard rules. Bring 'em on.</p>
+            <div class="diff-card selected" id="diff-normal" onclick="setDifficulty('normal')">
+                <canvas id="cvs-normal" width="100" height="100"></canvas>
+                <div class="diff-info">
+                    <h3>Bring 'em on.</h3>
+                    <p>I kick it old school, take me back to where it all began.</p>
+                </div>
             </div>
-            <div class="diff-card" onclick="setDifficulty('death', this)">
-                <h3 style="color:#ff7675">Death</h3>
-                <p>Fast. No Shields. Good luck.</p>
+            <div class="diff-card" id="diff-death" onclick="setDifficulty('death')">
+                <canvas id="cvs-death" width="100" height="100"></canvas>
+                <div class="diff-info">
+                    <h3 style="color:#ff7675">I am Death incarnate!</h3>
+                    <p>Fast play. No shields. Max adrenaline.</p>
+                </div>
             </div>
         </div>
-
-        <button class="btn" id="start-btn">PLAY GAME</button>
+        <button class="btn" id="close-diff-btn" style="margin-top:20px;">CONFIRM</button>
     </div>
 
-    <div id="shop-screen" class="screen">
-        <div id="shop-header">
-            <div class="glass-pill">BANK: <span id="shop-balance" style="color:#f1c40f">0</span> 🦴</div>
+    <div id="shop-screen">
+        <div id="shop-bg"></div>
+        <div class="balance-tag" id="shop-balance">0 🦴</div>
+        
+        <div id="shop-keeper-area">
+            <canvas id="shopkeeper-canvas" width="200" height="200"></canvas>
         </div>
-        <div id="shop-grid"></div>
-        <div style="position:fixed; bottom:20px; width:100%; display:flex; justify-content:center;">
-            <button class="btn" id="next-level-btn">NEXT LEVEL ▶</button>
+
+        <div id="shop-counter">
+            <div class="shop-items-grid" id="shop-container"></div>
+            
+            <div id="shop-text-box-container">
+                <div id="shop-text">WELCOME! TAKE A LOOK AT MY WARES.</div>
+                <button id="shop-next-btn">NEXT LEVEL</button>
+            </div>
         </div>
     </div>
 
-    <div id="game-over" class="screen">
-        <h1 style="color:#ff7675">GAME OVER</h1>
-        <div style="color:white; margin-bottom:20px; font-weight:bold; font-size:18px;" id="death-reason"></div>
-        <div class="glass-pill" style="margin-bottom:20px;">SCORE: <span id="final-score">0</span></div>
-        <button class="btn" id="retry-btn">TRY AGAIN</button>
-        <button class="btn" id="home-btn" style="background:transparent; border:2px solid white; color:white; font-size:16px; padding:10px 30px;">MAIN MENU</button>
+    <div id="game-over">
+        <h1 id="go-title" style="color:#ff7675; font-size:50px;">GAME OVER!</h1>
+        <canvas id="go-canvas" class="visual-example" width="150" height="100" style="display:none; margin:10px 0;"></canvas>
+        <div id="go-msg" style="color:#ffeaa7; font-weight:700; font-size:14px; max-width:80%; margin-bottom:10px;"></div>
+        <div class="glass-pill" style="margin: 10px 0;"><span id="score-label">FINAL SCORE</span><span id="end-score" style="font-size: 40px; font-weight: 900;">0</span></div>
+        <div class="btn" id="retry-btn">TRY AGAIN</div>
     </div>
 
 <script>
-    // --- SETUP ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     
     // UI Elements
     const uiLayer = document.getElementById('ui-layer');
     const scoreEl = document.getElementById('score');
+    const levelInd = document.getElementById('level-indicator');
     const stickText = document.getElementById('stick-text');
     const progressFill = document.getElementById('progress-fill');
     const megaMeter = document.getElementById('mega-meter');
+    const megaText = document.getElementById('mega-text');
     const megaBarFill = document.getElementById('mega-bar-fill');
 
     // Screens
     const startScreen = document.getElementById('start-screen');
+    const difficultyScreen = document.getElementById('difficulty-screen');
     const gameOverScreen = document.getElementById('game-over');
     const shopScreen = document.getElementById('shop-screen');
     
@@ -207,498 +363,459 @@
     const endScoreEl = document.getElementById('end-score');
     const goTitle = document.getElementById('go-title');
     const goMsg = document.getElementById('go-msg');
+    const goCanvas = document.getElementById('go-canvas');
     const flashOverlay = document.getElementById('flash-overlay');
-    const shopGrid = document.getElementById('shop-grid');
+    const shopContainer = document.getElementById('shop-container');
     const shopBalance = document.getElementById('shop-balance');
+    const shopText = document.getElementById('shop-text');
 
-    // Resize
-    let width, height, groundY;
-    const GROUND_HEIGHT = 140;
-    
-    function resize() {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
-        groundY = height - GROUND_HEIGHT;
+    function resize() { 
+        canvas.width = window.innerWidth; 
+        canvas.height = window.innerHeight; 
+        groundY = canvas.height - GROUND_H;
+        if(!gameActive && !frame) pepper.y = groundY;
     }
     window.addEventListener('resize', resize);
-    resize();
 
-    // --- AUDIO SYSTEM (Oscillator based - No files) ---
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    let audioCtx;
+    // --- SETTINGS ---
+    const GRAVITY = 1.1; 
+    const JUMP_FORCE = -19; 
+    const DOUBLE_JUMP_FORCE = -15; 
+    const GROUND_H = 140; 
     
-    function initAudio() {
-        if (!audioCtx) audioCtx = new AudioContext();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-    }
-
-    function playSound(type) {
-        if (!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        const now = audioCtx.currentTime;
-        
-        if (type === 'jump') {
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(300, now);
-            osc.frequency.linearRampToValueAtTime(500, now + 0.1);
-            gain.gain.setValueAtTime(0.2, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-            osc.start(now); osc.stop(now + 0.2);
-        }
-        else if (type === 'collect') {
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(1200, now);
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-            osc.start(now); osc.stop(now + 0.1);
-        }
-        else if (type === 'crash') {
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(100, now);
-            osc.frequency.linearRampToValueAtTime(50, now + 0.3);
-            gain.gain.setValueAtTime(0.3, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-            osc.start(now); osc.stop(now + 0.3);
-        }
-        else if (type === 'mega') {
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(200, now);
-            osc.frequency.linearRampToValueAtTime(600, now + 0.3);
-            gain.gain.setValueAtTime(0.2, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.3);
-            osc.start(now); osc.stop(now + 0.3);
-        }
-    }
-
-    // --- GAME STATE ---
+    let difficulty = 'normal';
     let gameActive = false;
     let frame = 0;
-    let score = 0;
-    let bonesBank = 0;
-    let level = 1;
-    let distance = 0;
-    let maxDistance = 2000;
-    let difficulty = 'normal';
+    let score = 0; 
+    let levelStartScore = 0;
+    let speed = 9;
+    let baseSpeed = 9;
+    let groundY = 0; 
+    let shakeAmount = 0;
+    let zoomLevel = 3.5; 
+    let currentLevel = 1;
+    let levelDistance = 0;
+    let levelMaxDistance = 2000; 
+    let levelFinished = false; 
+    let isMuted = false;
+    let magnetCooldown = 0;
+    let isDead = false;
     
-    // Pepper
     let pepper = {
         x: 100, y: 0, dy: 0,
-        grounded: true, canDouble: false,
-        hat: 'none', shield: false,
-        isMega: false, megaTimer: 0, streak: 0,
-        sticks: 0
+        grounded: true, canDoubleJump: false, isMega: false,
+        streak: 0, megaTimer: 0, sticks: 0, hasShield: false,
+        doubleJumpUnlocked: true,
+        runFrame: 0, rotation: 0, magnetTimer: 0, spinTimer: 0,
+        hat: 'none'
     };
 
-    // Arrays
     let obstacles = [];
-    let items = [];
+    let sticks = [];
+    let bones = [];
     let particles = [];
-    
-    // Decoration
-    let mountains = [];
-    let clouds = [];
+    let bgMountains = [];
+    let bgTrees = [];
+    let bgClouds = [];
+    let fgBushes = [];
+    let finishLine = null; 
 
-    // --- SHOP DATA ---
-    const HATS = {
-        none:   { id: 'none', name: 'No Hat', cost: 0, perk: 'Natural' },
-        cap:    { id: 'cap', name: 'Red Cap', cost: 50, perk: 'Double Points' },
-        tophat: { id: 'tophat', name: 'Top Hat', cost: 100, perk: 'Start w/ Shield' },
-        cowboy: { id: 'cowboy', name: 'Cowboy', cost: 200, perk: 'Easy Mega Mode' },
-        space:  { id: 'space', name: 'Space Helm', cost: 300, perk: 'Moon Gravity' }
-    };
-    let inventory = ['none'];
-    let equipped = 'none';
+    // --- AUDIO ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+    function initAudio() { if (!audioCtx) audioCtx = new AudioContext(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
 
-    // --- INITIALIZATION ---
-    function resetLevel() {
-        pepper.y = groundY;
-        pepper.dy = 0;
-        pepper.grounded = true;
-        pepper.isMega = false;
-        pepper.megaTimer = 0;
-        pepper.streak = 0;
-        pepper.sticks = 0;
-        pepper.shield = false;
-        
-        // Hat perks
-        pepper.hat = equipped;
-        if(pepper.hat === 'tophat') { pepper.shield = true; pepper.sticks = 5; }
-        if(pepper.hat === 'space') pepper.shield = true; // Bonus shield for space
-
-        obstacles = [];
-        items = [];
-        distance = 0;
-        maxDistance = 2000 + (level * 500);
-        
-        // Background init
-        mountains = []; for(let i=0; i<5; i++) mountains.push({x:i*300});
-        clouds = []; for(let i=0; i<5; i++) clouds.push({x:Math.random()*width, y:Math.random()*150, s:0.5+Math.random()});
-
-        updateHUD();
+    function synth(freq, type, vol, decay) { 
+        if (!audioCtx || isMuted) return; 
+        const osc = audioCtx.createOscillator(); 
+        const gain = audioCtx.createGain(); 
+        osc.type = type; 
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime); 
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime); 
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + decay); 
+        osc.connect(gain); 
+        gain.connect(audioCtx.destination); 
+        osc.start(); 
+        osc.stop(audioCtx.currentTime + decay + 0.1); 
     }
 
-    function startGame() {
-        startScreen.style.display = 'none';
-        gameOverScreen.style.display = 'none';
-        shopScreen.style.display = 'none';
-        uiLayer.style.display = 'flex';
+    function playSfx(type) { 
+        if(type==='jump') synth(350, 'triangle', 0.1, 0.1); 
+        if(type==='doublejump') synth(600, 'square', 0.1, 0.1); 
+        if(type==='collect') synth(1400, 'sine', 0.1, 0.2); 
+        if(type==='smash') synth(80, 'sawtooth', 0.3, 0.3); 
+        if(type==='crash') synth(50, 'sawtooth', 0.4, 0.5); 
+        if(type==='levelup') { synth(440, 'triangle', 0.2, 0.5); setTimeout(()=>synth(880, 'triangle', 0.2, 0.5), 100); } 
+    }
+
+    // --- INTERACTION ---
+    startBtn.onclick = () => startSequence(false);
+    startDiffBtn.onclick = () => { difficultyScreen.style.display = 'flex'; renderDiffPreviews(); };
+    closeDiffBtn.onclick = () => { difficultyScreen.style.display = 'none'; };
+    retryBtn.onclick = () => { if(difficulty === 'baby') { resetLevelState(); startSequence(false); } else { resetGameLogic(); startSequence(false); } };
+    nextLevelBtn.onclick = () => goToNextLevel();
+
+    function setDifficulty(mode) {
+        difficulty = mode;
+        document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
+        document.getElementById('diff-'+mode).classList.add('selected');
+        let label = "DIFFICULTY: BRING 'EM ON";
+        if(mode === 'baby') label = "DIFFICULTY: CAN I PLAY, DADDY?";
+        if(mode === 'death') label = "DIFFICULTY: DEATH INCARNATE";
+        startDiffBtn.innerText = label;
+        if(mode === 'death') megaText.innerText = "NO MEGA MODE!";
+        else megaText.innerText = "COLLECT 50 🦴";
+    }
+
+    function resetGameLogic() {
+        score = 0; levelStartScore = 0; scoreEl.innerText="0 🦴"; 
+        pepper.sticks=0; stickText.innerText="0/5"; 
+        pepper.streak=0; currentLevel=1; 
+        pepper.hat = 'none';
+        resetLevelState(); drawStickIcon();
+    }
+
+    function resetLevelState() {
+        obstacles=[]; sticks=[]; bones=[]; 
+        baseSpeed = (difficulty === 'death') ? 11 : 9; speed = baseSpeed;
+        levelDistance=0; levelFinished=false; finishLine=null; isDead = false;
         
-        score = 0;
-        level = 1;
-        initAudio();
-        resetLevel();
+        levelInd.innerText = "LEVEL " + currentLevel; 
+        pepper.y = groundY; pepper.dy=0; pepper.grounded=true; 
+        pepper.isMega = false; pepper.megaTimer = 0; pepper.magnetTimer = 0; pepper.x = 100;
+        magnetCooldown = 0; 
+        
+        if(pepper.hat === 'tophat') { pepper.hasShield = true; pepper.sticks = 5; stickText.innerText="5/5"; } 
+        else { pepper.hasShield = false; pepper.sticks = 0; stickText.innerText="0/5"; }
+
+        megaMeter.classList.remove('mega-active');
+        megaBarFill.style.width = "0%";
+        updateMegaText();
+        
+        bgMountains=[]; for(let i=0; i<3; i++) bgMountains.push({x: i*300});
+        bgTrees=[]; for(let i=0; i<5; i++) bgTrees.push({x: i*200});
+        bgClouds=[]; for(let i=0; i<5; i++) bgClouds.push({x: Math.random()*canvas.width, y: Math.random()*150, speed: 0.2 + Math.random()*0.3});
+        fgBushes=[]; for(let i=0; i<3; i++) fgBushes.push({x: Math.random()*canvas.width});
+    }
+
+    function updateMegaText() {
+        if(difficulty === 'death') { megaText.innerText = "NO MEGA MODE!"; return; }
+        let target = (pepper.hat === 'cowboy') ? 25 : 50;
+        if(pepper.isMega) megaText.innerText = "MEGA MODE!";
+        else {
+            let remaining = Math.max(0, target - pepper.streak);
+            megaText.innerText = "COLLECT " + remaining + " 🦴";
+        }
+    }
+
+    function goToNextLevel() { 
+        shopScreen.style.display = 'none';
+        levelStartScore = score; currentLevel++; levelMaxDistance += 1000; 
+        resetLevelState(); 
+        startSequence(false); 
+    }
+
+    // --- SHOP SYSTEM ---
+    const hatData = {
+        none: { name: "No Hat", cost: 0, perk: "None" },
+        cap: { name: "Red Cap", cost: 50, perk: "2x 🦴" },
+        tophat: { name: "Top Hat", cost: 100, perk: "Start w/ 🛡️" },
+        cowboy: { name: "Cowboy", cost: 200, perk: "Half Price Mega" }
+    };
+
+    function openShop() {
+        shopScreen.style.display = 'flex';
+        shopBalance.innerText = score + " 🦴";
+        
+        // Draw shopkeeper animation
+        let sk = document.getElementById('shopkeeper-canvas');
+        let skCtx = sk.getContext('2d');
+        let skFrame = 0;
+        function animateShopkeeper() {
+            if(shopScreen.style.display !== 'flex') return;
+            skFrame++;
+            skCtx.clearRect(0,0,200,200);
+            let breathe = Math.sin(skFrame*0.05) * 2;
+            skCtx.save();
+            skCtx.translate(100, 100 + breathe);
+            skCtx.scale(2.5, 2.5);
+            skCtx.fillStyle = "#1a1a1a";
+            skCtx.beginPath(); skCtx.ellipse(0, 40, 25, 15, 0, 0, Math.PI*2); skCtx.fill();
+            drawHeadPreview(skCtx, 0, 0, 'normal');
+            skCtx.restore();
+            requestAnimationFrame(animateShopkeeper);
+        }
+        animateShopkeeper();
+        renderShop();
+    }
+
+    function renderShop() {
+        shopContainer.innerHTML = '';
+        const keys = ['none', 'cap', 'tophat', 'cowboy'];
+        
+        keys.forEach(k => {
+            let item = hatData[k];
+            let div = document.createElement('div');
+            div.className = 'shop-item';
+            if (pepper.hat === k) div.classList.add('selected');
+            let isAffordable = score >= item.cost;
+            let alreadyOwn = pepper.hat === k; 
+            if (!isAffordable && !alreadyOwn && k !== 'none') div.classList.add('locked');
+
+            let iconHtml = `<canvas id="shop-cvs-${k}" width="60" height="60" style="margin-bottom:5px;"></canvas>`;
+            
+            div.innerHTML = `
+                ${iconHtml}
+                <div class="shop-name">${item.name}</div>
+                <div class="shop-perk">${item.perk}</div>
+                <div class="shop-cost">${alreadyOwn ? 'OWNED' : (item.cost > 0 ? item.cost + ' 🦴' : 'FREE')}</div>
+            `;
+            
+            div.onclick = () => {
+                if (k === 'none') { 
+                    pepper.hat = 'none'; shopText.innerText = "SOMETIMES NATURAL IS BEST!"; renderShop(); return; 
+                }
+                if (pepper.hat === k) return;
+                if (score >= item.cost) {
+                    score -= item.cost; 
+                    pepper.hat = k;
+                    shopBalance.innerText = score + " 🦴";
+                    scoreEl.innerText = score + " 🦴";
+                    shopText.innerText = "GREAT CHOICE! LOOKING SHARP!";
+                    renderShop();
+                    playSfx('collect');
+                } else {
+                    shopText.innerText = "YOU DON'T HAVE ENOUGH BONES!";
+                    playSfx('crash'); 
+                }
+            };
+            shopContainer.appendChild(div);
+            
+            setTimeout(() => {
+                let c = document.getElementById(`shop-cvs-${k}`).getContext('2d');
+                drawHeadPreview(c, 30, 30, 'normal');
+                // Draw hat overlay on preview
+                c.save(); c.translate(30,30);
+                if(k==='cap') { c.fillStyle = "#d63031"; c.beginPath(); c.arc(0, -25, 13, Math.PI, 0); c.fill(); c.fillRect(10, -25, 12, 4); }
+                if(k==='tophat') { c.fillStyle = "#2d3436"; c.fillRect(-12, -50, 24, 25); c.fillRect(-18, -25, 36, 4); }
+                if(k==='cowboy') { c.fillStyle = "#8B4513"; c.translate(0,-28); c.beginPath(); c.ellipse(0, 0, 20, 5, 0, 0, Math.PI*2); c.fill(); c.fillRect(-10, -15, 20, 15); }
+                c.restore();
+            }, 10);
+        });
+    }
+
+    // --- DRAWING ---
+    function drawStickIcon() {
+        const c = document.getElementById('stick-canvas');
+        const x = c.getContext('2d'); x.clearRect(0,0,40,40); x.save();
+        x.translate(20,20); x.rotate(Math.PI/4);
+        x.strokeStyle = "#8B4513"; x.lineWidth = 5; x.lineCap="round";
+        x.beginPath(); x.moveTo(-12, 0); x.lineTo(12, 0); x.stroke(); 
+        x.beginPath(); x.moveTo(-3, 0); x.lineTo(6, -6); x.stroke(); 
+        x.fillStyle = "#00b894"; x.beginPath(); x.arc(7, -7, 2.5, 0, Math.PI*2); x.fill();
+        x.restore();
+    }
+
+    function drawAviators(ctx, x, y) {
+        ctx.save(); ctx.translate(x, y);
+        ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(-2, -5); ctx.bezierCurveTo(-15, -5, -18, 5, -10, 10); ctx.bezierCurveTo(-2, 10, -2, -5, -2, -5); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(2, -5); ctx.bezierCurveTo(15, -5, 18, 5, 10, 10); ctx.bezierCurveTo(2, 10, 2, -5, 2, -5); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-2, -5); ctx.lineTo(2, -5); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-2, -8); ctx.lineTo(2, -8); ctx.stroke();
+        ctx.restore();
+    }
+
+    function renderDiffPreviews() {
+        ['baby', 'normal', 'death'].forEach(mode => {
+            let cvs = document.getElementById('cvs-'+mode);
+            let c = cvs.getContext('2d'); c.clearRect(0,0,100,100); drawHeadPreview(c, 50, 50, mode);
+        });
+    }
+    
+    function drawHeadPreview(c, x, y, mode) {
+        c.save(); c.translate(x, y); 
+        let bodyC = (mode==='death') ? "#2d3436" : "#1a1a1a";
+        let eyeC = (mode==='death') ? "red" : "#00fbff";
+        c.fillStyle = bodyC; c.beginPath(); c.arc(0, 0, 30, 0, Math.PI*2); c.fill();
+        c.fillStyle = "white"; c.beginPath(); c.arc(0, 8, 22, 0, Math.PI*2); c.fill();
+        c.fillStyle = bodyC; c.beginPath(); c.moveTo(-20, -10); c.lineTo(-25, -40); c.lineTo(-5, -20); c.fill(); c.beginPath(); c.moveTo(20, -10); c.lineTo(25, -40); c.lineTo(5, -20); c.fill();
+        c.fillStyle = "pink"; c.beginPath(); c.moveTo(-18, -15); c.lineTo(-22, -30); c.lineTo(-10, -20); c.fill(); c.beginPath(); c.moveTo(18, -15); c.lineTo(22, -30); c.lineTo(10, -20); c.fill();
+        c.fillStyle = "black"; c.beginPath(); c.arc(0, 5, 5, 0, Math.PI*2); c.fill(); 
+        c.fillStyle = eyeC; c.beginPath(); c.arc(-10, -5, 6, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(10, -5, 6, 0, Math.PI*2); c.fill(); 
+        c.fillStyle = "white"; c.beginPath(); c.arc(-12, -7, 2, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(8, -7, 2, 0, Math.PI*2); c.fill();
+        if(mode === 'normal') { drawAviators(c, 0, 0); }
+        if(mode === 'baby') { c.strokeStyle = "pink"; c.lineWidth = 6; c.beginPath(); c.arc(0, -5, 32, Math.PI, 0); c.stroke(); c.fillStyle = "#FFD700"; c.beginPath(); c.arc(0, 20, 6, 0, Math.PI*2); c.fill(); } 
+        else { c.strokeStyle = "black"; c.lineWidth = 2; c.beginPath(); c.arc(0, 12, 10, 0, Math.PI); c.stroke(); }
+        c.restore();
+    }
+
+    function startSequence(isFullReset = false) {
+        if(isFullReset) resetGameLogic(); 
+        initAudio(); startScreen.style.display = 'none'; gameOverScreen.style.display = 'none'; uiLayer.style.display = 'flex';
         gameActive = true;
         loop();
     }
 
-    function setDifficulty(mode, el) {
-        difficulty = mode;
-        document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
-        el.classList.add('selected');
-    }
-
-    // --- GAME LOOP ---
     function loop() {
-        if (!gameActive) return;
-        requestAnimationFrame(loop);
-        frame++;
+        if(gameActive && !isPaused) frame++;
+        groundY = canvas.height - GROUND_H;
+        ctx.save();
+        let targetZoom = (gameActive && pepper.isMega) ? 1.05 : 1.0;
+        zoomLevel += (targetZoom - zoomLevel) * 0.05;
+        ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(zoomLevel, zoomLevel); ctx.translate(-canvas.width/2, -canvas.height/2);
+        if(shakeAmount > 0) { ctx.translate((Math.floor(Math.random()*shakeAmount)-shakeAmount/2), (Math.floor(Math.random()*shakeAmount)-shakeAmount/2)); shakeAmount*=0.9; }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        const speed = 10 + (level * 0.5) + (pepper.isMega ? 5 : 0);
+        let grad = ctx.createLinearGradient(0, 0, 0, canvas.height); grad.addColorStop(0, '#81ecec'); grad.addColorStop(1, '#74b9ff'); ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        updatePhysics(speed);
-        updateEntities(speed);
-        draw();
+        ctx.fillStyle = "rgba(255,255,255,0.1)"; bgMountains.forEach(m => { if(!levelFinished && gameActive) m.x -= speed * 0.05; if(m.x < -300) m.x = canvas.width + 100; ctx.beginPath(); ctx.moveTo(Math.floor(m.x), groundY); ctx.lineTo(Math.floor(m.x+150), groundY-300); ctx.lineTo(Math.floor(m.x+300), groundY); ctx.fill(); });
         
-        // Distance
-        distance += speed * 0.1;
-        document.getElementById('progress-fill').style.width = Math.min(100, (distance/maxDistance)*100) + '%';
-        
-        if(distance >= maxDistance) {
-            gameActive = false;
-            playSound('mega');
-            openShop();
-        }
-    }
+        ctx.fillStyle = '#5D4037'; ctx.fillRect(0, groundY, canvas.width, GROUND_H);
+        ctx.fillStyle = '#00b894'; ctx.fillRect(0, groundY, canvas.width, 20);
 
-    // --- PHYSICS & LOGIC ---
-    function updatePhysics(speed) {
-        // Player Gravity
-        let grav = (pepper.hat === 'space') ? 0.6 : 1.1; // Floatier if space helm
-        pepper.dy += grav;
-        pepper.y += pepper.dy;
-        
-        // Ground Collision
-        if (pepper.y >= groundY) {
-            pepper.y = groundY;
-            pepper.dy = 0;
-            pepper.grounded = true;
-            pepper.canDouble = false;
+        if (gameActive && !levelFinished) {
+            levelDistance += speed * 0.1;
+            let pct = Math.min((levelDistance / levelMaxDistance) * 100, 100); progressFill.style.width = pct + "%";
+            if(levelDistance >= levelMaxDistance && !finishLine) finishLine = {x: canvas.width, type: 'finish'};
         }
 
-        // Mega Timer
-        if (pepper.isMega) {
-            pepper.megaTimer--;
-            document.getElementById('mega-bar-fill').style.width = (pepper.megaTimer/600 * 100) + "%";
-            if(pepper.megaTimer <= 0) {
-                pepper.isMega = false;
-                pepper.streak = 0;
-                document.getElementById('mega-meter').classList.remove('mega-active');
-            }
+        if(pepper.isMega && gameActive) {
+            pepper.megaTimer--; 
+            megaMeter.classList.add('mega-active'); 
+            megaBarFill.style.width = (pepper.megaTimer / 900) * 100 + "%";
+            if(pepper.megaTimer<=0) { pepper.isMega=false; pepper.streak=0; megaMeter.classList.remove('mega-active'); megaBarFill.style.width = "0%"; updateMegaText(); }
+        } else if (!pepper.isMega) {
+            let target = (pepper.hat === 'cowboy') ? 25 : 50;
+            let pct = (pepper.streak / target) * 100; megaBarFill.style.width = pct + "%";
+        }
+
+        if(magnetCooldown > 0) magnetCooldown--;
+        if(pepper.magnetTimer > 0 && gameActive) {
+            pepper.magnetTimer--;
+            bones.forEach(b => {
+                let dx = 150 - b.x; let dy = pepper.y - b.y;
+                if(Math.sqrt(dx*dx + dy*dy) < 400) { b.x += dx * 0.15; b.y += dy * 0.15; }
+            });
+        }
+
+        if(gameActive) { 
+            pepper.dy += GRAVITY; pepper.y += pepper.dy; 
+            if(pepper.y >= groundY) { pepper.y=groundY; pepper.dy=0; pepper.grounded=true; pepper.canDoubleJump = false; } 
+        } 
+
+        // Draw Husky
+        drawHusky(ctx, 150, pepper.y, pepper.isMega, pepper.hasShield);
+
+        if(finishLine && !isDead) {
+            finishLine.x -= speed;
+            ctx.fillStyle = "white"; ctx.fillRect(finishLine.x, groundY - 150, 10, 150);
+            if(finishLine.x < 150 && !levelFinished) { levelFinished = true; setTimeout(openShop, 1500); playSfx('levelup'); }
         }
 
         // Spawning
-        if (frame % Math.max(30, 90 - (level*5)) === 0) {
-            if (Math.random() > 0.3) spawnObstacle();
-            else spawnItem();
+        if(!finishLine && gameActive) {
+            if(Math.random() < 0.02) { 
+                let type = 'poo'; let y = groundY;
+                if(Math.random() > 0.7) type = 'hydrant';
+                if(Math.random() > 0.8) { type = 'bird'; y = groundY - 90; }
+                obstacles.push({x: canvas.width, type: type, y: y});
+            }
+            if(Math.random() < 0.02) {
+                let type = 'white'; if(Math.random()>0.9) type='gold'; if(Math.random()>0.95) type='stick';
+                bones.push({x:canvas.width, y: groundY-40, type:type});
+            }
         }
-    }
 
-    function spawnObstacle() {
-        const r = Math.random();
-        let type = 'poo';
-        let y = groundY;
-        
-        if (level >= 3 && r > 0.9) type = 'vacuum';
-        else if (level >= 2 && r > 0.8) type = 'squirrel';
-        else if (level >= 2 && r > 0.7) type = 'cat';
-        else if (r > 0.55) type = 'hydrant';
-        else if (r > 0.4) { type = 'bird'; y = groundY - 90; }
-        
-        obstacles.push({ x: width + 50, y: y, type: type, w: 30, h: 30 });
-    }
-
-    function spawnItem() {
-        const r = Math.random();
-        let type = 'white';
-        let y = groundY - (Math.random() > 0.5 ? 120 : 40);
-        
-        if (r > 0.9) type = 'stick';
-        else if (r > 0.7) type = 'gold';
-        
-        items.push({ x: width + 50, y: y, type: type });
-    }
-
-    function updateEntities(speed) {
-        // Obstacles
-        for (let i = obstacles.length - 1; i >= 0; i--) {
-            let o = obstacles[i];
-            let moveSpeed = speed;
-            if(o.type === 'vacuum') moveSpeed *= 1.3;
-            if(o.type === 'squirrel') moveSpeed *= 1.5;
+        for(let i=obstacles.length-1; i>=0; i--) {
+            let o = obstacles[i]; if(!levelFinished && gameActive) o.x -= speed;
+            ctx.save(); ctx.translate(o.x, o.y);
+            if(o.type === 'poo') { ctx.fillStyle = "#8B4513"; ctx.beginPath(); ctx.ellipse(0, -5, 20, 10, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(0, -15, 15, 8, 0, 0, Math.PI*2); ctx.fill(); }
+            if(o.type === 'hydrant') { ctx.fillStyle = "#d63031"; ctx.fillRect(-10,-40,20,40); }
+            if(o.type === 'bird') { ctx.fillStyle = "#2d3436"; ctx.beginPath(); ctx.arc(0,0,15,0,Math.PI*2); ctx.fill(); }
+            ctx.restore();
             
-            o.x -= moveSpeed;
-            
-            // Collision
-            if (Math.abs(100 - o.x) < 30 && Math.abs((pepper.y - 20) - o.y) < 30) {
-                if (pepper.isMega) {
-                    playSound('crash');
-                    obstacles.splice(i, 1);
-                } else if (pepper.shield) {
-                    pepper.shield = false;
-                    pepper.sticks = 0;
-                    playSound('crash');
-                    flashScreen('red');
-                    obstacles.splice(i, 1);
-                    updateHUD();
-                } else {
-                    gameOver(o.type);
+            if(gameActive && Math.abs(150-o.x)<30 && Math.abs((pepper.y-20)-o.y)<30) {
+                if(pepper.isMega) { score += 5; obstacles.splice(i, 1); playSfx('smash'); }
+                else if(pepper.hasShield) { pepper.hasShield = false; pepper.sticks=0; stickText.innerText="0/5"; obstacles.splice(i, 1); playSfx('crash'); }
+                else { 
+                    isDead = true; gameActive = false; 
+                    endScoreEl.innerText = score;
+                    if(difficulty === 'baby') retryBtn.innerText = "RETRY LEVEL"; else retryBtn.innerText = "TRY AGAIN";
+                    gameOverScreen.style.display = 'flex';
+                    playSfx('crash');
                 }
-            } else if (o.x < -50) {
-                obstacles.splice(i, 1);
             }
         }
 
-        // Items
-        for (let i = items.length - 1; i >= 0; i--) {
-            let item = items[i];
-            item.x -= speed;
-            
-            if (Math.abs(100 - item.x) < 30 && Math.abs((pepper.y - 20) - item.y) < 30) {
-                collectItem(item.type);
-                items.splice(i, 1);
-            } else if (item.x < -50) {
-                items.splice(i, 1);
-            }
-        }
-    }
-
-    function collectItem(type) {
-        playSound('collect');
-        if (type === 'stick') {
-            if (difficulty === 'death') return;
-            pepper.sticks++;
-            if(pepper.sticks >= 5) {
-                pepper.shield = true;
-                pepper.sticks = 0;
-                flashScreen('#00b894');
-                playSound('mega');
-            }
-        } else {
-            let val = (type === 'gold') ? 5 : 1;
-            if(pepper.hat === 'cap') val *= 2;
-            score += val;
-            bonesBank += val;
-            
-            // Mega logic
-            const target = (pepper.hat === 'cowboy') ? 25 : 50;
-            pepper.streak += val;
-            if(!pepper.isMega && pepper.streak >= target) {
-                pepper.isMega = true;
-                pepper.megaTimer = 600;
-                document.getElementById('mega-meter').classList.add('mega-active');
-                playSound('mega');
-                flashScreen('#ff00ff');
-            }
-            if(!pepper.isMega) {
-                document.getElementById('mega-bar-fill').style.width = (pepper.streak/target * 100) + "%";
-            }
-        }
-        updateHUD();
-    }
-
-    function updateHUD() {
-        document.getElementById('score').innerText = score + " 🦴";
-        document.getElementById('stick-text').innerText = pepper.sticks + "/5";
-    }
-
-    function flashScreen(color) {
-        const f = document.getElementById('flash-overlay');
-        f.style.background = color;
-        f.style.opacity = 0.5;
-        setTimeout(() => f.style.opacity = 0, 100);
-    }
-
-    function gameOver(reason) {
-        gameActive = false;
-        playSound('crash');
-        uiLayer.style.display = 'none';
-        gameOverScreen.style.display = 'flex';
-        document.getElementById('death-reason').innerText = "HIT BY " + reason.toUpperCase();
-        document.getElementById('final-score').innerText = score;
-    }
-
-    // --- RENDERER ---
-    function draw() {
-        // Sky Gradient
-        const grad = ctx.createLinearGradient(0, 0, 0, height);
-        grad.addColorStop(0, '#81ecec'); grad.addColorStop(1, '#74b9ff');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, width, height);
-
-        // Parallax Mountains
-        ctx.fillStyle = 'rgba(255,255,255,0.2)';
-        mountains.forEach(m => {
-            m.x -= 0.5; if(m.x < -300) m.x = width;
-            ctx.beginPath(); ctx.moveTo(m.x, groundY); ctx.lineTo(m.x+150, groundY-300); ctx.lineTo(m.x+300, groundY); ctx.fill();
-        });
-
-        // Ground
-        ctx.fillStyle = '#5D4037';
-        ctx.fillRect(0, groundY, width, GROUND_HEIGHT);
-        ctx.fillStyle = '#00b894';
-        ctx.fillRect(0, groundY, width, 20);
-
-        // Entities
-        items.forEach(drawItem);
-        obstacles.forEach(drawObstacle);
-        drawPepper();
-    }
-
-    function drawPepper() {
-        ctx.save();
-        ctx.translate(100, pepper.y);
-        
-        if (pepper.isMega) {
-            ctx.scale(1.5, 1.5);
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = `hsl(${frame*10}, 100%, 50%)`;
-        }
-
-        // Bobbing
-        ctx.translate(0, Math.sin(frame*0.3)*2);
-
-        // Body
-        ctx.fillStyle = '#2d3436';
-        ctx.beginPath(); ctx.ellipse(0, -20, 20, 12, 0, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(0, -40, 22, 0, Math.PI*2); ctx.fill(); // Head
-        
-        // Face
-        ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(0, -35, 16, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = '#2d3436';
-        ctx.beginPath(); ctx.moveTo(-15,-50); ctx.lineTo(-20,-75); ctx.lineTo(0,-55); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(15,-50); ctx.lineTo(20,-75); ctx.lineTo(0,-55); ctx.fill();
-
-        // Eyes
-        ctx.fillStyle = '#00fbff';
-        ctx.beginPath(); ctx.arc(-8, -42, 4, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(8, -42, 4, 0, Math.PI*2); ctx.fill();
-
-        drawHat();
-
-        // Shield
-        if (pepper.shield) {
-            ctx.strokeStyle = '#00b894'; ctx.lineWidth = 3;
-            const r = frame * 0.1;
-            for(let i=0; i<3; i++) {
-                let a = r + (i*Math.PI*2/3);
-                let sx = Math.cos(a)*40; let sy = Math.sin(a)*40 - 30;
-                ctx.beginPath(); ctx.moveTo(sx-5, sy); ctx.lineTo(sx+5, sy); ctx.stroke();
+        for(let i=bones.length-1; i>=0; i--) {
+            let b = bones[i]; if(!levelFinished && gameActive) b.x -= speed; 
+            ctx.fillStyle = b.type==='gold'?'gold':(b.type==='stick'?'brown':'white');
+            ctx.beginPath(); ctx.arc(b.x, b.y, 8, 0, Math.PI*2); ctx.fill();
+            if(gameActive && Math.abs(150-b.x)<30 && Math.abs((pepper.y-20)-b.y)<30) {
+                if(b.type === 'stick') {
+                    if(difficulty !== 'death') {
+                        pepper.sticks++; playSfx('collect'); 
+                        if(pepper.sticks>=5) { pepper.hasShield=true; pepper.sticks=0; }
+                        stickText.innerText=pepper.sticks+"/5";
+                    }
+                } else {
+                    let val = (b.type === 'gold') ? 5 : 1;
+                    if(pepper.hat === 'cap') val *= 2; 
+                    score += val; scoreEl.innerText = score + " 🦴"; playSfx('collect'); 
+                    if(!pepper.isMega && difficulty !== 'death') { 
+                        pepper.streak += val; 
+                        if(pepper.streak >= 50){ pepper.isMega=true; pepper.megaTimer = 900; } 
+                    }
+                }
+                bones.splice(i,1);
             }
         }
 
         ctx.restore();
+        requestAnimationFrame(loop);
     }
 
-    function drawHat() {
-        const type = pepper.hat;
-        if(type === 'cap') {
-            ctx.fillStyle = '#d63031';
-            ctx.beginPath(); ctx.arc(0, -58, 14, Math.PI, 0); ctx.fill();
-            ctx.fillRect(8, -58, 12, 4);
-        } else if (type === 'tophat') {
-            ctx.fillStyle = '#111'; ctx.fillRect(-12, -85, 24, 30); ctx.fillRect(-18, -55, 36, 5);
-        } else if (type === 'space') {
-            ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.fillStyle='rgba(100,200,255,0.3)';
-            ctx.beginPath(); ctx.arc(0, -40, 35, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-        } else if (type === 'cowboy') {
-            ctx.fillStyle = '#8B4513';
-            ctx.beginPath(); ctx.ellipse(0, -55, 30, 6, 0, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(0, -60, 14, Math.PI, 0); ctx.fill();
-        }
-    }
-
-    function drawObstacle(o) {
-        ctx.save();
-        ctx.translate(o.x, o.y);
+    function drawHusky(ctx, x, y, isMega, hasShield) {
+        ctx.save(); ctx.translate(x, y);
+        let s = isMega ? 1.4 : 1; ctx.scale(s, s);
         
-        if (o.type === 'poo') {
-            ctx.fillStyle = '#8B4513';
-            ctx.beginPath(); ctx.ellipse(0, -5, 15, 10, 0, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(0, -15, 10, 8, 0, 0, Math.PI*2); ctx.fill();
-        } else if (o.type === 'hydrant') {
-            ctx.fillStyle = '#d63031'; ctx.fillRect(-10, -30, 20, 30);
-            ctx.beginPath(); ctx.arc(0, -30, 10, Math.PI, 0); ctx.fill();
-        } else if (o.type === 'vacuum') {
-            ctx.fillStyle = '#636e72'; ctx.fillRect(-15, -10, 30, 10);
-            ctx.fillStyle = '#d63031'; ctx.fillRect(-10, -50, 20, 40);
-        } else if (o.type === 'squirrel') {
-            ctx.fillStyle = '#e67e22'; ctx.translate(0, Math.sin(frame*0.2)*-5);
-            ctx.beginPath(); ctx.ellipse(0, -5, 12, 6, 0, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(10, -15, 8, 0, Math.PI, false); ctx.fill();
-        } else if (o.type === 'cat') {
-            ctx.fillStyle = '#b2bec3';
-            ctx.beginPath(); ctx.arc(0, -10, 15, Math.PI, 0); ctx.fill();
-            ctx.beginPath(); ctx.arc(-12, -20, 10, 0, Math.PI*2); ctx.fill();
-        } else if (o.type === 'bird') {
-            ctx.fillStyle = '#2d3436';
-            ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI*2); ctx.fill();
-            ctx.fillStyle = '#fff';
-            ctx.beginPath(); ctx.moveTo(5,0); ctx.lineTo(15, -10 + Math.sin(frame)*10); ctx.lineTo(5, 5); ctx.fill();
+        let bodyC = "#1a1a1a";
+        if(isMega) bodyC = `hsl(${(Date.now()/5)%360}, 80%, 40%)`;
+
+        ctx.fillStyle = bodyC; ctx.beginPath(); ctx.ellipse(0, -20, 22, 14, 0, 0, Math.PI*2); ctx.fill(); 
+        ctx.beginPath(); ctx.arc(0, -40, 22, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(0, -35, 16, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = bodyC; ctx.beginPath(); ctx.moveTo(-15, -50); ctx.lineTo(-20, -70); ctx.lineTo(-5, -55); ctx.fill(); ctx.beginPath(); ctx.moveTo(15, -50); ctx.lineTo(20, -70); ctx.lineTo(5, -55); ctx.fill();
+        ctx.fillStyle = "#00fbff"; ctx.beginPath(); ctx.arc(-8, -42, 4, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(8, -42, 4, 0, Math.PI*2); ctx.fill();
+
+        // Hat
+        if(pepper.hat === 'cap') { ctx.fillStyle = "#d63031"; ctx.beginPath(); ctx.arc(0, -55, 14, Math.PI, 0); ctx.fill(); ctx.fillRect(10, -55, 12, 4); }
+        if(pepper.hat === 'tophat') { ctx.fillStyle = "#2d3436"; ctx.fillRect(-12, -80, 24, 30); ctx.fillRect(-18, -50, 36, 4); }
+        if(pepper.hat === 'cowboy') { ctx.fillStyle = "#8B4513"; ctx.translate(0,-55); ctx.beginPath(); ctx.ellipse(0, 0, 25, 5, 0, 0, Math.PI*2); ctx.fill(); ctx.fillRect(-12, -15, 24, 15); }
+
+        if(hasShield) { 
+            ctx.strokeStyle = "#00b894"; ctx.lineWidth = 3;
+            let r = Date.now() * 0.005;
+            for(let i=0; i<5; i++) {
+                let a = r + (i * (Math.PI * 2) / 5);
+                ctx.beginPath(); ctx.moveTo(Math.cos(a)*40, Math.sin(a)*40-30); ctx.lineTo(Math.cos(a)*30, Math.sin(a)*30-30); ctx.stroke();
+            }
         }
         ctx.restore();
     }
 
-    function drawItem(i) {
-        ctx.save();
-        ctx.translate(i.x, i.y + Math.sin(frame*0.1)*5);
-        if (i.type === 'stick') {
-            ctx.strokeStyle = "#8B4513"; ctx.lineWidth = 4;
-            ctx.beginPath(); ctx.moveTo(-10, 5); ctx.lineTo(10, -5); ctx.stroke();
-            ctx.fillStyle = "#00b894"; ctx.beginPath(); ctx.arc(10, -5, 4, 0, Math.PI*2); ctx.fill();
-        } else {
-            ctx.fillStyle = (i.type === 'gold') ? '#f1c40f' : 'white';
-            ctx.fillRect(-8,-3,16,6);
-            ctx.beginPath(); ctx.arc(-8,0,5,0,Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(8,0,5,0,Math.PI*2); ctx.fill();
-        }
-        ctx.restore();
+    function handleInput() { 
+        if(!gameActive) return; 
+        initAudio(); 
+        if(pepper.grounded) { pepper.dy = JUMP_FORCE; pepper.grounded = false; playSfx('jump'); if(pepper.doubleJumpUnlocked) pepper.canDoubleJump = true; } 
+        else if (pepper.canDoubleJump) { pepper.dy = DOUBLE_JUMP_FORCE; pepper.canDoubleJump = false; playSfx('doublejump'); } 
     }
 
-    // --- INPUT ---
-    function jump(e) {
-        if(!gameActive) return;
-        if(e.target.tagName === 'BUTTON') return;
-        if(e.type === 'touchstart') e.preventDefault();
-        
-        initAudio();
-        if(pepper.grounded) {
-            pepper.dy = JUMP_FORCE; pepper.grounded=false; pepper.canDoubleJump=true; playSfx('jump');
-        } else if(pepper.canDoubleJump) {
-            pepper.dy = (pepper.hat==='space'?-10:-15); pepper.canDoubleJump=false; playSfx('doublejump');
-        }
-    }
-    window.addEventListener('mousedown', jump);
-    window.addEventListener('touchstart', jump, {passive:false});
+    window.addEventListener('touchstart', (e) => { if(e.target.className.includes('btn') || e.target.closest('.diff-card') || e.target.closest('.shop-item')) return; e.preventDefault(); handleInput(); }, {passive: false});
+    window.addEventListener('mousedown', (e) => { if(e.target.className.includes('btn') || e.target.closest('.diff-card') || e.target.closest('.shop-item')) return; handleInput(); });
 
-    // Start
-    resize();
-    renderDiffPreviews();
-    drawStickIcon();
-
+    // INITIALIZE
+    resize(); resetGameLogic(); renderDiffPreviews(); drawStickIcon(); 
 </script>
 </body>
 </html>
