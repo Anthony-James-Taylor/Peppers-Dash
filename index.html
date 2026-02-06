@@ -3,878 +3,652 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V41 (Architect)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Press+Start+2P&display=swap" rel="stylesheet">
-    
+    <title>Pepper's Doo-Doo Dash V42</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #00fbff;
-            --accent: #f1c40f;
-            --danger: #ff7675;
-            --dark: #2d3436;
-            --glass: rgba(0, 0, 0, 0.85);
-        }
-        body { margin: 0; overflow: hidden; background: #111; font-family: 'Montserrat', sans-serif; touch-action: none; user-select: none; -webkit-user-select: none; }
+        /* CSS RESET & CORE LAYOUT */
+        body { margin: 0; overflow: hidden; background: #111; font-family: 'Montserrat', sans-serif; user-select: none; -webkit-user-select: none; touch-action: none; }
+        canvas { display: block; width: 100%; height: 100%; }
         
-        /* LAYOUT UTILS */
-        .fullscreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; }
-        .center { justify-content: center; }
-        .hidden { display: none !important; }
-        .ui-layer { pointer-events: none; z-index: 10; }
-        .interactive-layer { pointer-events: auto; z-index: 20; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); }
+        /* UI OVERLAYS */
+        .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+        .ui-layer.active { opacity: 1; pointer-events: auto; }
+        .ui-bg { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); }
         
-        /* HUD ELEMENTS */
-        .hud-row { display: flex; justify-content: space-between; width: 92%; margin-top: 20px; }
-        .pill { 
-            background: var(--glass); border: 2px solid rgba(255,255,255,0.2); 
-            border-radius: 16px; padding: 10px 20px; color: white; 
-            display: flex; flex-direction: column; align-items: center; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-        .pill-label { font-size: 10px; font-weight: 900; color: var(--primary); letter-spacing: 1px; }
-        .pill-value { font-size: 20px; font-weight: 900; }
+        /* HUD (Heads Up Display) */
+        #hud { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; box-sizing: border-box; display: flex; justify-content: space-between; pointer-events: none; z-index: 10; }
+        .hud-pill { background: rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 20px; color: white; font-weight: 900; text-align: center; }
+        .hud-sub { font-size: 10px; color: #00fbff; display: block; }
         
-        /* METERS */
-        #progress-container { position: absolute; top: 90px; width: 60%; height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; }
-        #progress-bar { height: 100%; width: 0%; background: var(--primary); border-radius: 4px; transition: width 0.1s linear; }
+        /* TYPOGRAPHY & BUTTONS */
+        h1 { color: white; font-size: 40px; text-transform: uppercase; margin-bottom: 30px; text-shadow: 0 4px 0 #000; text-align: center; }
+        .btn { background: white; color: #111; border: none; padding: 15px 40px; font-size: 18px; font-weight: 900; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 0 #b2bec3; transition: transform 0.1s; pointer-events: auto; margin: 10px; }
+        .btn:active { transform: translateY(4px); box-shadow: none; }
+        .btn-red { background: #ff7675; color: white; box-shadow: 0 5px 0 #d63031; }
         
-        #mega-container { 
-            position: absolute; bottom: 30px; 
-            background: var(--glass); border: 2px solid rgba(255,255,255,0.3); border-radius: 12px;
-            padding: 10px 25px; display: flex; flex-direction: column; align-items: center;
-            transition: transform 0.2s;
-        }
-        #mega-container.active { border-color: #ff00ff; box-shadow: 0 0 20px #ff00ff; animation: pulse 0.5s infinite; }
-        #mega-fill-bg { width: 180px; height: 10px; background: #444; margin: 5px 0; border-radius: 5px; overflow: hidden; }
-        #mega-fill { height: 100%; width: 0%; background: #ff00ff; transition: width 0.2s; }
-
-        /* MENUS & SHOP */
-        h1 { color: white; font-size: 40px; text-transform: uppercase; font-weight: 900; text-align: center; margin-bottom: 30px; line-height: 1; text-shadow: 0 5px 0 #000; }
-        .btn { 
-            background: white; color: var(--dark); border: none; padding: 18px 50px; 
-            border-radius: 30px; font-size: 18px; font-weight: 900; cursor: pointer; 
-            box-shadow: 0 5px 0 #b2bec3; transition: transform 0.1s; margin: 10px;
-        }
-        .btn:active { transform: translateY(5px); box-shadow: none; }
-        .btn-secondary { background: transparent; border: 2px solid white; color: white; padding: 12px 30px; font-size: 14px; box-shadow: none; }
-
         /* SHOP GRID */
-        #shop-view { width: 100%; height: 100%; display: flex; flex-direction: column; background: linear-gradient(135deg, #74b9ff, #0984e3); }
-        #shop-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: rgba(0,0,0,0.2); }
-        #shop-grid { 
-            flex: 1; overflow-y: auto; padding: 20px; 
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; 
-            align-content: start; justify-items: center;
-        }
-        .shop-card { 
-            background: white; width: 140px; border-radius: 12px; padding: 10px; 
-            display: flex; flex-direction: column; align-items: center; text-align: center;
-            border: 4px solid #b2bec3; cursor: pointer; position: relative;
-        }
-        .shop-card.owned { border-color: var(--primary); background: #e0fbfc; }
-        .shop-card.equipped { border-color: #0984e3; box-shadow: 0 0 15px var(--primary); transform: scale(1.05); }
-        .shop-card.locked { opacity: 0.6; filter: grayscale(1); }
-        .shop-btn { width: 100%; padding: 8px; margin-top: 5px; border:none; border-radius: 4px; font-weight: 900; cursor: pointer; font-size: 10px; color: white; }
-
-        /* UTILS */
-        #flash-overlay { background: white; opacity: 0; pointer-events: none; z-index: 100; transition: opacity 0.1s; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        #shop-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; max-height: 60vh; overflow-y: auto; padding: 10px; }
+        .shop-item { background: white; border-radius: 10px; padding: 15px; text-align: center; border: 4px solid #b2bec3; cursor: pointer; transition: transform 0.2s; width: 120px; }
+        .shop-item.owned { border-color: #00b894; background: #e3faf5; }
+        .shop-item.equipped { border-color: #0984e3; box-shadow: 0 0 15px #0984e3; transform: scale(1.05); }
+        .shop-item.locked { opacity: 0.5; filter: grayscale(1); }
+        
+        /* FX */
+        #flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; pointer-events: none; opacity: 0; z-index: 100; transition: opacity 0.1s; }
     </style>
 </head>
 <body>
 
-    <canvas id="game-canvas"></canvas>
-    <div id="flash-overlay" class="fullscreen"></div>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="flash"></div>
 
-    <div id="ui-hud" class="fullscreen ui-layer hidden">
-        <div class="hud-row">
-            <div class="pill">
-                <span class="pill-label">SCORE</span>
-                <span class="pill-value" id="hud-score">0</span>
-            </div>
-            <div class="pill">
-                <span class="pill-label">SHIELD</span>
-                <span class="pill-value" id="hud-sticks">0/5</span>
-            </div>
+    <div id="hud">
+        <div class="hud-pill">
+            <span class="hud-sub">SCORE</span>
+            <span id="scoreVal">0 🦴</span>
         </div>
-        <div id="progress-container"><div id="progress-bar"></div></div>
-        <div id="mega-container">
-            <div class="pill-label" style="color:#ff00ff">MEGA MODE</div>
-            <div id="mega-fill-bg"><div id="mega-fill"></div></div>
-            <div class="pill-label" id="mega-text" style="color:white; margin-top:5px;">COLLECT 50</div>
-        </div>
-    </div>
-
-    <div id="ui-start" class="fullscreen interactive-layer center">
-        <h1>Pepper's<br>Doo-Doo Dash<br><span style="font-size:20px; color:var(--primary)">V41 Architect Edition</span></h1>
-        <button class="btn" onclick="Game.setDifficulty('normal'); Game.start()">PLAY GAME</button>
-        <div style="margin-top:20px;">
-            <button class="btn btn-secondary" onclick="Game.setDifficulty('baby'); Game.start()">BABY MODE</button>
-            <button class="btn btn-secondary" style="border-color:var(--danger); color:var(--danger);" onclick="Game.setDifficulty('death'); Game.start()">DEATH MODE</button>
-        </div>
-    </div>
-
-    <div id="ui-shop" class="fullscreen interactive-layer hidden" style="padding:0; background:none;">
-        <div id="shop-view">
-            <div id="shop-header">
-                <div style="background:white; padding:10px 20px; border-radius:20px; font-weight:900;">WELCOME!</div>
-                <div class="pill" style="flex-direction:row; gap:10px;">
-                    <span class="pill-value" style="color:var(--accent)" id="shop-balance">0</span> 🦴
-                </div>
-            </div>
-            <div id="shop-grid">
-                </div>
-            <div style="padding:20px; text-align:center; background:rgba(0,0,0,0.2);">
-                <button class="btn" onclick="Game.nextLevel()">NEXT LEVEL ▶</button>
+        <div class="hud-pill">
+            <span class="hud-sub">MEGA MODE</span>
+            <div style="width:100px; height:8px; background:#444; margin-top:5px; border-radius:4px; overflow:hidden;">
+                <div id="megaBar" style="width:0%; height:100%; background:#ff00ff; transition:width 0.2s;"></div>
             </div>
         </div>
     </div>
 
-    <div id="ui-gameover" class="fullscreen interactive-layer center hidden">
-        <h1 style="color:var(--danger)">GAME OVER</h1>
-        <div style="color:white; margin-bottom:20px; font-weight:bold;" id="death-reason"></div>
-        <div class="pill" style="margin-bottom:30px;">
-            <span class="pill-label">FINAL SCORE</span>
-            <span class="pill-value" id="final-score">0</span>
-        </div>
-        <button class="btn" onclick="Game.retry()">TRY AGAIN</button>
-        <button class="btn btn-secondary" onclick="Game.home()">MAIN MENU</button>
+    <div id="screen-start" class="ui-layer ui-bg active">
+        <h1>Pepper's<br>Doo-Doo Dash<br><span style="font-size:16px; color:#00fbff;">V42 STABLE CORE</span></h1>
+        <button class="btn" onclick="Game.start()">PLAY GAME</button>
+        <button class="btn btn-red" onclick="Game.setDifficulty('death'); Game.start()">DEATH MODE</button>
+    </div>
+
+    <div id="screen-shop" class="ui-layer ui-bg">
+        <h1>The Pet Store</h1>
+        <div class="hud-pill" style="margin-bottom:20px;">BANK: <span id="shopBank">0</span> 🦴</div>
+        <div id="shop-container">
+            </div>
+        <button class="btn" onclick="Game.nextLevel()" style="margin-top:20px;">NEXT LEVEL ▶</button>
+    </div>
+
+    <div id="screen-gameover" class="ui-layer ui-bg">
+        <h1 style="color:#ff7675;">GAME OVER</h1>
+        <div class="hud-pill" style="margin-bottom:20px;">SCORE: <span id="finalScore">0</span></div>
+        <div style="color:white; margin-bottom:20px; font-weight:bold;" id="deathReason"></div>
+        <button class="btn" onclick="Game.home()">MAIN MENU</button>
+        <button class="btn btn-red" onclick="Game.restart()">TRY AGAIN</button>
     </div>
 
 <script>
 /**
- * PEPPER'S DOO-DOO DASH V41
- * A strictly modular, Object-Oriented implementation.
+ * PEPPER'S DOO-DOO DASH V42 - Stable Core
+ * Author: Elite Coder Logic
+ * Intent: Maximum stability, clear control flow, robust asset-less rendering.
  */
 
-// --- 1. CONFIGURATION ---
-const Config = {
-    gravity: 1.1,
-    groundHeight: 140,
-    baseSpeed: 10.5,
+// --- 1. CONFIGURATION & STATE ---
+const CFG = {
+    gravity: 0.6,          // Adjusted for 60fps
+    jumpForce: -13,        // Adjusted for scale
+    groundHeight: 120,
+    baseSpeed: 8,
     colors: {
-        skyDay: ['#81ecec', '#74b9ff'],
-        skyDusk: ['#ff9f43', '#ee5253'],
-        skyNight: ['#2c3e50', '#000000'],
-        grass: '#00b894',
-        ground: '#5D4037'
-    },
-    hats: {
-        none:   { id: 'none', name: 'None', cost: 0, perk: 'None' },
-        cap:    { id: 'cap', name: 'Red Cap', cost: 50, perk: '2x Bones' },
-        tophat: { id: 'tophat', name: 'Top Hat', cost: 100, perk: 'Start w/ Shield' },
-        cowboy: { id: 'cowboy', name: 'Cowboy', cost: 200, perk: 'Fast Mega Mode' },
-        space:  { id: 'space', name: 'Space Helm', cost: 300, perk: 'Moon Gravity' }
+        sky: ['#81ecec', '#74b9ff'],
+        ground: '#5D4037',
+        grass: '#00b894'
     }
 };
 
-// --- 2. AUDIO ENGINE (Web Audio API) ---
-class AudioController {
-    constructor() {
-        this.ctx = null;
-        this.muted = false;
-        this.musicInterval = null;
-    }
+const HATS = {
+    none:   { id: 'none', name: 'No Hat', cost: 0, perk: 'None' },
+    cap:    { id: 'cap', name: 'Red Cap', cost: 50, perk: 'Double Points' },
+    tophat: { id: 'tophat', name: 'Top Hat', cost: 100, perk: 'Shield Start' },
+    cowboy: { id: 'cowboy', name: 'Cowboy', cost: 200, perk: 'Easy Mega' },
+    space:  { id: 'space', name: 'Space Helm', cost: 300, perk: 'Moon Gravity' }
+};
 
+// Global Game State
+const State = {
+    active: false,
+    screen: 'start', // start, play, shop, over
+    frame: 0,
+    score: 0,
+    bones: 0, // Currency
+    level: 1,
+    distance: 0,
+    difficulty: 'normal',
+    
+    // Player State
+    player: {
+        y: 0, dy: 0, grounded: true, 
+        canDouble: false, shield: false, 
+        isMega: false, megaTimer: 0, 
+        streak: 0, magnetTimer: 0
+    },
+    
+    // Inventory
+    inventory: ['none'],
+    equipped: 'none'
+};
+
+// --- 2. AUDIO SYSTEM (Robust & Lazy Load) ---
+const AudioSys = {
+    ctx: null,
     init() {
         if (!this.ctx) {
             this.ctx = new (window.AudioContext || window.webkitAudioContext)();
         }
         if (this.ctx.state === 'suspended') this.ctx.resume();
-    }
-
-    playTone(freq, type, duration, vol = 0.1, slideTo = null) {
-        if (this.muted || !this.ctx) return;
+    },
+    play(freq, type, dur, vol=0.1) {
+        if (!this.ctx) return;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = type;
         osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-        if (slideTo) {
-            osc.frequency.linearRampToValueAtTime(slideTo, this.ctx.currentTime + duration);
-        }
         gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.start();
-        osc.stop(this.ctx.currentTime + duration + 0.1);
-    }
-
-    sfx(name) {
-        switch (name) {
-            case 'jump': this.playTone(350, 'triangle', 0.15); break;
-            case 'doublejump': this.playTone(600, 'square', 0.1); break;
-            case 'collect': this.playTone(1200, 'sine', 0.1); break;
-            case 'smash': this.playTone(100, 'sawtooth', 0.2); break;
-            case 'crash': this.playTone(60, 'sawtooth', 0.4); break;
-            case 'hiss': this.playTone(800, 'sawtooth', 0.3, 0.1, 600); break; // Cat
-            case 'vacuum': this.playTone(150, 'square', 0.5, 0.05, 100); break;
-            case 'shield': this.playTone(800, 'sine', 0.5, 0.1); break;
+        osc.stop(this.ctx.currentTime + dur + 0.1);
+    },
+    sfx(key) {
+        this.init();
+        switch(key) {
+            case 'jump': this.play(400, 'triangle', 0.2); break;
+            case 'double': this.play(600, 'square', 0.1); break;
+            case 'coin': this.play(1200, 'sine', 0.1, 0.2); break;
+            case 'hit': this.play(100, 'sawtooth', 0.3, 0.3); break;
+            case 'powerup': this.play(600, 'sine', 0.5, 0.2); break;
+            case 'win': this.play(800, 'square', 0.4); break;
         }
     }
+};
 
-    startMusic(bpm = 130) {
-        if (this.musicInterval || this.muted) return;
-        let beat = 0;
-        const bassLine = [110, 0, 110, 130, 0, 110, 146, 0]; 
-        const interval = 60000 / (bpm * 4); // 16th notes
-        
-        this.musicInterval = setInterval(() => {
-            if (Game.state !== 'playing') return;
-            const freq = bassLine[beat % 8];
-            if (freq) this.playTone(freq, 'triangle', 0.1, 0.1);
-            if (beat % 8 === 4) this.playTone(200, 'white', 0.05, 0.05); // Snare-ish
-            beat++;
-        }, interval);
-    }
+// --- 3. RENDERING ENGINE (Canvas API) ---
+const Draw = {
+    ctx: null,
+    width: 0, height: 0, groundY: 0,
 
-    stopMusic() {
-        clearInterval(this.musicInterval);
-        this.musicInterval = null;
-    }
-}
-const Audio = new AudioController();
-
-// --- 3. RENDERING ENGINE (The Art) ---
-const Renderer = {
-    clear(ctx, w, h) { ctx.clearRect(0, 0, w, h); },
-
-    // Procedural Backgrounds
-    drawSky(ctx, w, h, levelProgress) {
-        // Interpolate colors based on level progress (Day -> Night)
-        // Simplified: use Day for start, Dusk for end
-        const grad = ctx.createLinearGradient(0, 0, 0, h);
-        grad.addColorStop(0, Config.colors.skyDay[0]);
-        grad.addColorStop(1, Config.colors.skyDay[1]);
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, w, h);
+    init(canvasId) {
+        const cvs = document.getElementById(canvasId);
+        this.ctx = cvs.getContext('2d');
+        this.resize(cvs);
+        window.addEventListener('resize', () => this.resize(cvs));
     },
 
-    drawGround(ctx, w, h, groundY, speed, frame) {
-        ctx.fillStyle = Config.colors.ground;
-        ctx.fillRect(0, groundY, w, h - groundY);
-        ctx.fillStyle = Config.colors.grass;
-        ctx.fillRect(0, groundY, w, 20);
+    resize(cvs) {
+        cvs.width = window.innerWidth;
+        cvs.height = window.innerHeight;
+        this.width = cvs.width;
+        this.height = cvs.height;
+        this.groundY = this.height - CFG.groundHeight;
+    },
+
+    clear() {
+        const grad = this.ctx.createLinearGradient(0,0,0,this.height);
+        grad.addColorStop(0, CFG.colors.sky[0]);
+        grad.addColorStop(1, CFG.colors.sky[1]);
+        this.ctx.fillStyle = grad;
+        this.ctx.fillRect(0,0,this.width, this.height);
+    },
+
+    ground(speed) {
+        this.ctx.fillStyle = CFG.colors.ground;
+        this.ctx.fillRect(0, this.groundY, this.width, CFG.groundHeight);
+        this.ctx.fillStyle = CFG.colors.grass;
+        this.ctx.fillRect(0, this.groundY, this.width, 20);
         
-        // Motion stripes
-        ctx.fillStyle = "rgba(255,255,255,0.1)";
-        const offset = (frame * speed) % 100;
-        for (let i = -100; i < w + 100; i += 100) {
-            ctx.beginPath();
-            ctx.moveTo(i - offset, groundY);
-            ctx.lineTo(i - offset + 40, h);
-            ctx.lineTo(i - offset + 80, h);
-            ctx.lineTo(i - offset + 40, groundY);
-            ctx.fill();
+        // Striping
+        this.ctx.fillStyle = "rgba(0,0,0,0.1)";
+        const off = (State.frame * speed) % 100;
+        for(let i = -100; i < this.width + 100; i+=100) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(i-off, this.groundY);
+            this.ctx.lineTo(i-off+40, this.height);
+            this.ctx.lineTo(i-off+80, this.height);
+            this.ctx.lineTo(i-off+40, this.groundY);
+            this.ctx.fill();
         }
     },
 
-    // Procedural Entity Drawings
-    drawHusky(ctx, x, y, frame, state) {
+    // Procedural Husky Drawing
+    husky(x, y) {
+        const ctx = this.ctx;
         ctx.save();
         ctx.translate(x, y);
-        const scale = state.isMega ? 1.5 : 1;
-        ctx.scale(scale, scale);
         
-        // Bobbing
-        ctx.translate(0, Math.sin(frame * 0.3) * 2);
+        // Mega Mode Effect
+        if(State.player.isMega) {
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = `hsl(${(State.frame*10)%360}, 100%, 50%)`;
+            ctx.scale(1.2, 1.2);
+        }
 
-        const furColor = state.isMega ? `hsl(${(frame*20)%360}, 70%, 50%)` : '#2d3436';
-        
+        // Bobbing
+        ctx.translate(0, Math.sin(State.frame * 0.2) * 2);
+
         // Body
-        ctx.fillStyle = furColor;
-        ctx.beginPath(); ctx.ellipse(0, 25, 20, 12, 0, 0, Math.PI*2); ctx.fill();
-        
+        ctx.fillStyle = '#2d3436';
+        ctx.beginPath(); ctx.ellipse(0, 20, 20, 14, 0, 0, Math.PI*2); ctx.fill();
+
         // Head
-        ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI*2); ctx.fill();
-        
-        // Face Mask
+        ctx.beginPath(); ctx.arc(0, 0, 25, 0, Math.PI*2); ctx.fill();
+
+        // Face
         ctx.fillStyle = 'white';
-        ctx.beginPath(); ctx.arc(0, 5, 16, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = furColor;
+        ctx.beginPath(); ctx.arc(0, 5, 18, 0, Math.PI*2); ctx.fill();
+
         // Ears
+        ctx.fillStyle = '#2d3436';
         ctx.beginPath(); ctx.moveTo(-15, -10); ctx.lineTo(-20, -35); ctx.lineTo(0, -15); ctx.fill();
         ctx.beginPath(); ctx.moveTo(15, -10); ctx.lineTo(20, -35); ctx.lineTo(0, -15); ctx.fill();
 
         // Eyes
-        ctx.fillStyle = Game.difficulty === 'death' ? '#ff7675' : '#00fbff';
+        ctx.fillStyle = '#00fbff';
         ctx.beginPath(); ctx.arc(-8, -2, 4, 0, Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.arc(8, -2, 4, 0, Math.PI*2); ctx.fill();
 
-        // Hat
-        this.drawHat(ctx, state.hat);
+        // Draw Hat
+        this.hat(State.equipped);
 
-        // Shield (Rotating sticks)
-        if (state.shield) {
-            ctx.strokeStyle = '#00b894'; ctx.lineWidth = 3;
-            const r = frame * 0.1;
-            for(let i=0; i<3; i++) {
-                const a = r + (i * (Math.PI*2)/3);
-                const sx = Math.cos(a)*35; const sy = Math.sin(a)*35;
-                ctx.beginPath(); ctx.moveTo(sx-5, sy); ctx.lineTo(sx+5, sy); ctx.stroke();
-            }
+        // Shield
+        if(State.player.shield) {
+            ctx.strokeStyle = 'rgba(0, 251, 255, 0.6)';
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(0, 10, 40, 0, Math.PI*2); ctx.stroke();
         }
 
         ctx.restore();
     },
 
-    drawHat(ctx, type) {
-        if (type === 'none') return;
-        ctx.save();
-        if (type === 'cap') {
+    hat(type) {
+        const ctx = this.ctx;
+        if(type === 'cap') {
             ctx.fillStyle = '#d63031';
-            ctx.beginPath(); ctx.arc(0, -18, 13, Math.PI, 0); ctx.fill();
-            ctx.fillRect(8, -18, 12, 4); // Brim
+            ctx.beginPath(); ctx.arc(0, -20, 14, Math.PI, 0); ctx.fill();
+            ctx.fillRect(10, -20, 15, 4);
         } else if (type === 'tophat') {
             ctx.fillStyle = '#111';
-            ctx.fillRect(-12, -45, 24, 30);
-            ctx.fillRect(-18, -15, 36, 5);
-            ctx.fillStyle = 'red'; ctx.fillRect(-12, -25, 24, 5);
+            ctx.fillRect(-12, -50, 24, 30);
+            ctx.fillRect(-18, -20, 36, 5);
+        } else if (type === 'space') {
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.strokeStyle = 'white'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(0, -5, 35, 0, Math.PI*2); ctx.fill(); ctx.stroke();
         } else if (type === 'cowboy') {
             ctx.fillStyle = '#8B4513';
-            ctx.translate(0, -20);
-            ctx.beginPath(); ctx.ellipse(0, 0, 25, 6, 0, 0, Math.PI*2); ctx.fill(); // Brim
-            ctx.beginPath(); ctx.arc(0, -10, 12, Math.PI, 0); ctx.fill(); // Top
-        } else if (type === 'space') {
-            ctx.fillStyle = 'rgba(100, 200, 255, 0.4)';
-            ctx.strokeStyle = 'white'; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.arc(0, -5, 32, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.ellipse(0, -20, 30, 5, 0, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(0, -25, 15, Math.PI, 0); ctx.fill();
         }
-        ctx.restore();
     },
 
-    drawObstacle(ctx, x, y, type) {
+    object(o) {
+        const ctx = this.ctx;
         ctx.save();
-        ctx.translate(x, y);
+        ctx.translate(o.x, o.y);
         
-        if (type === 'poo') {
+        if (o.type === 'poo') {
             ctx.fillStyle = '#8B4513';
             ctx.beginPath(); ctx.ellipse(0, 0, 15, 10, 0, 0, Math.PI*2); ctx.fill();
             ctx.beginPath(); ctx.ellipse(0, -10, 10, 8, 0, 0, Math.PI*2); ctx.fill();
-        } else if (type === 'stack') {
-            ctx.fillStyle = '#8B4513';
-            ctx.beginPath(); ctx.ellipse(0, 0, 18, 10, 0, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(0, -15, 14, 9, 0, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.ellipse(0, -28, 10, 8, 0, 0, Math.PI*2); ctx.fill();
-            // Flies
-            ctx.fillStyle = '#2d3436';
-            const fOff = Math.sin(Date.now()/50)*5;
-            ctx.fillRect(-15, -30+fOff, 2, 2); ctx.fillRect(15, -20-fOff, 2, 2);
-        } else if (type === 'hydrant') {
+        } else if (o.type === 'hydrant') {
             ctx.fillStyle = '#d63031';
             ctx.fillRect(-10, -30, 20, 30);
             ctx.beginPath(); ctx.arc(0, -30, 10, Math.PI, 0); ctx.fill();
-            ctx.fillStyle = '#b2bec3'; ctx.fillRect(-12, -10, 4, 4); ctx.fillRect(8, -10, 4, 4);
-        } else if (type === 'cat') {
-            ctx.fillStyle = '#b2bec3';
-            ctx.beginPath(); ctx.arc(0, -10, 15, Math.PI, 0); ctx.fill(); // Arch back
-            ctx.beginPath(); ctx.arc(-12, -15, 8, 0, Math.PI*2); ctx.fill(); // Head
-            ctx.beginPath(); ctx.moveTo(8, -10); ctx.quadraticCurveTo(15, -30, 20, -10); ctx.stroke(); // Tail
-        } else if (type === 'vacuum') {
-            ctx.fillStyle = '#636e72'; ctx.fillRect(-15, -5, 30, 10); // Base
-            ctx.fillStyle = '#d63031'; ctx.fillRect(-10, -50, 20, 45); // Body
-            ctx.fillStyle = '#55efc4'; ctx.beginPath(); ctx.arc(0, -30, 6, 0, Math.PI*2); ctx.fill(); // Bag
-        } else if (type === 'squirrel') {
+        } else if (o.type === 'vacuum') {
+            ctx.fillStyle = '#636e72'; ctx.fillRect(-15, -10, 30, 10);
+            ctx.fillStyle = '#d63031'; ctx.fillRect(-10, -50, 20, 40);
+        } else if (o.type === 'squirrel') {
             ctx.fillStyle = '#e67e22';
-            const hop = Math.abs(Math.sin(Date.now()/100)*5);
+            const hop = Math.abs(Math.sin(State.frame*0.2)*5);
             ctx.translate(0, -hop);
-            ctx.beginPath(); ctx.ellipse(0, -5, 12, 6, 0, 0, Math.PI*2); ctx.fill(); // Body
-            ctx.beginPath(); ctx.arc(10, -15, 8, 0, Math.PI, false); ctx.fill(); // Tail
-        } else if (type === 'bird') {
-            ctx.fillStyle = '#2d3436';
-            ctx.beginPath(); ctx.arc(0, 0, 12, 0, Math.PI*2); ctx.fill();
-            const wing = Math.sin(Date.now()/50)*10;
-            ctx.fillStyle = '#dfe6e9';
-            ctx.beginPath(); ctx.moveTo(5,0); ctx.lineTo(15, -10+wing); ctx.lineTo(5, 5); ctx.fill();
-        } else if (type === 'pond') {
-            ctx.fillStyle = 'rgba(9, 132, 227, 0.8)';
-            ctx.beginPath(); ctx.ellipse(0, 5, 30, 8, 0, 0, Math.PI*2); ctx.fill();
-        }
-
-        ctx.restore();
-    },
-
-    drawPickup(ctx, x, y, type) {
-        ctx.save();
-        ctx.translate(x, y + Math.sin(Date.now()/200)*5);
-        if (type === 'stick') {
-            ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 4;
-            ctx.beginPath(); ctx.moveTo(-10, 5); ctx.lineTo(10, -5); ctx.stroke();
-            ctx.fillStyle = '#00b894'; ctx.beginPath(); ctx.arc(10, -5, 3, 0, Math.PI*2); ctx.fill();
-        } else if (type === 'magnet') {
-            ctx.fillStyle = '#d63031';
-            ctx.beginPath(); ctx.arc(0, 0, 10, Math.PI, 0); ctx.fill();
-            ctx.fillStyle = 'white'; ctx.fillRect(-10, 0, 5, 5); ctx.fillRect(5, 0, 5, 5);
-        } else {
-            // Bones
-            ctx.fillStyle = type === 'gold' ? '#f1c40f' : 'white';
+            ctx.beginPath(); ctx.ellipse(0, -5, 12, 6, 0, 0, Math.PI*2); ctx.fill(); 
+            ctx.beginPath(); ctx.arc(10, -15, 8, 0, Math.PI, false); ctx.fill();
+        } else if (o.type === 'cat') {
+            ctx.fillStyle = '#b2bec3';
+            ctx.beginPath(); ctx.arc(0, -10, 15, Math.PI, 0); ctx.fill();
+            ctx.beginPath(); ctx.arc(-12, -15, 8, 0, Math.PI*2); ctx.fill();
+        } else if (o.type === 'bone' || o.type === 'gold') {
+            ctx.translate(0, Math.sin(State.frame*0.1)*5);
+            ctx.fillStyle = o.type === 'gold' ? '#f1c40f' : 'white';
             ctx.fillRect(-8, -3, 16, 6);
             ctx.beginPath(); ctx.arc(-8, 0, 5, 0, Math.PI*2); ctx.fill();
             ctx.beginPath(); ctx.arc(8, 0, 5, 0, Math.PI*2); ctx.fill();
+        } else if (o.type === 'magnet') {
+            ctx.fillStyle = '#ff7675';
+            ctx.beginPath(); ctx.arc(0, 0, 12, Math.PI, 0); ctx.fill();
+            ctx.fillStyle = 'white'; ctx.fillRect(-10,0,5,5); ctx.fillRect(5,0,5,5);
         }
+
         ctx.restore();
     }
 };
 
-// --- 4. GAME ENTITIES ---
-
-class Player {
-    constructor() {
-        this.reset();
-    }
-
-    reset() {
-        this.y = 0;
-        this.dy = 0;
-        this.grounded = true;
-        this.canDoubleJump = false;
-        
-        // Stats
-        this.sticks = 0;
-        this.shield = false;
-        this.isMega = false;
-        this.megaTimer = 0;
-        this.magnetTimer = 0;
-        this.streak = 0;
-        
-        // Apply Hat Perks
-        this.hat = Game.shop.equipped;
-        this.gravity = (this.hat === 'space') ? 0.6 : Config.gravity;
-        this.jumpPower = (this.hat === 'space') ? -13 : -19;
-        
-        if (this.hat === 'tophat') { this.sticks = 5; this.shield = true; }
-        if (this.hat === 'space') { this.shield = true; } // Space helm has 1 hit shield property too
-    }
-
-    update() {
-        // Timers
-        if (this.megaTimer > 0) {
-            this.megaTimer--;
-            if (this.megaTimer <= 0) {
-                this.isMega = false;
-                this.streak = 0;
-                Game.ui.updateMega(0);
-            }
-        }
-        if (this.magnetTimer > 0) this.magnetTimer--;
-
-        // Physics
-        this.dy += this.gravity;
-        this.y += this.dy;
-
-        // Ground collision
-        const floor = Game.groundY;
-        if (this.y >= floor) {
-            this.y = floor;
-            this.dy = 0;
-            this.grounded = true;
-            this.canDoubleJump = false;
-        }
-    }
-
-    jump() {
-        if (this.grounded) {
-            this.dy = this.jumpPower;
-            this.grounded = false;
-            this.canDoubleJump = true;
-            Audio.sfx('jump');
-        } else if (this.canDoubleJump) {
-            this.dy = this.jumpPower * 0.8;
-            this.canDoubleJump = false;
-            Audio.sfx('doublejump');
-        }
-    }
-
-    hit() {
-        if (this.isMega) return false;
-        if (this.shield) {
-            this.shield = false;
-            this.sticks = 0;
-            Audio.sfx('crash');
-            Game.ui.flash('#ff7675');
-            Game.ui.updateSticks(0);
-            return false; // Survived
-        }
-        return true; // Game Over
-    }
-
-    collectStick() {
-        if (Game.difficulty === 'death') return;
-        this.sticks++;
-        if (this.sticks >= 5) {
-            this.shield = true;
-            this.sticks = 0;
-            Audio.sfx('shield');
-            Game.ui.flash('#00b894');
-        }
-        Game.ui.updateSticks(this.sticks);
-    }
-}
-
-class Spawner {
-    constructor() {
-        this.obsTimer = 0;
-        this.itemTimer = 0;
-    }
-
-    update() {
-        this.obsTimer--;
-        this.itemTimer--;
-
-        // Spawn Obstacles
-        if (this.obsTimer <= 0) {
-            this.spawnObstacle();
-            // Difficulty curve: spawn faster as level increases
-            this.obsTimer = Math.max(35, 90 - (Game.level * 5));
-        }
-
-        // Spawn Items
-        if (this.itemTimer <= 0) {
-            this.spawnItem();
-            this.itemTimer = Math.random() * 50 + 30;
-        }
-    }
-
-    spawnObstacle() {
-        const typeRoll = Math.random();
-        const level = Game.level;
-        let type = 'poo';
-        let y = Game.groundY;
-        let speedMod = 1;
-
-        if (level >= 3 && typeRoll > 0.9) { type = 'vacuum'; speedMod = 1.3; }
-        else if (level >= 2 && typeRoll > 0.85) { type = 'squirrel'; speedMod = 1.6; }
-        else if (level >= 2 && typeRoll > 0.80) { type = 'cat'; speedMod = 0; } // Static
-        else if (level >= 3 && typeRoll > 0.75) { type = 'pond'; speedMod = 0; }
-        else if (typeRoll > 0.6) { type = 'hydrant'; }
-        else if (typeRoll > 0.45) { type = 'bird'; y = Game.groundY - 90; }
-        else if (typeRoll > 0.35) { type = 'stack'; } // Stack of poo
-
-        Game.obstacles.push({ x: Game.cvs.width, y, type, speedMod, w: 25, h: 25 });
-    }
-
-    spawnItem() {
-        // 10% chance for magnet or stick, otherwise bones
-        const roll = Math.random();
-        let type = 'bone';
-        if (roll > 0.95) type = 'magnet';
-        else if (roll > 0.90) type = 'stick';
-        else if (roll > 0.7) type = 'gold';
-
-        // Elevation variety
-        const y = Game.groundY - (Math.random() > 0.5 ? 120 : 40);
-        Game.items.push({ x: Game.cvs.width, y, type, w: 20, h: 20 });
-    }
-}
-
-// --- 5. GAME ENGINE (The Controller) ---
+// --- 4. GAME LOGIC CONTROLLER ---
 const Game = {
-    cvs: document.getElementById('game-canvas'),
-    ctx: document.getElementById('game-canvas').getContext('2d'),
-    
-    // State
-    state: 'menu', // menu, playing, shop, gameover
-    level: 1,
-    score: 0,
-    dist: 0,
-    difficulty: 'normal',
-    
-    // Components
-    player: new Player(),
-    spawner: new Spawner(),
-    obstacles: [],
-    items: [],
+    entities: [],
     particles: [],
+    loopId: null,
 
-    // Shop Data
-    shop: {
-        inventory: ['none'],
-        equipped: 'none',
-        bones: 0 // Global currency (persists across retries)
-    },
-
-    // DOM UI Interface
-    ui: {
-        hideAll() {
-            document.querySelectorAll('.fullscreen').forEach(el => el.classList.add('hidden'));
-        },
-        show(id) {
-            this.hideAll();
-            document.getElementById(id).classList.remove('hidden');
-        },
-        updateHUD(score, sticks) {
-            document.getElementById('hud-score').innerText = score;
-            document.getElementById('hud-sticks').innerText = sticks + '/5';
-        },
-        updateSticks(n) { document.getElementById('hud-sticks').innerText = n+'/5'; },
-        updateMega(pct) { document.getElementById('mega-fill').style.width = pct + '%'; },
-        flash(color) {
-            const f = document.getElementById('flash-overlay');
-            f.style.background = color; f.style.opacity = 0.5;
-            setTimeout(() => f.style.opacity = 0, 100);
-        }
-    },
-
-    // Lifecycle
     init() {
-        this.resize();
-        window.addEventListener('resize', () => this.resize());
+        Draw.init('gameCanvas');
+        this.renderShop();
         
-        // Input binding
-        const inputAction = (e) => {
-            if (this.state === 'playing') {
-                e.preventDefault();
-                this.player.jump();
-            }
+        // Input Handling (Touch + Mouse Unified)
+        const jump = (e) => {
+            if (e.target.tagName === 'BUTTON') return;
+            e.preventDefault();
+            if (State.screen === 'play') this.playerJump();
         };
-        window.addEventListener('mousedown', (e) => { 
-            Audio.init(); 
-            if(e.target.tagName !== 'BUTTON') inputAction(e); 
-        });
-        window.addEventListener('touchstart', (e) => { 
-            Audio.init(); 
-            if(e.target.tagName !== 'BUTTON') inputAction(e); 
-        }, {passive:false});
-
-        // Start Loop
-        requestAnimationFrame(t => this.loop(t));
-        this.renderShop(); // Pre-render shop
+        window.addEventListener('mousedown', jump);
+        window.addEventListener('touchstart', jump, {passive: false});
     },
 
-    resize() {
-        this.cvs.width = window.innerWidth;
-        this.cvs.height = window.innerHeight;
-        this.groundY = this.cvs.height - Config.groundHeight;
+    setDifficulty(diff) {
+        State.difficulty = diff;
     },
-
-    // Game Logic
-    setDifficulty(d) { this.difficulty = d; },
 
     start() {
-        this.level = 1;
-        this.score = 0;
-        this.shop.bones = 0; // Reset session currency
-        this.startLevel();
+        State.screen = 'play';
+        State.level = 1;
+        State.score = 0;
+        State.bones = 0; // Session bones reset on full start
+        this.resetLevel();
+        this.uiSwitch('hud');
+        this.loop();
     },
 
-    startLevel() {
-        this.state = 'playing';
-        this.obstacles = [];
-        this.items = [];
-        this.particles = [];
-        this.dist = 0;
-        this.player.reset();
-        this.spawner = new Spawner();
-        
-        this.ui.show('ui-hud');
-        this.ui.updateHUD(this.score, this.player.sticks);
-        this.ui.updateMega(0);
-        document.getElementById('mega-container').classList.remove('active');
-        
-        Audio.startMusic();
+    restart() {
+        if (State.difficulty === 'baby') {
+            // Keep score, restart level
+        } else {
+            State.score = 0;
+            State.level = 1;
+        }
+        this.resetLevel();
+        this.uiSwitch('hud');
+        this.loop();
     },
 
     nextLevel() {
-        this.level++;
-        this.startLevel();
-    },
-
-    openShop() {
-        this.state = 'shop';
-        Audio.stopMusic();
-        this.renderShop();
-        this.ui.show('ui-shop');
-    },
-
-    gameOver(reason) {
-        this.state = 'gameover';
-        Audio.stopMusic();
-        Audio.sfx('crash');
-        document.getElementById('death-reason').innerText = reason;
-        document.getElementById('final-score').innerText = this.score;
-        this.ui.show('ui-gameover');
-    },
-
-    retry() {
-        if (this.difficulty === 'baby') {
-            // Keep score, restart level
-            this.startLevel();
-        } else {
-            // Full restart
-            this.start();
-        }
+        State.level++;
+        this.resetLevel();
+        this.uiSwitch('hud');
+        this.loop();
     },
 
     home() {
-        this.state = 'menu';
-        Audio.stopMusic();
-        this.ui.show('ui-start');
+        State.screen = 'start';
+        this.stopLoop();
+        this.uiSwitch('screen-start');
     },
 
-    // Shop Logic
-    renderShop() {
-        const grid = document.getElementById('shop-grid');
-        grid.innerHTML = '';
-        document.getElementById('shop-balance').innerText = this.shop.bones;
+    resetLevel() {
+        State.active = true;
+        State.frame = 0;
+        State.distance = 0;
+        State.player.y = 0;
+        State.player.dy = 0;
+        State.player.grounded = false;
+        State.player.shield = (State.equipped === 'tophat' || State.equipped === 'space');
+        State.player.isMega = false;
+        State.player.streak = 0;
+        
+        // Hat Physics
+        State.player.gravity = (State.equipped === 'space') ? 0.25 : CFG.gravity;
+        State.player.jumpForce = (State.equipped === 'space') ? -8 : CFG.jumpForce;
 
-        Object.values(Config.hats).forEach(hat => {
-            const isOwned = this.shop.inventory.includes(hat.id);
-            const isEquipped = this.shop.equipped === hat.id;
-            const canAfford = this.shop.bones >= hat.cost;
+        this.entities = [];
+        this.spawnTimer = 0;
+        
+        // Update HUD immediate
+        document.getElementById('scoreVal').innerText = State.score + " 🦴";
+        document.getElementById('megaBar').style.width = "0%";
+    },
+
+    stopLoop() {
+        if (this.loopId) cancelAnimationFrame(this.loopId);
+        State.active = false;
+    },
+
+    // --- MAIN LOOP ---
+    loop() {
+        if (!State.active) return;
+        this.loopId = requestAnimationFrame(() => this.loop());
+        
+        State.frame++;
+        Draw.clear();
+        
+        // Speed calculation
+        const speed = CFG.baseSpeed + (State.level * 0.5) + (State.player.isMega ? 4 : 0);
+        Draw.ground(speed);
+
+        this.updatePlayer();
+        this.updateEntities(speed);
+        this.spawnLogic();
+        
+        Draw.husky(100, Draw.groundY + State.player.y);
+
+        // Level End
+        const maxDist = 2000 + (State.level * 500);
+        State.distance += speed * 0.1;
+        if (State.distance >= maxDist) {
+            this.stopLoop();
+            this.uiSwitch('screen-shop');
+            this.renderShop();
+        }
+    },
+
+    updatePlayer() {
+        const p = State.player;
+        
+        // Mega Logic
+        if (p.megaTimer > 0) {
+            p.megaTimer--;
+            document.getElementById('megaBar').style.width = (p.megaTimer / 600 * 100) + "%";
+            if (p.megaTimer <= 0) p.isMega = false;
+        }
+
+        // Magnet
+        if (p.magnetTimer > 0) p.magnetTimer--;
+
+        // Physics
+        p.dy += p.gravity;
+        p.y += p.dy;
+
+        if (p.y > 0) {
+            p.y = 0;
+            p.dy = 0;
+            p.grounded = true;
+            p.canDouble = false;
+        }
+    },
+
+    playerJump() {
+        const p = State.player;
+        if (p.grounded) {
+            p.dy = p.jumpForce;
+            p.grounded = false;
+            p.canDouble = true;
+            AudioSys.sfx('jump');
+        } else if (p.canDouble) {
+            p.dy = p.jumpForce * 0.8;
+            p.canDouble = false;
+            AudioSys.sfx('double');
+        }
+    },
+
+    spawnLogic() {
+        this.spawnTimer--;
+        if (this.spawnTimer <= 0) {
+            this.spawnTimer = Math.max(30, 100 - (State.level * 5));
+            
+            // Random Spawner
+            const r = Math.random();
+            let type = 'poo';
+            let y = 0; // Relative to ground
+
+            if (State.level >= 2 && r > 0.85) { type = 'vacuum'; }
+            else if (State.level >= 2 && r > 0.75) { type = 'cat'; }
+            else if (State.level >= 2 && r > 0.65) { type = 'squirrel'; }
+            else if (r > 0.55) { type = 'hydrant'; }
+            else if (r > 0.45) { type = 'bird'; y = -80; }
+            else if (r > 0.3) { type = 'bone'; y = Math.random() > 0.5 ? -100 : -30; }
+            else if (r > 0.25) { type = 'gold'; y = -30; }
+            else if (r > 0.22) { type = 'magnet'; y = -50; }
+
+            this.entities.push({
+                x: Draw.width + 50,
+                y: y,
+                type: type,
+                w: 30, h: 30,
+                active: true
+            });
+        }
+    },
+
+    updateEntities(speed) {
+        const p = State.player;
+        const hitbox = 30; // forgiving hitbox
+
+        this.entities.forEach(e => {
+            if (!e.active) return;
+            
+            // Move
+            let moveSpeed = speed;
+            if (e.type === 'vacuum') moveSpeed *= 1.2;
+            if (e.type === 'squirrel') moveSpeed *= 1.5;
+            if (e.type === 'cat') moveSpeed = speed; // Static relative to scroll usually implies moving with ground, but here entities move towards player
+            
+            e.x -= moveSpeed;
+            Draw.object({ x: e.x, y: Draw.groundY + e.y, type: e.type });
+
+            // Magnet Effect
+            if (p.magnetTimer > 0 && (e.type === 'bone' || e.type === 'gold')) {
+                const dx = 100 - e.x;
+                const dy = (p.y) - e.y; // Simplified
+                if (Math.abs(dx) < 300) {
+                    e.x += dx * 0.15;
+                    e.y += dy * 0.15;
+                }
+            }
+
+            // Collision
+            const dx = Math.abs(100 - e.x);
+            const dy = Math.abs((p.y - 15) - e.y); // Center point approx
+
+            if (dx < hitbox && dy < hitbox) {
+                if (['bone', 'gold', 'magnet'].includes(e.type)) {
+                    // Pickup
+                    e.active = false;
+                    this.collectItem(e.type);
+                } else {
+                    // Hazard
+                    if (p.isMega) {
+                        e.active = false;
+                        AudioSys.sfx('hit');
+                    } else if (p.shield) {
+                        p.shield = false;
+                        e.active = false;
+                        AudioSys.sfx('hit');
+                        this.flash('#ff7675');
+                    } else {
+                        this.gameOver(`Hit by ${e.type.toUpperCase()}`);
+                    }
+                }
+            }
+        });
+    },
+
+    collectItem(type) {
+        if (type === 'magnet') {
+            State.player.magnetTimer = 600;
+            AudioSys.sfx('powerup');
+            return;
+        }
+
+        const val = (State.equipped === 'cap') ? 2 : 1;
+        const points = (type === 'gold' ? 5 : 1) * val;
+        
+        State.score += points;
+        State.bones += points;
+        document.getElementById('scoreVal').innerText = State.score + " 🦴";
+        AudioSys.sfx('coin');
+
+        // Mega Progress
+        const target = (State.equipped === 'cowboy') ? 25 : 50;
+        State.player.streak += (type === 'gold' ? 5 : 1);
+        
+        if (!State.player.isMega) {
+            const pct = Math.min(100, (State.player.streak / target) * 100);
+            document.getElementById('megaBar').style.width = pct + "%";
+            if (State.player.streak >= target) {
+                State.player.isMega = true;
+                State.player.megaTimer = 600;
+                AudioSys.sfx('powerup');
+            }
+        }
+    },
+
+    gameOver(reason) {
+        this.stopLoop();
+        AudioSys.sfx('hit');
+        document.getElementById('deathReason').innerText = reason;
+        document.getElementById('finalScore').innerText = State.score;
+        this.uiSwitch('screen-gameover');
+    },
+
+    // --- UI HELPERS ---
+    uiSwitch(id) {
+        document.querySelectorAll('.ui-layer').forEach(el => el.classList.remove('active'));
+        if(id === 'hud') {
+            document.getElementById('hud').style.opacity = 1;
+        } else {
+            document.getElementById('hud').style.opacity = 0;
+            document.getElementById(id).classList.add('active');
+        }
+    },
+
+    flash(color) {
+        const f = document.getElementById('flash');
+        f.style.background = color;
+        f.style.opacity = 0.5;
+        setTimeout(() => f.style.opacity = 0, 100);
+    },
+
+    renderShop() {
+        const grid = document.getElementById('shop-container');
+        document.getElementById('shopBank').innerText = State.bones;
+        grid.innerHTML = '';
+
+        Object.values(HATS).forEach(hat => {
+            const owned = State.inventory.includes(hat.id);
+            const equipped = State.equipped === hat.id;
+            const afford = State.bones >= hat.cost;
 
             const div = document.createElement('div');
-            div.className = `shop-card ${isOwned ? 'owned' : ''} ${isEquipped ? 'equipped' : ''}`;
-            if (!isOwned && !canAfford) div.classList.add('locked');
-
-            let btnText = isEquipped ? 'EQUIPPED' : (isOwned ? 'EQUIP' : `BUY ${hat.cost}`);
-            let btnStyle = isEquipped ? 'background:#0984e3' : (isOwned ? 'background:#00b894' : 'background:#d63031');
-
+            div.className = `shop-item ${owned?'owned':''} ${equipped?'equipped':''} ${(!owned && !afford)?'locked':''}`;
             div.innerHTML = `
-                <div style="font-weight:900; margin-bottom:5px;">${hat.name}</div>
-                <div style="font-size:10px; color:#636e72; flex:1;">${hat.perk}</div>
-                <canvas width="60" height="60" id="shop-cvs-${hat.id}"></canvas>
-                <button class="shop-btn" style="${btnStyle}">${btnText}</button>
+                <div style="font-weight:900">${hat.name}</div>
+                <div style="font-size:10px; margin:5px 0;">${hat.perk}</div>
+                <div style="font-weight:bold; color:${owned?'#00b894':'#d63031'}">${owned ? (equipped?'EQUIPPED':'OWNED') : hat.cost+' 🦴'}</div>
             `;
-
-            // Canvas Preview
-            setTimeout(() => {
-                const cx = document.getElementById(`shop-cvs-${hat.id}`).getContext('2d');
-                Renderer.drawHusky(cx, 30, 35, 0, { isMega: false, shield: false, hat: hat.id });
-            }, 0);
-
             div.onclick = () => {
-                if (isEquipped) return;
-                if (isOwned) {
-                    this.shop.equipped = hat.id;
-                    Audio.sfx('collect');
-                } else if (canAfford) {
-                    this.shop.bones -= hat.cost;
-                    this.shop.inventory.push(hat.id);
-                    this.shop.equipped = hat.id;
-                    Audio.sfx('collect');
-                } else {
-                    Audio.sfx('crash');
+                if(equipped) return;
+                if(owned) {
+                    State.equipped = hat.id;
+                    AudioSys.sfx('coin');
+                } else if (afford) {
+                    State.bones -= hat.cost;
+                    State.inventory.push(hat.id);
+                    State.equipped = hat.id;
+                    AudioSys.sfx('powerup');
                 }
                 this.renderShop();
             };
             grid.appendChild(div);
         });
-    },
-
-    // Main Loop
-    loop(t) {
-        requestAnimationFrame(t => this.loop(t));
-        
-        // 1. CLEAR
-        Renderer.clear(this.ctx, this.cvs.width, this.cvs.height);
-        
-        // 2. BACKGROUND
-        Renderer.drawSky(this.ctx, this.cvs.width, this.cvs.height, this.dist);
-        const speed = Config.baseSpeed + (this.level * 0.5) + (this.player.isMega ? 5 : 0);
-        const frame = Math.floor(t / 16);
-        Renderer.drawGround(this.ctx, this.cvs.width, this.cvs.height, this.groundY, speed, frame);
-
-        if (this.state !== 'playing') {
-             // Just draw player idle if not playing
-             if(this.state !== 'shop')
-                Renderer.drawHusky(this.ctx, this.cvs.width/2, this.groundY, frame, this.player);
-             return; 
-        }
-
-        // 3. UPDATE LOGIC
-        this.player.update();
-        this.spawner.update();
-        this.dist += speed * 0.1;
-
-        // Level Progress
-        const maxDist = 2000 + (this.level * 500);
-        document.getElementById('progress-bar').style.width = Math.min(100, (this.dist / maxDist) * 100) + '%';
-        if (this.dist >= maxDist) {
-            this.openShop();
-            return;
-        }
-
-        // Magnet Logic
-        if (this.player.magnetTimer > 0) {
-            this.items.forEach(it => {
-                if (it.type !== 'magnet') {
-                    const dx = 100 - it.x;
-                    const dy = (this.player.y - 25) - it.y;
-                    if (Math.sqrt(dx*dx + dy*dy) < 300) {
-                        it.x += dx * 0.15;
-                        it.y += dy * 0.15;
-                    }
-                }
-            });
-        }
-
-        // Move & Collide Entities
-        const updateEntity = (arr, isItem) => {
-            for (let i = arr.length - 1; i >= 0; i--) {
-                const e = arr[i];
-                e.x -= speed * (e.speedMod !== undefined ? e.speedMod : 1);
-
-                // Collision AABB
-                const pX = 100; const pY = this.player.y - 25; // Player Center
-                const dx = Math.abs(pX - e.x);
-                const dy = Math.abs(pY - e.y);
-                const hitDist = 30; // forgiving hitbox
-
-                if (dx < hitDist && dy < hitDist) {
-                    if (isItem) {
-                        if (e.type === 'magnet') {
-                            this.player.magnetTimer = 600;
-                            Audio.sfx('vacuum'); // reuse sound
-                        } else if (e.type === 'stick') {
-                            this.player.collectStick();
-                            Audio.sfx('collect');
-                        } else {
-                            // Bones
-                            const mult = this.player.hat === 'cap' ? 2 : 1;
-                            const val = (e.type === 'gold' ? 5 : 1);
-                            this.score += val * mult;
-                            this.shop.bones += val * mult; // Currency
-                            this.ui.updateHUD(this.score, this.player.sticks);
-                            Audio.sfx('collect');
-                            
-                            // Mega Logic
-                            const req = this.player.hat === 'cowboy' ? 25 : 50;
-                            this.player.streak += val;
-                            if (!this.player.isMega) {
-                                this.ui.updateMega((this.player.streak/req)*100);
-                                if (this.player.streak >= req) {
-                                    this.player.isMega = true;
-                                    this.player.megaTimer = 600;
-                                    document.getElementById('mega-container').classList.add('active');
-                                }
-                            }
-                        }
-                        arr.splice(i, 1);
-                    } else {
-                        // Obstacle
-                        if (this.player.isMega) {
-                            Audio.sfx('smash');
-                            arr.splice(i, 1);
-                        } else {
-                            if (this.player.hit()) {
-                                this.gameOver(`Hit by a ${e.type.toUpperCase()}`);
-                            } else {
-                                arr.splice(i, 1); // Shield break
-                            }
-                        }
-                    }
-                }
-                if (e.x < -50) arr.splice(i, 1);
-            }
-        };
-
-        updateEntity(this.items, true);
-        updateEntity(this.obstacles, false);
-
-        // 4. RENDER ENTITIES
-        this.items.forEach(i => Renderer.drawPickup(this.ctx, i.x, i.y, i.type));
-        this.obstacles.forEach(o => Renderer.drawObstacle(this.ctx, o.x, o.y, o.type));
-        Renderer.drawHusky(this.ctx, 100, this.player.y, frame, this.player);
     }
 };
 
