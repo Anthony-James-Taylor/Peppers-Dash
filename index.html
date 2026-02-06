@@ -3,134 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pepper's Doo-Doo Dash V42</title>
+    <title>Pepper's Doo-Doo Dash V43 (Stable)</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        /* CSS RESET & CORE LAYOUT */
-        body { margin: 0; overflow: hidden; background: #111; font-family: 'Montserrat', sans-serif; user-select: none; -webkit-user-select: none; touch-action: none; }
+        /* CORE RESET */
+        body { margin: 0; overflow: hidden; background: #2d3436; font-family: 'Montserrat', sans-serif; touch-action: none; user-select: none; -webkit-user-select: none; }
         canvas { display: block; width: 100%; height: 100%; }
+
+        /* UI LAYOUTS */
+        .screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); z-index: 10;
+        }
+        .screen.active { display: flex; }
+
+        /* HUD */
+        #hud {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: none;
+        }
+        .hud-top { position: absolute; top: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; }
+        .pill { background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; border: 2px solid rgba(255,255,255,0.2); font-weight: 900; }
         
-        /* UI OVERLAYS */
-        .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
-        .ui-layer.active { opacity: 1; pointer-events: auto; }
-        .ui-bg { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px); }
+        #progress-bar-container {
+            position: absolute; top: 80px; left: 10%; width: 80%; height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px;
+        }
+        #progress-fill { width: 0%; height: 100%; background: #00fbff; border-radius: 4px; transition: width 0.1s linear; }
+
+        #mega-meter {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); padding: 10px 30px; border-radius: 12px; border: 2px solid white;
+            display: flex; flex-direction: column; align-items: center; transition: all 0.2s;
+        }
+        #mega-meter.active { border-color: #ff00ff; box-shadow: 0 0 20px #ff00ff; transform: translateX(-50%) scale(1.1); }
+        #mega-fill { width: 0%; height: 8px; background: #ff00ff; margin-top: 5px; border-radius: 4px; width: 150px; }
+
+        /* CARDS & BUTTONS */
+        h1 { color: white; font-size: 40px; text-transform: uppercase; text-align: center; margin-bottom: 30px; text-shadow: 0 5px 0 black; }
         
-        /* HUD (Heads Up Display) */
-        #hud { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; box-sizing: border-box; display: flex; justify-content: space-between; pointer-events: none; z-index: 10; }
-        .hud-pill { background: rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 20px; color: white; font-weight: 900; text-align: center; }
-        .hud-sub { font-size: 10px; color: #00fbff; display: block; }
-        
-        /* TYPOGRAPHY & BUTTONS */
-        h1 { color: white; font-size: 40px; text-transform: uppercase; margin-bottom: 30px; text-shadow: 0 4px 0 #000; text-align: center; }
-        .btn { background: white; color: #111; border: none; padding: 15px 40px; font-size: 18px; font-weight: 900; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 0 #b2bec3; transition: transform 0.1s; pointer-events: auto; margin: 10px; }
+        .btn {
+            background: white; border: none; padding: 15px 40px; font-size: 20px; font-weight: 900;
+            border-radius: 30px; cursor: pointer; margin: 10px; box-shadow: 0 5px 0 #b2bec3;
+            transition: transform 0.1s;
+        }
         .btn:active { transform: translateY(4px); box-shadow: none; }
-        .btn-red { background: #ff7675; color: white; box-shadow: 0 5px 0 #d63031; }
-        
-        /* SHOP GRID */
-        #shop-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; max-height: 60vh; overflow-y: auto; padding: 10px; }
-        .shop-item { background: white; border-radius: 10px; padding: 15px; text-align: center; border: 4px solid #b2bec3; cursor: pointer; transition: transform 0.2s; width: 120px; }
-        .shop-item.owned { border-color: #00b894; background: #e3faf5; }
-        .shop-item.equipped { border-color: #0984e3; box-shadow: 0 0 15px #0984e3; transform: scale(1.05); }
-        .shop-item.locked { opacity: 0.5; filter: grayscale(1); }
+
+        /* DIFFICULTY CARDS */
+        .diff-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        .diff-card {
+            background: rgba(255,255,255,0.1); border: 2px solid transparent; border-radius: 12px;
+            padding: 20px; width: 280px; text-align: left; cursor: pointer; transition: all 0.2s;
+        }
+        .diff-card:hover { background: rgba(255,255,255,0.2); }
+        .diff-card.selected { border-color: #00fbff; background: rgba(0, 251, 255, 0.1); }
+        .diff-card h3 { color: #ffeaa7; margin: 0 0 5px 0; font-size: 18px; text-transform: uppercase; }
+        .diff-card p { color: #ccc; font-size: 12px; margin: 0; line-height: 1.4; }
+
+        /* SHOP */
+        #shop-screen { background: linear-gradient(135deg, #74b9ff, #0984e3); display: none; justify-content: flex-start; padding-top: 20px; overflow-y: auto; }
+        #shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; width: 90%; max-width: 600px; margin-top: 20px; padding-bottom: 100px; }
+        .shop-item {
+            background: white; border-radius: 10px; padding: 10px; text-align: center; border: 4px solid #b2bec3; cursor: pointer;
+        }
+        .shop-item.owned { border-color: #00b894; background: #e6fffa; }
+        .shop-item.equipped { border-color: #0984e3; transform: scale(1.05); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
         
         /* FX */
-        #flash { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; pointer-events: none; opacity: 0; z-index: 100; transition: opacity 0.1s; }
+        #flash { position: absolute; top:0; left:0; width:100%; height:100%; background:white; opacity:0; pointer-events:none; z-index:999; transition: opacity 0.1s; }
     </style>
 </head>
 <body>
 
     <canvas id="gameCanvas"></canvas>
-    
     <div id="flash"></div>
 
     <div id="hud">
-        <div class="hud-pill">
-            <span class="hud-sub">SCORE</span>
-            <span id="scoreVal">0 🦴</span>
+        <div class="hud-top">
+            <div class="pill">SCORE: <span id="scoreVal">0</span></div>
+            <div class="pill" id="shieldPill">SHIELD: <span id="shieldVal">0/5</span></div>
         </div>
-        <div class="hud-pill">
-            <span class="hud-sub">MEGA MODE</span>
-            <div style="width:100px; height:8px; background:#444; margin-top:5px; border-radius:4px; overflow:hidden;">
-                <div id="megaBar" style="width:0%; height:100%; background:#ff00ff; transition:width 0.2s;"></div>
+        <div id="progress-bar-container"><div id="progress-fill"></div></div>
+        <div id="mega-meter">
+            <div style="color:#00fbff; font-weight:900; font-size:12px;">MEGA MODE</div>
+            <div style="width:150px; height:8px; background:#333; margin-top:5px; border-radius:4px; overflow:hidden;">
+                <div id="mega-fill" style="width:0%; height:100%; background:#ff00ff;"></div>
             </div>
         </div>
     </div>
 
-    <div id="screen-start" class="ui-layer ui-bg active">
-        <h1>Pepper's<br>Doo-Doo Dash<br><span style="font-size:16px; color:#00fbff;">V42 STABLE CORE</span></h1>
-        <button class="btn" onclick="Game.start()">PLAY GAME</button>
-        <button class="btn btn-red" onclick="Game.setDifficulty('death'); Game.start()">DEATH MODE</button>
-    </div>
-
-    <div id="screen-shop" class="ui-layer ui-bg">
-        <h1>The Pet Store</h1>
-        <div class="hud-pill" style="margin-bottom:20px;">BANK: <span id="shopBank">0</span> 🦴</div>
-        <div id="shop-container">
+    <div id="start-screen" class="screen active">
+        <h1>Pepper's<br>Doo-Doo Dash<br><span style="font-size:20px; color:#00fbff">V43 STABLE</span></h1>
+        
+        <div class="diff-container">
+            <div class="diff-card" onclick="Game.setDiff('baby', this)">
+                <h3>Baby Mode</h3>
+                <p>Can I play, Daddy? (Restarts Level)</p>
             </div>
-        <button class="btn" onclick="Game.nextLevel()" style="margin-top:20px;">NEXT LEVEL ▶</button>
+            <div class="diff-card selected" onclick="Game.setDiff('normal', this)">
+                <h3>Normal</h3>
+                <p>Bring 'em on. (Standard rules)</p>
+            </div>
+            <div class="diff-card" onclick="Game.setDiff('death', this)">
+                <h3 style="color:#ff7675">Death Mode</h3>
+                <p>I am Death Incarnate! (Fast, No Shields)</p>
+            </div>
+        </div>
+
+        <button class="btn" style="margin-top:30px;" onclick="Game.start()">START RUN</button>
     </div>
 
-    <div id="screen-gameover" class="ui-layer ui-bg">
-        <h1 style="color:#ff7675;">GAME OVER</h1>
-        <div class="hud-pill" style="margin-bottom:20px;">SCORE: <span id="finalScore">0</span></div>
-        <div style="color:white; margin-bottom:20px; font-weight:bold;" id="deathReason"></div>
-        <button class="btn" onclick="Game.home()">MAIN MENU</button>
-        <button class="btn btn-red" onclick="Game.restart()">TRY AGAIN</button>
+    <div id="shop-screen" class="screen">
+        <div class="pill" style="margin-top:20px;">BANK: <span id="shop-bank">0</span> 🦴</div>
+        <div id="shop-grid"></div>
+        <div style="position:fixed; bottom:20px;">
+            <button class="btn" onclick="Game.nextLevel()">NEXT LEVEL ▶</button>
+        </div>
+    </div>
+
+    <div id="game-over" class="screen">
+        <h1 style="color:#ff7675">GAME OVER</h1>
+        <div style="color:white; margin-bottom:20px; font-weight:bold;" id="death-msg"></div>
+        <div class="pill">SCORE: <span id="final-score">0</span></div>
+        <div style="margin-top:30px;">
+            <button class="btn" onclick="Game.retry()">RETRY</button>
+            <button class="btn" onclick="Game.home()">HOME</button>
+        </div>
     </div>
 
 <script>
 /**
- * PEPPER'S DOO-DOO DASH V42 - Stable Core
- * Author: Elite Coder Logic
- * Intent: Maximum stability, clear control flow, robust asset-less rendering.
+ * PEPPER'S DOO-DOO DASH V43
+ * Architecture: Singleton Game Object + Stateless Renderer
  */
 
-// --- 1. CONFIGURATION & STATE ---
-const CFG = {
-    gravity: 0.6,          // Adjusted for 60fps
-    jumpForce: -13,        // Adjusted for scale
-    groundHeight: 120,
-    baseSpeed: 8,
-    colors: {
-        sky: ['#81ecec', '#74b9ff'],
-        ground: '#5D4037',
-        grass: '#00b894'
-    }
+// --- CONFIGURATION ---
+const CONSTANTS = {
+    GRAVITY: 0.6,
+    JUMP_FORCE: -12,
+    GROUND_Y: 140, // Distance from bottom
+    BASE_SPEED: 8
 };
 
 const HATS = {
     none:   { id: 'none', name: 'No Hat', cost: 0, perk: 'None' },
-    cap:    { id: 'cap', name: 'Red Cap', cost: 50, perk: 'Double Points' },
+    cap:    { id: 'cap', name: 'Red Cap', cost: 50, perk: '2x Bones' },
     tophat: { id: 'tophat', name: 'Top Hat', cost: 100, perk: 'Shield Start' },
-    cowboy: { id: 'cowboy', name: 'Cowboy', cost: 200, perk: 'Easy Mega' },
+    cowboy: { id: 'cowboy', name: 'Cowboy', cost: 200, perk: 'Fast Mega' },
     space:  { id: 'space', name: 'Space Helm', cost: 300, perk: 'Moon Gravity' }
 };
 
-// Global Game State
-const State = {
-    active: false,
-    screen: 'start', // start, play, shop, over
-    frame: 0,
-    score: 0,
-    bones: 0, // Currency
-    level: 1,
-    distance: 0,
-    difficulty: 'normal',
-    
-    // Player State
-    player: {
-        y: 0, dy: 0, grounded: true, 
-        canDouble: false, shield: false, 
-        isMega: false, megaTimer: 0, 
-        streak: 0, magnetTimer: 0
-    },
-    
-    // Inventory
-    inventory: ['none'],
-    equipped: 'none'
-};
-
-// --- 2. AUDIO SYSTEM (Robust & Lazy Load) ---
+// --- AUDIO (Lazy Load) ---
 const AudioSys = {
     ctx: null,
     init() {
@@ -139,142 +161,113 @@ const AudioSys = {
         }
         if (this.ctx.state === 'suspended') this.ctx.resume();
     },
-    play(freq, type, dur, vol=0.1) {
+    play(freq, type, dur) {
         if (!this.ctx) return;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = type;
         osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-        gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + dur);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.start();
         osc.stop(this.ctx.currentTime + dur + 0.1);
     },
-    sfx(key) {
+    sfx(id) {
         this.init();
-        switch(key) {
+        switch(id) {
             case 'jump': this.play(400, 'triangle', 0.2); break;
             case 'double': this.play(600, 'square', 0.1); break;
-            case 'coin': this.play(1200, 'sine', 0.1, 0.2); break;
-            case 'hit': this.play(100, 'sawtooth', 0.3, 0.3); break;
-            case 'powerup': this.play(600, 'sine', 0.5, 0.2); break;
-            case 'win': this.play(800, 'square', 0.4); break;
+            case 'coin': this.play(1200, 'sine', 0.1); break;
+            case 'hit': this.play(100, 'sawtooth', 0.3); break;
+            case 'power': this.play(600, 'sine', 0.5); break;
         }
     }
 };
 
-// --- 3. RENDERING ENGINE (Canvas API) ---
+// --- RENDERER ---
 const Draw = {
     ctx: null,
-    width: 0, height: 0, groundY: 0,
-
-    init(canvasId) {
-        const cvs = document.getElementById(canvasId);
-        this.ctx = cvs.getContext('2d');
-        this.resize(cvs);
-        window.addEventListener('resize', () => this.resize(cvs));
+    width: 0, height: 0,
+    init(canvas) {
+        this.ctx = canvas.getContext('2d');
+        this.resize(canvas);
+        window.addEventListener('resize', () => this.resize(canvas));
     },
-
-    resize(cvs) {
-        cvs.width = window.innerWidth;
-        cvs.height = window.innerHeight;
-        this.width = cvs.width;
-        this.height = cvs.height;
-        this.groundY = this.height - CFG.groundHeight;
+    resize(canvas) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        this.width = canvas.width;
+        this.height = canvas.height;
     },
-
     clear() {
         const grad = this.ctx.createLinearGradient(0,0,0,this.height);
-        grad.addColorStop(0, CFG.colors.sky[0]);
-        grad.addColorStop(1, CFG.colors.sky[1]);
+        grad.addColorStop(0, '#81ecec'); grad.addColorStop(1, '#74b9ff');
         this.ctx.fillStyle = grad;
         this.ctx.fillRect(0,0,this.width, this.height);
     },
-
-    ground(speed) {
-        this.ctx.fillStyle = CFG.colors.ground;
-        this.ctx.fillRect(0, this.groundY, this.width, CFG.groundHeight);
-        this.ctx.fillStyle = CFG.colors.grass;
-        this.ctx.fillRect(0, this.groundY, this.width, 20);
-        
-        // Striping
-        this.ctx.fillStyle = "rgba(0,0,0,0.1)";
-        const off = (State.frame * speed) % 100;
-        for(let i = -100; i < this.width + 100; i+=100) {
+    ground(speed, frame) {
+        const y = this.height - CONSTANTS.GROUND_Y;
+        this.ctx.fillStyle = '#5D4037';
+        this.ctx.fillRect(0, y, this.width, CONSTANTS.GROUND_Y);
+        this.ctx.fillStyle = '#00b894';
+        this.ctx.fillRect(0, y, this.width, 20);
+        // Stripes
+        this.ctx.fillStyle = 'rgba(255,255,255,0.1)';
+        const off = (frame * speed) % 100;
+        for(let i=-100; i<this.width+100; i+=100) {
             this.ctx.beginPath();
-            this.ctx.moveTo(i-off, this.groundY);
+            this.ctx.moveTo(i-off, y);
             this.ctx.lineTo(i-off+40, this.height);
             this.ctx.lineTo(i-off+80, this.height);
-            this.ctx.lineTo(i-off+40, this.groundY);
+            this.ctx.lineTo(i-off+40, y);
             this.ctx.fill();
         }
     },
-
-    // Procedural Husky Drawing
-    husky(x, y) {
+    husky(x, y, frame, p) {
         const ctx = this.ctx;
         ctx.save();
         ctx.translate(x, y);
+        if(p.isMega) { ctx.scale(1.5, 1.5); ctx.filter = `hue-rotate(${frame*10}deg)`; }
         
-        // Mega Mode Effect
-        if(State.player.isMega) {
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = `hsl(${(State.frame*10)%360}, 100%, 50%)`;
-            ctx.scale(1.2, 1.2);
-        }
-
-        // Bobbing
-        ctx.translate(0, Math.sin(State.frame * 0.2) * 2);
-
         // Body
+        ctx.translate(0, Math.sin(frame*0.2)*2); // Bob
         ctx.fillStyle = '#2d3436';
-        ctx.beginPath(); ctx.ellipse(0, 20, 20, 14, 0, 0, Math.PI*2); ctx.fill();
-
-        // Head
-        ctx.beginPath(); ctx.arc(0, 0, 25, 0, Math.PI*2); ctx.fill();
-
+        ctx.beginPath(); ctx.ellipse(0, 20, 20, 12, 0, 0, Math.PI*2); ctx.fill(); // Torso
+        ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI*2); ctx.fill(); // Head
+        
         // Face
-        ctx.fillStyle = 'white';
-        ctx.beginPath(); ctx.arc(0, 5, 18, 0, Math.PI*2); ctx.fill();
-
-        // Ears
-        ctx.fillStyle = '#2d3436';
-        ctx.beginPath(); ctx.moveTo(-15, -10); ctx.lineTo(-20, -35); ctx.lineTo(0, -15); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(15, -10); ctx.lineTo(20, -35); ctx.lineTo(0, -15); ctx.fill();
+        ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(0, 5, 16, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#2d3436'; 
+        ctx.beginPath(); ctx.moveTo(-15,-10); ctx.lineTo(-20,-35); ctx.lineTo(0,-15); ctx.fill(); // L Ear
+        ctx.beginPath(); ctx.moveTo(15,-10); ctx.lineTo(20,-35); ctx.lineTo(0,-15); ctx.fill(); // R Ear
 
         // Eyes
         ctx.fillStyle = '#00fbff';
         ctx.beginPath(); ctx.arc(-8, -2, 4, 0, Math.PI*2); ctx.fill();
         ctx.beginPath(); ctx.arc(8, -2, 4, 0, Math.PI*2); ctx.fill();
 
-        // Draw Hat
-        this.hat(State.equipped);
+        this.hat(p.hat);
 
-        // Shield
-        if(State.player.shield) {
-            ctx.strokeStyle = 'rgba(0, 251, 255, 0.6)';
-            ctx.lineWidth = 3;
+        if(p.shield) {
+            ctx.strokeStyle = '#00fbff'; ctx.lineWidth = 3;
             ctx.beginPath(); ctx.arc(0, 10, 40, 0, Math.PI*2); ctx.stroke();
         }
 
         ctx.restore();
     },
-
     hat(type) {
         const ctx = this.ctx;
         if(type === 'cap') {
             ctx.fillStyle = '#d63031';
-            ctx.beginPath(); ctx.arc(0, -20, 14, Math.PI, 0); ctx.fill();
-            ctx.fillRect(10, -20, 15, 4);
+            ctx.beginPath(); ctx.arc(0, -18, 14, Math.PI, 0); ctx.fill();
+            ctx.fillRect(10, -18, 15, 4);
         } else if (type === 'tophat') {
             ctx.fillStyle = '#111';
-            ctx.fillRect(-12, -50, 24, 30);
-            ctx.fillRect(-18, -20, 36, 5);
+            ctx.fillRect(-12, -50, 24, 30); ctx.fillRect(-18, -20, 36, 5);
         } else if (type === 'space') {
-            ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            ctx.strokeStyle = 'white'; ctx.lineWidth = 2;
+            ctx.strokeStyle = 'white'; ctx.lineWidth = 2; ctx.fillStyle='rgba(255,255,255,0.3)';
             ctx.beginPath(); ctx.arc(0, -5, 35, 0, Math.PI*2); ctx.fill(); ctx.stroke();
         } else if (type === 'cowboy') {
             ctx.fillStyle = '#8B4513';
@@ -282,192 +275,161 @@ const Draw = {
             ctx.beginPath(); ctx.arc(0, -25, 15, Math.PI, 0); ctx.fill();
         }
     },
-
-    object(o) {
+    obj(o) {
         const ctx = this.ctx;
         ctx.save();
         ctx.translate(o.x, o.y);
-        
-        if (o.type === 'poo') {
+        if(o.type === 'poo') {
             ctx.fillStyle = '#8B4513';
             ctx.beginPath(); ctx.ellipse(0, 0, 15, 10, 0, 0, Math.PI*2); ctx.fill();
             ctx.beginPath(); ctx.ellipse(0, -10, 10, 8, 0, 0, Math.PI*2); ctx.fill();
         } else if (o.type === 'hydrant') {
-            ctx.fillStyle = '#d63031';
-            ctx.fillRect(-10, -30, 20, 30);
+            ctx.fillStyle = '#d63031'; ctx.fillRect(-10, -30, 20, 30);
             ctx.beginPath(); ctx.arc(0, -30, 10, Math.PI, 0); ctx.fill();
-        } else if (o.type === 'vacuum') {
-            ctx.fillStyle = '#636e72'; ctx.fillRect(-15, -10, 30, 10);
-            ctx.fillStyle = '#d63031'; ctx.fillRect(-10, -50, 20, 40);
-        } else if (o.type === 'squirrel') {
-            ctx.fillStyle = '#e67e22';
-            const hop = Math.abs(Math.sin(State.frame*0.2)*5);
-            ctx.translate(0, -hop);
-            ctx.beginPath(); ctx.ellipse(0, -5, 12, 6, 0, 0, Math.PI*2); ctx.fill(); 
-            ctx.beginPath(); ctx.arc(10, -15, 8, 0, Math.PI, false); ctx.fill();
         } else if (o.type === 'cat') {
             ctx.fillStyle = '#b2bec3';
             ctx.beginPath(); ctx.arc(0, -10, 15, Math.PI, 0); ctx.fill();
             ctx.beginPath(); ctx.arc(-12, -15, 8, 0, Math.PI*2); ctx.fill();
+        } else if (o.type === 'vacuum') {
+            ctx.fillStyle = '#636e72'; ctx.fillRect(-15, -10, 30, 10);
+            ctx.fillStyle = '#d63031'; ctx.fillRect(-10, -50, 20, 40);
+        } else if (o.type === 'squirrel') {
+            ctx.fillStyle = '#e67e22'; ctx.translate(0, Math.sin(Date.now()/100)*-5);
+            ctx.beginPath(); ctx.ellipse(0, -5, 12, 6, 0, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(10, -15, 8, 0, Math.PI, false); ctx.fill();
         } else if (o.type === 'bone' || o.type === 'gold') {
-            ctx.translate(0, Math.sin(State.frame*0.1)*5);
-            ctx.fillStyle = o.type === 'gold' ? '#f1c40f' : 'white';
-            ctx.fillRect(-8, -3, 16, 6);
-            ctx.beginPath(); ctx.arc(-8, 0, 5, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(8, 0, 5, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = o.type==='gold'?'#f1c40f':'white';
+            ctx.translate(0, Math.sin(Date.now()/200)*5);
+            ctx.fillRect(-8,-3,16,6);
+            ctx.beginPath(); ctx.arc(-8,0,5,0,Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(8,0,5,0,Math.PI*2); ctx.fill();
         } else if (o.type === 'magnet') {
             ctx.fillStyle = '#ff7675';
-            ctx.beginPath(); ctx.arc(0, 0, 12, Math.PI, 0); ctx.fill();
-            ctx.fillStyle = 'white'; ctx.fillRect(-10,0,5,5); ctx.fillRect(5,0,5,5);
+            ctx.beginPath(); ctx.arc(0,0,12,Math.PI,0); ctx.fill();
+        } else if (o.type === 'stick') {
+            ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(-10,5); ctx.lineTo(10,-5); ctx.stroke();
+            ctx.fillStyle = '#00b894'; ctx.beginPath(); ctx.arc(10,-5,3,0,Math.PI*2); ctx.fill();
         }
-
         ctx.restore();
     }
 };
 
-// --- 4. GAME LOGIC CONTROLLER ---
+// --- GAME LOGIC ---
 const Game = {
-    entities: [],
-    particles: [],
     loopId: null,
+    active: false,
+    frame: 0,
+    
+    // Settings
+    difficulty: 'normal',
+    
+    // Stats
+    level: 1,
+    score: 0,
+    bones: 0,
+    distance: 0,
+
+    // Entities
+    player: { y: 0, dy: 0, grounded: true, shield: false, isMega: false, hat: 'none' },
+    obstacles: [],
+    
+    // Shop
+    inventory: ['none'],
+    equipped: 'none',
 
     init() {
-        Draw.init('gameCanvas');
-        this.renderShop();
+        Draw.init(document.getElementById('gameCanvas'));
         
-        // Input Handling (Touch + Mouse Unified)
+        // Input
         const jump = (e) => {
-            if (e.target.tagName === 'BUTTON') return;
-            e.preventDefault();
-            if (State.screen === 'play') this.playerJump();
+            if(e.target.tagName !== 'BUTTON' && this.active) {
+                e.preventDefault();
+                this.playerJump();
+            }
         };
         window.addEventListener('mousedown', jump);
-        window.addEventListener('touchstart', jump, {passive: false});
+        window.addEventListener('touchstart', jump, {passive:false});
     },
 
-    setDifficulty(diff) {
-        State.difficulty = diff;
+    setDiff(mode, el) {
+        this.difficulty = mode;
+        document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
     },
 
     start() {
-        State.screen = 'play';
-        State.level = 1;
-        State.score = 0;
-        State.bones = 0; // Session bones reset on full start
+        document.getElementById('start-screen').classList.remove('active');
+        document.getElementById('hud').style.display = 'block';
+        this.level = 1;
+        this.score = 0;
         this.resetLevel();
-        this.uiSwitch('hud');
-        this.loop();
-    },
-
-    restart() {
-        if (State.difficulty === 'baby') {
-            // Keep score, restart level
-        } else {
-            State.score = 0;
-            State.level = 1;
-        }
-        this.resetLevel();
-        this.uiSwitch('hud');
+        this.active = true;
         this.loop();
     },
 
     nextLevel() {
-        State.level++;
+        document.getElementById('shop-screen').classList.remove('active');
+        document.getElementById('hud').style.display = 'block';
+        this.level++;
         this.resetLevel();
-        this.uiSwitch('hud');
+        this.active = true;
+        this.loop();
+    },
+
+    restart() {
+        document.getElementById('game-over').classList.remove('active');
+        if(this.difficulty !== 'baby') {
+            this.score = 0;
+            this.level = 1;
+        }
+        this.resetLevel();
+        this.active = true;
         this.loop();
     },
 
     home() {
-        State.screen = 'start';
-        this.stopLoop();
-        this.uiSwitch('screen-start');
+        document.getElementById('game-over').classList.remove('active');
+        document.getElementById('start-screen').classList.add('active');
+        document.getElementById('hud').style.display = 'none';
+        this.active = false;
+        if(this.loopId) cancelAnimationFrame(this.loopId);
     },
 
     resetLevel() {
-        State.active = true;
-        State.frame = 0;
-        State.distance = 0;
-        State.player.y = 0;
-        State.player.dy = 0;
-        State.player.grounded = false;
-        State.player.shield = (State.equipped === 'tophat' || State.equipped === 'space');
-        State.player.isMega = false;
-        State.player.streak = 0;
-        
-        // Hat Physics
-        State.player.gravity = (State.equipped === 'space') ? 0.25 : CFG.gravity;
-        State.player.jumpForce = (State.equipped === 'space') ? -8 : CFG.jumpForce;
-
-        this.entities = [];
+        this.frame = 0;
+        this.distance = 0;
         this.spawnTimer = 0;
+        this.obstacles = [];
         
-        // Update HUD immediate
-        document.getElementById('scoreVal').innerText = State.score + " 🦴";
-        document.getElementById('megaBar').style.width = "0%";
+        // Player Reset
+        const p = this.player;
+        p.y = 0; p.dy = 0; p.grounded = true; p.canDouble = false;
+        p.hat = this.equipped;
+        p.shield = (p.hat === 'tophat' || p.hat === 'space');
+        p.isMega = false;
+        p.megaTimer = 0;
+        p.streak = 0;
+        p.magnetTimer = 0;
+        p.sticks = 0;
+
+        // Hat Physics
+        p.gravity = (p.hat === 'space') ? 0.25 : CONSTANTS.GRAVITY;
+        p.jumpForce = (p.hat === 'space') ? -8 : CONSTANTS.JUMP_FORCE;
+
+        this.updateHUD();
     },
 
-    stopLoop() {
-        if (this.loopId) cancelAnimationFrame(this.loopId);
-        State.active = false;
-    },
-
-    // --- MAIN LOOP ---
-    loop() {
-        if (!State.active) return;
-        this.loopId = requestAnimationFrame(() => this.loop());
-        
-        State.frame++;
-        Draw.clear();
-        
-        // Speed calculation
-        const speed = CFG.baseSpeed + (State.level * 0.5) + (State.player.isMega ? 4 : 0);
-        Draw.ground(speed);
-
-        this.updatePlayer();
-        this.updateEntities(speed);
-        this.spawnLogic();
-        
-        Draw.husky(100, Draw.groundY + State.player.y);
-
-        // Level End
-        const maxDist = 2000 + (State.level * 500);
-        State.distance += speed * 0.1;
-        if (State.distance >= maxDist) {
-            this.stopLoop();
-            this.uiSwitch('screen-shop');
-            this.renderShop();
-        }
-    },
-
-    updatePlayer() {
-        const p = State.player;
-        
-        // Mega Logic
-        if (p.megaTimer > 0) {
-            p.megaTimer--;
-            document.getElementById('megaBar').style.width = (p.megaTimer / 600 * 100) + "%";
-            if (p.megaTimer <= 0) p.isMega = false;
-        }
-
-        // Magnet
-        if (p.magnetTimer > 0) p.magnetTimer--;
-
-        // Physics
-        p.dy += p.gravity;
-        p.y += p.dy;
-
-        if (p.y > 0) {
-            p.y = 0;
-            p.dy = 0;
-            p.grounded = true;
-            p.canDouble = false;
-        }
+    updateHUD() {
+        document.getElementById('scoreVal').innerText = this.score;
+        document.getElementById('shieldVal').innerText = this.player.sticks + "/5";
+        document.getElementById('mega-fill').style.width = "0%";
+        document.getElementById('mega-meter').classList.remove('active');
     },
 
     playerJump() {
-        const p = State.player;
-        if (p.grounded) {
+        const p = this.player;
+        if(p.grounded) {
             p.dy = p.jumpForce;
             p.grounded = false;
             p.canDouble = true;
@@ -479,135 +441,218 @@ const Game = {
         }
     },
 
-    spawnLogic() {
-        this.spawnTimer--;
-        if (this.spawnTimer <= 0) {
-            this.spawnTimer = Math.max(30, 100 - (State.level * 5));
-            
-            // Random Spawner
-            const r = Math.random();
-            let type = 'poo';
-            let y = 0; // Relative to ground
+    // --- GAME LOOP ---
+    loop() {
+        if(!this.active) return;
+        this.loopId = requestAnimationFrame(() => this.loop());
+        
+        this.frame++;
+        Draw.clear();
+        
+        // Game Speed
+        const speed = CONSTANTS.BASE_SPEED + (this.level * 0.5) + (this.player.isMega ? 4 : 0);
+        Draw.ground(speed, this.frame);
 
-            if (State.level >= 2 && r > 0.85) { type = 'vacuum'; }
-            else if (State.level >= 2 && r > 0.75) { type = 'cat'; }
-            else if (State.level >= 2 && r > 0.65) { type = 'squirrel'; }
-            else if (r > 0.55) { type = 'hydrant'; }
-            else if (r > 0.45) { type = 'bird'; y = -80; }
-            else if (r > 0.3) { type = 'bone'; y = Math.random() > 0.5 ? -100 : -30; }
-            else if (r > 0.25) { type = 'gold'; y = -30; }
-            else if (r > 0.22) { type = 'magnet'; y = -50; }
-
-            this.entities.push({
-                x: Draw.width + 50,
-                y: y,
-                type: type,
-                w: 30, h: 30,
-                active: true
-            });
+        // Player Physics
+        const p = this.player;
+        
+        if(p.megaTimer > 0) {
+            p.megaTimer--;
+            document.getElementById('mega-fill').style.width = (p.megaTimer/600 * 100) + "%";
+            if(p.megaTimer<=0) { p.isMega=false; p.streak=0; document.getElementById('mega-meter').classList.remove('active'); }
         }
-    },
+        if(p.magnetTimer > 0) p.magnetTimer--;
 
-    updateEntities(speed) {
-        const p = State.player;
-        const hitbox = 30; // forgiving hitbox
+        p.dy += p.gravity;
+        p.y += p.dy;
+        
+        // Floor Collision
+        if(p.y >= 0) {
+            p.y = 0; p.dy = 0; p.grounded = true; p.canDouble = false;
+        }
 
-        this.entities.forEach(e => {
-            if (!e.active) return;
+        // Draw Player
+        const groundY = Draw.height - CONSTANTS.GROUND_Y;
+        Draw.husky(100, groundY + p.y, this.frame, p);
+
+        // Spawn Logic
+        this.spawnTimer--;
+        if(this.spawnTimer <= 0) {
+            this.spawnTimer = Math.max(30, 90 - (this.level * 5));
+            this.spawnObject();
+        }
+
+        // Update Entities
+        for(let i = this.obstacles.length - 1; i >= 0; i--) {
+            let o = this.obstacles[i];
             
-            // Move
+            // Movement speed based on type
             let moveSpeed = speed;
-            if (e.type === 'vacuum') moveSpeed *= 1.2;
-            if (e.type === 'squirrel') moveSpeed *= 1.5;
-            if (e.type === 'cat') moveSpeed = speed; // Static relative to scroll usually implies moving with ground, but here entities move towards player
-            
-            e.x -= moveSpeed;
-            Draw.object({ x: e.x, y: Draw.groundY + e.y, type: e.type });
+            if(o.type === 'vacuum') moveSpeed *= 1.3;
+            if(o.type === 'squirrel') moveSpeed *= 1.5;
+            if(o.type === 'cat') moveSpeed = speed; // Cat sits
 
-            // Magnet Effect
-            if (p.magnetTimer > 0 && (e.type === 'bone' || e.type === 'gold')) {
-                const dx = 100 - e.x;
-                const dy = (p.y) - e.y; // Simplified
-                if (Math.abs(dx) < 300) {
-                    e.x += dx * 0.15;
-                    e.y += dy * 0.15;
+            o.x -= moveSpeed;
+            
+            // Magnet
+            if(p.magnetTimer > 0 && ['bone','gold'].includes(o.type)) {
+                if(Math.abs(100 - o.x) < 300) {
+                    o.x += (100 - o.x) * 0.15;
+                    o.y += (p.y - o.y) * 0.15;
                 }
             }
 
-            // Collision
-            const dx = Math.abs(100 - e.x);
-            const dy = Math.abs((p.y - 15) - e.y); // Center point approx
+            // Draw
+            Draw.obj({ x: o.x, y: groundY + o.y, type: o.type });
 
-            if (dx < hitbox && dy < hitbox) {
-                if (['bone', 'gold', 'magnet'].includes(e.type)) {
-                    // Pickup
-                    e.active = false;
-                    this.collectItem(e.type);
-                } else {
-                    // Hazard
-                    if (p.isMega) {
-                        e.active = false;
+            // Collision
+            const dx = Math.abs(100 - o.x);
+            const dy = Math.abs((p.y - 15) - o.y);
+            const hitDist = 30;
+
+            if(dx < hitDist && dy < hitDist) {
+                // Pickup
+                if(['bone','gold','magnet','stick'].includes(o.type)) {
+                    this.collect(o.type);
+                    this.obstacles.splice(i, 1);
+                } 
+                // Hazard
+                else {
+                    if(p.isMega) {
                         AudioSys.sfx('hit');
+                        this.obstacles.splice(i, 1);
                     } else if (p.shield) {
                         p.shield = false;
-                        e.active = false;
+                        p.sticks = 0;
                         AudioSys.sfx('hit');
                         this.flash('#ff7675');
+                        this.updateHUD();
+                        this.obstacles.splice(i, 1);
                     } else {
-                        this.gameOver(`Hit by ${e.type.toUpperCase()}`);
+                        this.gameOver(o.type);
                     }
                 }
             }
-        });
+            
+            if(o.x < -100) this.obstacles.splice(i, 1);
+        }
+
+        // Level End
+        const maxDist = 2000 + (this.level * 500);
+        this.distance += speed * 0.1;
+        document.getElementById('progress-fill').style.width = (this.distance/maxDist * 100) + "%";
+
+        if(this.distance >= maxDist) {
+            this.active = false;
+            this.openShop();
+        }
     },
 
-    collectItem(type) {
-        if (type === 'magnet') {
-            State.player.magnetTimer = 600;
-            AudioSys.sfx('powerup');
-            return;
-        }
+    spawnObject() {
+        const r = Math.random();
+        let type = 'poo';
+        let y = 0;
 
-        const val = (State.equipped === 'cap') ? 2 : 1;
-        const points = (type === 'gold' ? 5 : 1) * val;
-        
-        State.score += points;
-        State.bones += points;
-        document.getElementById('scoreVal').innerText = State.score + " 🦴";
-        AudioSys.sfx('coin');
+        if(this.level >= 3 && r > 0.9) { type = 'vacuum'; }
+        else if(this.level >= 2 && r > 0.82) { type = 'squirrel'; }
+        else if(this.level >= 2 && r > 0.75) { type = 'cat'; }
+        else if(r > 0.6) { type = 'hydrant'; }
+        else if(r > 0.5) { type = 'bird'; y = -90; }
+        else if(r > 0.3) { type = 'bone'; y = Math.random()>0.5 ? -100 : -30; }
+        else if(r > 0.25) { type = 'gold'; y = -30; }
+        else if(r > 0.22) { type = 'stick'; y = -30; }
+        else if(r > 0.20) { type = 'magnet'; y = -50; }
 
-        // Mega Progress
-        const target = (State.equipped === 'cowboy') ? 25 : 50;
-        State.player.streak += (type === 'gold' ? 5 : 1);
-        
-        if (!State.player.isMega) {
-            const pct = Math.min(100, (State.player.streak / target) * 100);
-            document.getElementById('megaBar').style.width = pct + "%";
-            if (State.player.streak >= target) {
-                State.player.isMega = true;
-                State.player.megaTimer = 600;
-                AudioSys.sfx('powerup');
+        this.obstacles.push({ x: Draw.width + 50, y, type });
+    },
+
+    collect(type) {
+        if(type === 'stick') {
+            if(this.difficulty === 'death') return;
+            this.player.sticks++;
+            if(this.player.sticks >= 5) {
+                this.player.sticks = 0;
+                this.player.shield = true;
+                this.flash('#00fbff');
+                AudioSys.sfx('power');
+            }
+        } else if (type === 'magnet') {
+            this.player.magnetTimer = 600;
+            AudioSys.sfx('power');
+        } else {
+            // Bones
+            const mult = (this.player.hat === 'cap') ? 2 : 1;
+            const pts = (type === 'gold' ? 5 : 1) * mult;
+            this.score += pts;
+            this.bones += pts;
+            AudioSys.sfx('coin');
+            
+            // Mega
+            const target = (this.player.hat === 'cowboy') ? 25 : 50;
+            this.player.streak += (type==='gold'?5:1);
+            if(!this.player.isMega) {
+                document.getElementById('mega-fill').style.width = (this.player.streak/target * 100) + "%";
+                if(this.player.streak >= target) {
+                    this.player.isMega = true;
+                    this.player.megaTimer = 600;
+                    document.getElementById('mega-meter').classList.add('active');
+                    AudioSys.sfx('power');
+                }
             }
         }
+        this.updateHUD();
     },
 
     gameOver(reason) {
-        this.stopLoop();
+        this.active = false;
         AudioSys.sfx('hit');
-        document.getElementById('deathReason').innerText = reason;
-        document.getElementById('finalScore').innerText = State.score;
-        this.uiSwitch('screen-gameover');
+        document.getElementById('death-msg').innerText = "Hit by " + reason.toUpperCase();
+        document.getElementById('final-score').innerText = this.score;
+        document.getElementById('hud').style.display = 'none';
+        document.getElementById('game-over').classList.add('active');
     },
 
-    // --- UI HELPERS ---
-    uiSwitch(id) {
-        document.querySelectorAll('.ui-layer').forEach(el => el.classList.remove('active'));
-        if(id === 'hud') {
-            document.getElementById('hud').style.opacity = 1;
-        } else {
-            document.getElementById('hud').style.opacity = 0;
-            document.getElementById(id).classList.add('active');
-        }
+    // --- SHOP LOGIC ---
+    openShop() {
+        document.getElementById('hud').style.display = 'none';
+        document.getElementById('shop-screen').classList.add('active');
+        this.renderShop();
+    },
+
+    renderShop() {
+        const grid = document.getElementById('shop-grid');
+        document.getElementById('shop-bank').innerText = this.bones;
+        grid.innerHTML = '';
+
+        Object.values(HATS).forEach(hat => {
+            const owned = this.inventory.includes(hat.id);
+            const equipped = this.equipped === hat.id;
+            const afford = this.bones >= hat.cost;
+
+            const el = document.createElement('div');
+            el.className = `shop-item ${owned?'owned':''} ${equipped?'equipped':''} ${(!owned && !afford)?'locked':''}`;
+            el.innerHTML = `
+                <div style="font-weight:900">${hat.name}</div>
+                <div style="font-size:10px; margin:5px 0;">${hat.perk}</div>
+                <div style="font-weight:bold; color:${owned?'#00b894':'#d63031'}">${owned ? (equipped?'EQUIPPED':'OWNED') : hat.cost+' 🦴'}</div>
+            `;
+            el.onclick = () => {
+                if(equipped) return;
+                if(owned) {
+                    this.equipped = hat.id;
+                    AudioSys.sfx('coin');
+                } else if(afford) {
+                    this.bones -= hat.cost;
+                    this.inventory.push(hat.id);
+                    this.equipped = hat.id;
+                    AudioSys.sfx('power');
+                } else {
+                    AudioSys.sfx('hit');
+                }
+                this.renderShop();
+            };
+            grid.appendChild(el);
+        });
     },
 
     flash(color) {
@@ -615,40 +660,6 @@ const Game = {
         f.style.background = color;
         f.style.opacity = 0.5;
         setTimeout(() => f.style.opacity = 0, 100);
-    },
-
-    renderShop() {
-        const grid = document.getElementById('shop-container');
-        document.getElementById('shopBank').innerText = State.bones;
-        grid.innerHTML = '';
-
-        Object.values(HATS).forEach(hat => {
-            const owned = State.inventory.includes(hat.id);
-            const equipped = State.equipped === hat.id;
-            const afford = State.bones >= hat.cost;
-
-            const div = document.createElement('div');
-            div.className = `shop-item ${owned?'owned':''} ${equipped?'equipped':''} ${(!owned && !afford)?'locked':''}`;
-            div.innerHTML = `
-                <div style="font-weight:900">${hat.name}</div>
-                <div style="font-size:10px; margin:5px 0;">${hat.perk}</div>
-                <div style="font-weight:bold; color:${owned?'#00b894':'#d63031'}">${owned ? (equipped?'EQUIPPED':'OWNED') : hat.cost+' 🦴'}</div>
-            `;
-            div.onclick = () => {
-                if(equipped) return;
-                if(owned) {
-                    State.equipped = hat.id;
-                    AudioSys.sfx('coin');
-                } else if (afford) {
-                    State.bones -= hat.cost;
-                    State.inventory.push(hat.id);
-                    State.equipped = hat.id;
-                    AudioSys.sfx('powerup');
-                }
-                this.renderShop();
-            };
-            grid.appendChild(div);
-        });
     }
 };
 
