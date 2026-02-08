@@ -66,10 +66,9 @@ let frame = 0;
 let score = 0; 
 let levelStartScore = 0;
 
-// --- SPEED SETTINGS (UPDATED) ---
-// Default (Normal)
-let speed = 6; 
-let baseSpeed = 6;
+// --- GLOBAL DEFAULT SPEED ---
+let speed = 2;     // Default (Normal)
+let baseSpeed = 2; // Default (Normal)
 
 let groundY = 0; 
 let shakeAmount = 0;
@@ -144,16 +143,16 @@ function setDifficulty(mode) {
     document.getElementById('diff-'+mode).classList.add('selected');
     let label = "DIFFICULTY: BRING 'EM ON";
     
-    // --- UPDATE SPEED LOGIC HERE ---
+    // --- UPDATED SPEED LOGIC ---
     if(mode === 'baby') { 
         label = "DIFFICULTY: CAN I PLAY, DADDY?";
-        baseSpeed = 3;  // Slower
+        baseSpeed = 1; // Baby
     } else if(mode === 'death') {
         label = "DIFFICULTY: DEATH INCARNATE";
-        baseSpeed = 9;  // Faster
+        baseSpeed = 3; // Death
     } else {
         // Normal
-        baseSpeed = 6;  // Normal
+        baseSpeed = 2; // Bring 'em on
     }
     
     // Force update speed now
@@ -180,9 +179,9 @@ function resetLevelState() {
     obstacles=[]; sticks=[]; bones=[]; floatTexts=[]; 
     
     // --- ENSURE CORRECT SPEED ON RESET ---
-    if (difficulty === 'baby') baseSpeed = 3;
-    else if (difficulty === 'death') baseSpeed = 9;
-    else baseSpeed = 6;
+    if (difficulty === 'baby') baseSpeed = 1;
+    else if (difficulty === 'death') baseSpeed = 3;
+    else baseSpeed = 2; // Normal
     speed = baseSpeed;
     
     levelDistance=0; levelFinished=false; levelVictoryAnim=false; finishLine=null; isDead = false;
@@ -424,11 +423,9 @@ function loop() {
                 let r = Math.random(); 
                 let obj = {x: canvas.width, type: 'poo', stack: 1, y: groundY};
                 
-                // --- FIXED SPAWN LOGIC (Distance based on pixels, not frames) ---
-                // We want a gap of roughly 400-500 pixels regardless of speed.
-                // Frames to wait = Desired_Pixels / Speed
-                
-                let basePixels = 400; // Minimum gap
+                // --- ROBUST SPAWN LOGIC (Distance based) ---
+                // basePixels / speed ensure the gap on screen is always same size
+                let basePixels = 400; 
                 let cooldownSet = basePixels / speed;
                 
                 if(currentLevel >= 3 && r > 0.92) { obj.type = 'pond'; cooldownSet = (basePixels + 100) / speed; } 
