@@ -160,10 +160,15 @@ function resetLevelState() {
     levelDistance=0; levelFinished=false; levelVictoryAnim=false; finishLine=null; isDead = false;
     globalSpawnCooldown = 0;
     
+    // MEGA MODE RESET FIX (Always reset streak on death/restart)
+    pepper.streak = 0;
+    pepper.isMega = false;
+    pepper.megaTimer = 0;
+    
     levelInd.innerText = "LEVEL " + currentLevel; 
     
     pepper.y = groundY; pepper.dy=0; pepper.grounded=true; 
-    pepper.isMega = false; pepper.megaTimer = 0; pepper.magnetTimer = 0; pepper.spinTimer = 0;
+    pepper.magnetTimer = 0; pepper.spinTimer = 0;
     pepper.rotation = 0; pepper.x = 100;
     magnetCooldown = 0; 
     
@@ -206,6 +211,7 @@ function goHome() {
     uiLayer.style.display = 'none'; menuContent.style.display = 'none'; menuOpen = false; menuBtn.innerText = "☰";
     startScreen.style.display = 'flex'; gameOverScreen.style.display = 'none'; howToScreen.style.display = 'none'; shopScreen.style.display = 'none';
     resetGameLogic(); pepper.y = groundY; pepper.dy = 0; zoomLevel = 3.5;
+    renderStartScreenDog(); // Redraw start screen dog
 }
 
 // --- SHOP ---
@@ -264,6 +270,15 @@ function renderDiffPreviews() {
         let cvs = document.getElementById('cvs-'+mode);
         let c = cvs.getContext('2d'); c.clearRect(0,0,100,100); drawHeadPreview(c, 50, 50, mode);
     });
+}
+
+function renderStartScreenDog() {
+    let cvs = document.getElementById('start-dog-canvas');
+    if(cvs) {
+        let c = cvs.getContext('2d');
+        c.clearRect(0,0,200,150);
+        drawFrontFacingHusky(c, 100, 50);
+    }
 }
 
 function closeModal() { infoModal.style.display = 'none'; isPaused = false; startMusic(currentLevel, difficulty, pepper); }
@@ -500,5 +515,10 @@ function handleInput() {
 window.addEventListener('touchstart', (e) => { if(e.target.className.includes('btn') || e.target.className.includes('menu') || menuOpen || e.target.closest('.diff-card') || e.target.closest('.shop-item')) return; if(e.target !== menuBtn) { e.preventDefault(); handleInput(); } }, {passive: false});
 window.addEventListener('mousedown', (e) => { if(e.target.className.includes('btn') || e.target.className.includes('menu') || menuOpen || e.target.closest('.diff-card') || e.target.closest('.shop-item')) return; if(e.target !== menuBtn) handleInput(); });
 
+// Fix for Content Security Policy (Difficulty Buttons)
+document.getElementById('diff-baby').addEventListener('click', () => setDifficulty('baby'));
+document.getElementById('diff-normal').addEventListener('click', () => setDifficulty('normal'));
+document.getElementById('diff-death').addEventListener('click', () => setDifficulty('death'));
+
 // Start
-resize(); resetGameLogic(); renderDiffPreviews(); drawStickIcon(); requestAnimationFrame(loop);
+resize(); resetGameLogic(); renderDiffPreviews(); drawStickIcon(); renderStartScreenDog(); requestAnimationFrame(loop);
