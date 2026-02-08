@@ -222,3 +222,5 @@ function getSkyColor(levelDistance, levelMaxDistance, currentLevel) {
         ground: lerpColor(s.ground, e.ground, t) 
     };
 }
+
+// END OF FILE - renderer.js
