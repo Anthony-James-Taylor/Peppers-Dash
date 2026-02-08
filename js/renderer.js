@@ -1,11 +1,10 @@
 // --- VISUAL RENDERING ---
 
-// Helper to draw the Husky
+// Helper to draw the In-Game Husky (Side View)
 function drawHusky(ctx, x, y, isMega, hasShield, pepper, difficulty, frame) {
     ctx.save(); ctx.translate(x, y);
     let s = isMega ? 1.4 : 1; ctx.scale(s, s);
     
-    // Spin Logic
     if(pepper.spinTimer > 0) {
         pepper.spinTimer--;
         let angle = (pepper.spinTimer / 20) * Math.PI * 2;
@@ -16,19 +15,19 @@ function drawHusky(ctx, x, y, isMega, hasShield, pepper, difficulty, frame) {
     if(difficulty === 'death') { bodyC = "#2d3436"; eyeC = "red"; }
     if(isMega) { let hue = (Date.now() / 5) % 360; bodyC = `hsl(${hue}, 80%, 40%)`; white = `hsl(${(hue+180)%360}, 90%, 80%)`; }
 
-    // Internal Hat Drawing Function
-    function drawHat(ctx) {
+    // Internal Hat Helper
+    function drawHat(ctx, isSide=true) {
         ctx.save(); 
         if(pepper.hat === 'cowboy') { 
-            ctx.translate(5, -28); 
+            ctx.translate(isSide ? 5 : 0, -28); 
             ctx.fillStyle = "#8B4513"; ctx.beginPath(); ctx.ellipse(0, 0, 20, 5, 0, 0, Math.PI*2); ctx.fill(); ctx.fillRect(-10, -15, 20, 15); 
         } 
         else if (pepper.hat === 'tophat') { 
-            ctx.translate(5, -28); 
+            ctx.translate(isSide ? 5 : 0, -28); 
             ctx.fillStyle = "#2d3436"; ctx.fillRect(-12, -25, 24, 25); ctx.fillRect(-18, 0, 36, 4); ctx.fillStyle = "red"; ctx.fillRect(-12, -5, 24, 4); 
         } 
         else if (pepper.hat === 'cap') { 
-            ctx.translate(2, -25); 
+            ctx.translate(isSide ? 2 : 0, -25); 
             ctx.fillStyle = "#d63031"; ctx.beginPath(); ctx.arc(0, 0, 13, Math.PI, 0); ctx.fill(); ctx.fillRect(-12, 0, 24, 3); ctx.fillRect(10, 0, 12, 4); 
         }
         ctx.restore();
@@ -36,7 +35,6 @@ function drawHusky(ctx, x, y, isMega, hasShield, pepper, difficulty, frame) {
 
     pepper.runFrame = (pepper.runFrame || 0) + 0.3; 
     
-    // Rotation logic based on jumps
     if(!pepper.grounded && pepper.canDoubleJump) { ctx.rotate(pepper.dy * 0.04); } 
     else if (!pepper.grounded && !pepper.canDoubleJump) { pepper.rotation += 0.3; ctx.rotate(pepper.rotation); } 
     else { pepper.rotation = 0; }
@@ -53,16 +51,11 @@ function drawHusky(ctx, x, y, isMega, hasShield, pepper, difficulty, frame) {
         ctx.restore(); 
     }
     
-    // Magnet Visual
     if(pepper.magnetTimer > 0) { 
         ctx.save(); ctx.translate(0, -40); 
         let wave = (frame % 30) / 30;
         ctx.strokeStyle = `rgba(231, 76, 60, ${1-wave})`; ctx.lineWidth=2;
         ctx.beginPath(); ctx.arc(0,0, 20 + wave*30, 0, Math.PI*2); ctx.stroke();
-        ctx.scale(0.6, 0.6);
-        ctx.fillStyle = "#e74c3c"; ctx.strokeStyle = "#bdc3c7"; ctx.lineWidth = 4;
-        ctx.beginPath(); ctx.arc(0, -5, 12, Math.PI, 0); ctx.lineTo(12, 10); ctx.lineTo(5, 10); ctx.lineTo(5, -5); ctx.arc(0, -5, 5, 0, Math.PI, true); ctx.lineTo(-5, 10); ctx.lineTo(-12, 10); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = "#bdc3c7"; ctx.fillRect(-12, 5, 7, 5); ctx.fillRect(5, 5, 7, 5);
         ctx.restore(); 
     }
 
@@ -88,9 +81,79 @@ function drawHusky(ctx, x, y, isMega, hasShield, pepper, difficulty, frame) {
     else if (difficulty === 'baby') { ctx.fillStyle = "white"; ctx.beginPath(); ctx.ellipse(6, -4, 5, 8, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = eyeC; ctx.beginPath(); ctx.ellipse(8, -2, 2.5, 4, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(8.5, -3, 1, 0, Math.PI*2); ctx.fill(); }
     else { /* Death Mode Eyes */ ctx.fillStyle = "white"; ctx.beginPath(); ctx.ellipse(6, -4, 5, 8, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = eyeC; ctx.beginPath(); ctx.ellipse(8, -2, 2.5, 4, 0, 0, Math.PI*2); ctx.fill(); }
 
-    drawHat(ctx); 
+    drawHat(ctx, true); 
     if(difficulty === 'baby') { ctx.strokeStyle = "pink"; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(-2, -5, 14, Math.PI, 0); ctx.stroke(); ctx.fillStyle = "#FFD700"; ctx.beginPath(); ctx.arc(14, 8, 4, 0, Math.PI*2); ctx.fill(); } 
     ctx.restore(); ctx.restore();
+}
+
+// Side Profile Head for Difficulty Cards (Matching Game Sprite)
+function drawHeadPreview(c, x, y, mode) {
+    c.save(); c.translate(x, y); c.scale(1.2, 1.2);
+    let bodyC = (mode==='death') ? "#2d3436" : "#1a1a1a";
+    let eyeC = (mode==='death') ? "red" : "#00fbff";
+    
+    // Side profile shape
+    c.fillStyle = bodyC; c.beginPath(); c.arc(0, 0, 16, 0, Math.PI*2); c.fill(); // Head
+    c.fillStyle = "white"; c.beginPath(); c.moveTo(5, -8); c.lineTo(18, 2); c.lineTo(12, 12); c.lineTo(0, 10); c.lineTo(-5, 0); c.fill(); // Muzzle
+    c.fillStyle = "black"; c.beginPath(); c.arc(18, 1, 3.5, 0, Math.PI*2); c.fill(); // Nose
+
+    // Ear
+    c.fillStyle = bodyC; c.beginPath(); c.moveTo(-5, -5); c.lineTo(-8, -22); c.lineTo(2, -12); c.fill();
+    c.fillStyle = "pink"; c.beginPath(); c.moveTo(-4, -6); c.lineTo(-7, -18); c.lineTo(0, -10); c.fill();
+
+    // Eyes
+    if(mode === 'normal') { drawAviators(c, 0, 0); }
+    else if(mode === 'baby') {
+        c.fillStyle = "white"; c.beginPath(); c.ellipse(6, -4, 5, 8, 0, 0, Math.PI*2); c.fill(); 
+        c.fillStyle = eyeC; c.beginPath(); c.ellipse(8, -2, 2.5, 4, 0, 0, Math.PI*2); c.fill(); 
+        c.fillStyle = "white"; c.beginPath(); c.arc(8.5, -3, 1, 0, Math.PI*2); c.fill();
+        // Bonnet
+        c.strokeStyle = "pink"; c.lineWidth = 3; c.beginPath(); c.arc(-2, -5, 14, Math.PI, 0); c.stroke(); 
+        c.fillStyle = "#FFD700"; c.beginPath(); c.arc(0, 12, 4, 0, Math.PI*2); c.fill(); // Pacifier hint
+    } else {
+        c.fillStyle = "white"; c.beginPath(); c.ellipse(6, -4, 5, 8, 0, 0, Math.PI*2); c.fill(); 
+        c.fillStyle = eyeC; c.beginPath(); c.ellipse(8, -2, 2.5, 4, 0, 0, Math.PI*2); c.fill();
+    }
+    c.restore();
+}
+
+// CUTE BIG FRONT FACING DOG (For Start Screen)
+function drawFrontFacingHusky(ctx, x, y) {
+    ctx.save(); ctx.translate(x, y);
+    // Body
+    ctx.fillStyle = "#1a1a1a"; ctx.beginPath(); ctx.ellipse(0, 40, 35, 30, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "white"; ctx.beginPath(); ctx.ellipse(0, 40, 20, 25, 0, 0, Math.PI*2); ctx.fill();
+    
+    // Feet
+    ctx.fillStyle = "white"; 
+    ctx.beginPath(); ctx.arc(-20, 65, 10, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(20, 65, 10, 0, Math.PI*2); ctx.fill();
+
+    // Head
+    ctx.fillStyle = "#1a1a1a"; ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(0, 10, 28, 0, Math.PI*2); ctx.fill();
+
+    // Ears
+    ctx.fillStyle = "#1a1a1a"; ctx.beginPath(); ctx.moveTo(-25, -20); ctx.lineTo(-35, -55); ctx.lineTo(-5, -30); ctx.fill();
+    ctx.fillStyle = "#1a1a1a"; ctx.beginPath(); ctx.moveTo(25, -20); ctx.lineTo(35, -55); ctx.lineTo(5, -30); ctx.fill();
+    ctx.fillStyle = "pink"; ctx.beginPath(); ctx.moveTo(-23, -25); ctx.lineTo(-32, -48); ctx.lineTo(-10, -32); ctx.fill();
+    ctx.fillStyle = "pink"; ctx.beginPath(); ctx.moveTo(23, -25); ctx.lineTo(32, -48); ctx.lineTo(10, -32); ctx.fill();
+
+    // Face
+    ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(0, 5, 6, 0, Math.PI*2); ctx.fill(); // Nose
+    ctx.fillStyle = "#00fbff"; ctx.beginPath(); ctx.arc(-12, -8, 7, 0, Math.PI*2); ctx.fill(); // Left Eye
+    ctx.fillStyle = "#00fbff"; ctx.beginPath(); ctx.arc(12, -8, 7, 0, Math.PI*2); ctx.fill(); // Right Eye
+    ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(-14, -10, 2, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(10, -10, 2, 0, Math.PI*2); ctx.fill();
+    
+    // Aviators (Front Facing)
+    ctx.save(); ctx.translate(0, -8);
+    ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(2, -2); ctx.bezierCurveTo(15, -2, 25, 10, 10, 15); ctx.bezierCurveTo(2, 15, 2, -2, 2, -2); ctx.fill(); ctx.stroke(); // Right Lens
+    ctx.beginPath(); ctx.moveTo(-2, -2); ctx.bezierCurveTo(-15, -2, -25, 10, -10, 15); ctx.bezierCurveTo(-2, 15, -2, -2, -2, -2); ctx.fill(); ctx.stroke(); // Left Lens
+    ctx.beginPath(); ctx.moveTo(-2, -2); ctx.lineTo(2, -2); ctx.stroke(); // Bridge
+    ctx.restore();
+    ctx.restore();
 }
 
 function drawStick(ctx, x, y, frame=0) { 
@@ -168,6 +231,7 @@ function drawFlies(ctx, x, y, frame) {
 }
 
 function drawHeadPreview(c, x, y, mode) {
+    // Legacy function, kept for safety, but logic moved to side profile version above
     c.save(); c.translate(x, y); 
     let bodyC = (mode==='death') ? "#2d3436" : "#1a1a1a";
     let eyeC = (mode==='death') ? "red" : "#00fbff";
@@ -179,8 +243,6 @@ function drawHeadPreview(c, x, y, mode) {
     c.fillStyle = eyeC; c.beginPath(); c.arc(-10, -5, 6, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(10, -5, 6, 0, Math.PI*2); c.fill(); 
     c.fillStyle = "white"; c.beginPath(); c.arc(-12, -7, 2, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(8, -7, 2, 0, Math.PI*2); c.fill();
     if(mode === 'normal') { drawAviators(c, 0, 0); }
-    if(mode === 'baby') { c.strokeStyle = "pink"; c.lineWidth = 6; c.beginPath(); c.arc(0, -5, 32, Math.PI, 0); c.stroke(); c.fillStyle = "#FFD700"; c.beginPath(); c.arc(0, 18, 6, 0, Math.PI*2); c.fill(); } 
-    else { c.strokeStyle = "black"; c.lineWidth = 2; c.beginPath(); c.arc(0, 12, 10, 0, Math.PI); c.stroke(); }
     c.restore();
 }
 
@@ -222,5 +284,4 @@ function getSkyColor(levelDistance, levelMaxDistance, currentLevel) {
         ground: lerpColor(s.ground, e.ground, t) 
     };
 }
-
 // END OF FILE - renderer.js
