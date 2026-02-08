@@ -50,10 +50,10 @@ const shopContainer = document.getElementById('shop-container');
 const shopBalance = document.getElementById('shop-balance');
 const shopTextBox = document.getElementById('shop-text-box');
 
-// Game Constants
-const GRAVITY = 1.1; 
-const JUMP_FORCE = -19; 
-const DOUBLE_JUMP_FORCE = -15; 
+// --- TUNED CONSTANTS (FASTER & SNAPPIER) ---
+const GRAVITY = 1.6;  // Was 1.1 (Less floaty)
+const JUMP_FORCE = -22; // Was -19 (Higher jump to match gravity)
+const DOUBLE_JUMP_FORCE = -17; 
 const GROUND_H = 140; 
 
 // Game State
@@ -65,8 +65,8 @@ let levelVictoryAnim = false;
 let frame = 0;
 let score = 0; 
 let levelStartScore = 0;
-let speed = 9;
-let baseSpeed = 9;
+let speed = 13; // Was 9 (Much faster base speed)
+let baseSpeed = 13;
 let groundY = 0; 
 let shakeAmount = 0;
 let zoomLevel = 3.5; 
@@ -145,7 +145,10 @@ function setDifficulty(mode) {
     if(mode === 'death') megaText.innerText = "NO MEGA MODE!";
     else megaText.innerText = "COLLECT 50 🦴";
     
-    // REMOVED THE BUGGY LINE HERE (requestAnimationFrame) to stop speed glitch
+    // Refresh start screen rendering when difficulty changes
+    if(!gameActive) {
+        requestAnimationFrame(loop);
+    }
 }
 
 function resetGameLogic() {
@@ -158,7 +161,9 @@ function resetGameLogic() {
 
 function resetLevelState() {
     obstacles=[]; sticks=[]; bones=[]; floatTexts=[]; 
-    baseSpeed = (difficulty === 'death') ? 11 : 9; speed = baseSpeed;
+    // INCREASED SPEEDS FOR MODES
+    baseSpeed = (difficulty === 'death') ? 16 : 13; speed = baseSpeed;
+    
     levelDistance=0; levelFinished=false; levelVictoryAnim=false; finishLine=null; isDead = false;
     globalSpawnCooldown = 0;
     
