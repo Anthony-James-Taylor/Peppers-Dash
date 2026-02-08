@@ -50,10 +50,10 @@ const shopContainer = document.getElementById('shop-container');
 const shopBalance = document.getElementById('shop-balance');
 const shopTextBox = document.getElementById('shop-text-box');
 
-// --- TUNED CONSTANTS (FASTER & SNAPPIER) ---
-const GRAVITY = 1.6;  // Was 1.1 (Less floaty)
-const JUMP_FORCE = -22; // Was -19 (Higher jump to match gravity)
-const DOUBLE_JUMP_FORCE = -17; 
+// --- RESTORED ORIGINAL CONSTANTS ---
+const GRAVITY = 1.1; 
+const JUMP_FORCE = -19; 
+const DOUBLE_JUMP_FORCE = -15; 
 const GROUND_H = 140; 
 
 // Game State
@@ -65,8 +65,8 @@ let levelVictoryAnim = false;
 let frame = 0;
 let score = 0; 
 let levelStartScore = 0;
-let speed = 13; // Was 9 (Much faster base speed)
-let baseSpeed = 13;
+let speed = 9; // Back to original speed
+let baseSpeed = 9;
 let groundY = 0; 
 let shakeAmount = 0;
 let zoomLevel = 3.5; 
@@ -161,8 +161,10 @@ function resetGameLogic() {
 
 function resetLevelState() {
     obstacles=[]; sticks=[]; bones=[]; floatTexts=[]; 
-    // INCREASED SPEEDS FOR MODES
-    baseSpeed = (difficulty === 'death') ? 16 : 13; speed = baseSpeed;
+    
+    // RESTORED ORIGINAL SPEED LOGIC
+    baseSpeed = (difficulty === 'death') ? 11 : 9; 
+    speed = baseSpeed;
     
     levelDistance=0; levelFinished=false; levelVictoryAnim=false; finishLine=null; isDead = false;
     globalSpawnCooldown = 0;
