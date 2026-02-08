@@ -50,7 +50,7 @@ const shopContainer = document.getElementById('shop-container');
 const shopBalance = document.getElementById('shop-balance');
 const shopTextBox = document.getElementById('shop-text-box');
 
-// --- RESTORED ORIGINAL CONSTANTS ---
+// --- ORIGINAL PHYSICS (FLOATY FEEL) ---
 const GRAVITY = 1.1; 
 const JUMP_FORCE = -19; 
 const DOUBLE_JUMP_FORCE = -15; 
@@ -65,8 +65,8 @@ let levelVictoryAnim = false;
 let frame = 0;
 let score = 0; 
 let levelStartScore = 0;
-let speed = 9; // Back to original speed
-let baseSpeed = 9;
+let speed = 7; // Default Normal Speed
+let baseSpeed = 7;
 let groundY = 0; 
 let shakeAmount = 0;
 let zoomLevel = 3.5; 
@@ -145,10 +145,7 @@ function setDifficulty(mode) {
     if(mode === 'death') megaText.innerText = "NO MEGA MODE!";
     else megaText.innerText = "COLLECT 50 🦴";
     
-    // Refresh start screen rendering when difficulty changes
-    if(!gameActive) {
-        requestAnimationFrame(loop);
-    }
+    // Note: No extra loop call here to prevent speed glitch
 }
 
 function resetGameLogic() {
@@ -162,8 +159,11 @@ function resetGameLogic() {
 function resetLevelState() {
     obstacles=[]; sticks=[]; bones=[]; floatTexts=[]; 
     
-    // RESTORED ORIGINAL SPEED LOGIC
-    baseSpeed = (difficulty === 'death') ? 11 : 9; 
+    // --- EXACT SPEEDS REQUESTED ---
+    if (difficulty === 'baby') baseSpeed = 5;
+    else if (difficulty === 'death') baseSpeed = 9;
+    else baseSpeed = 7; // Normal (Bring 'em On)
+    
     speed = baseSpeed;
     
     levelDistance=0; levelFinished=false; levelVictoryAnim=false; finishLine=null; isDead = false;
