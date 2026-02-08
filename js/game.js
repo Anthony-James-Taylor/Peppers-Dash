@@ -211,7 +211,6 @@ function goHome() {
     uiLayer.style.display = 'none'; menuContent.style.display = 'none'; menuOpen = false; menuBtn.innerText = "☰";
     startScreen.style.display = 'flex'; gameOverScreen.style.display = 'none'; howToScreen.style.display = 'none'; shopScreen.style.display = 'none';
     resetGameLogic(); pepper.y = groundY; pepper.dy = 0; zoomLevel = 3.5;
-    renderStartScreenDog(); // Redraw start screen dog
 }
 
 // --- SHOP ---
@@ -270,15 +269,6 @@ function renderDiffPreviews() {
         let cvs = document.getElementById('cvs-'+mode);
         let c = cvs.getContext('2d'); c.clearRect(0,0,100,100); drawHeadPreview(c, 50, 50, mode);
     });
-}
-
-function renderStartScreenDog() {
-    let cvs = document.getElementById('start-dog-canvas');
-    if(cvs) {
-        let c = cvs.getContext('2d');
-        c.clearRect(0,0,200,150);
-        drawFrontFacingHusky(c, 100, 50);
-    }
 }
 
 function closeModal() { infoModal.style.display = 'none'; isPaused = false; startMusic(currentLevel, difficulty, pepper); }
@@ -380,12 +370,16 @@ function loop() {
         if(pepper.y >= groundY) { pepper.y=groundY; pepper.dy=0; pepper.grounded=true; pepper.canDoubleJump = false; } 
     } else if (!gameActive && !isCountingDown && !levelVictoryAnim) { pepper.y = groundY; }
 
-    let drawX = levelVictoryAnim ? pepper.x : 150; if(!gameActive && !isCountingDown) drawX = 150; 
-    
     // RENDER CHARACTER
-    drawHusky(ctx, drawX, pepper.y, pepper.isMega, pepper.hasShield, pepper, difficulty, frame);
-    
-    if(!gameActive && !isCountingDown && !levelVictoryAnim) { drawSteamDooDoo(ctx, canvas.width * 0.75, groundY-15, frame); }
+    if(!gameActive && !isCountingDown && !levelVictoryAnim) {
+        // DRAW START SCREEN DOG (Big & Front Facing)
+        drawFrontFacingHusky(ctx, 150, groundY - 20, 2.0); // Scale 2.0x, Positioned at start
+        drawSteamDooDoo(ctx, canvas.width * 0.75, groundY-15, frame); 
+    } else {
+        // DRAW IN-GAME DOG (Normal Runner)
+        let drawX = levelVictoryAnim ? pepper.x : 150; 
+        drawHusky(ctx, drawX, pepper.y, pepper.isMega, pepper.hasShield, pepper, difficulty, frame);
+    }
 
     if(finishLine && !isDead) {
         finishLine.x -= speed;
@@ -521,4 +515,4 @@ document.getElementById('diff-normal').addEventListener('click', () => setDiffic
 document.getElementById('diff-death').addEventListener('click', () => setDifficulty('death'));
 
 // Start
-resize(); resetGameLogic(); renderDiffPreviews(); drawStickIcon(); renderStartScreenDog(); requestAnimationFrame(loop);
+resize(); resetGameLogic(); renderDiffPreviews(); drawStickIcon(); requestAnimationFrame(loop);
