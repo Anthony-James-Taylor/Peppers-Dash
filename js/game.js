@@ -50,7 +50,7 @@ const shopContainer = document.getElementById('shop-container');
 const shopBalance = document.getElementById('shop-balance');
 const shopTextBox = document.getElementById('shop-text-box');
 
-// --- ORIGINAL PHYSICS (FLOATY FEEL) ---
+// --- ORIGINAL PHYSICS ---
 const GRAVITY = 1.1; 
 const JUMP_FORCE = -19; 
 const DOUBLE_JUMP_FORCE = -15; 
@@ -65,7 +65,7 @@ let levelVictoryAnim = false;
 let frame = 0;
 let score = 0; 
 let levelStartScore = 0;
-let speed = 7; // Default Normal Speed
+let speed = 7; 
 let baseSpeed = 7;
 let groundY = 0; 
 let shakeAmount = 0;
@@ -139,13 +139,28 @@ function setDifficulty(mode) {
     document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
     document.getElementById('diff-'+mode).classList.add('selected');
     let label = "DIFFICULTY: BRING 'EM ON";
-    if(mode === 'baby') label = "DIFFICULTY: CAN I PLAY, DADDY?";
-    if(mode === 'death') label = "DIFFICULTY: DEATH INCARNATE";
+    
+    // APPLY SPEED IMMEDIATELY
+    if(mode === 'baby') { 
+        label = "DIFFICULTY: CAN I PLAY, DADDY?";
+        baseSpeed = 5;
+    } else if(mode === 'death') {
+        label = "DIFFICULTY: DEATH INCARNATE";
+        baseSpeed = 9;
+    } else {
+        baseSpeed = 7; // Normal
+    }
+    
+    // Force update speed now
+    speed = baseSpeed;
+
     startDiffBtn.innerText = label;
     if(mode === 'death') megaText.innerText = "NO MEGA MODE!";
     else megaText.innerText = "COLLECT 50 🦴";
     
-    // Note: No extra loop call here to prevent speed glitch
+    if(!gameActive) {
+        requestAnimationFrame(loop);
+    }
 }
 
 function resetGameLogic() {
@@ -159,17 +174,15 @@ function resetGameLogic() {
 function resetLevelState() {
     obstacles=[]; sticks=[]; bones=[]; floatTexts=[]; 
     
-    // --- EXACT SPEEDS REQUESTED ---
+    // Safety check to ensure speed is correct on reset
     if (difficulty === 'baby') baseSpeed = 5;
     else if (difficulty === 'death') baseSpeed = 9;
-    else baseSpeed = 7; // Normal (Bring 'em On)
-    
+    else baseSpeed = 7;
     speed = baseSpeed;
     
     levelDistance=0; levelFinished=false; levelVictoryAnim=false; finishLine=null; isDead = false;
     globalSpawnCooldown = 0;
     
-    // MEGA MODE RESET FIX (Always reset streak on death/restart)
     pepper.streak = 0;
     pepper.isMega = false;
     pepper.megaTimer = 0;
