@@ -65,9 +65,12 @@ let levelVictoryAnim = false;
 let frame = 0;
 let score = 0; 
 let levelStartScore = 0;
-// DEFAULT SPEED (Normal)
-let speed = 15; 
-let baseSpeed = 15;
+
+// --- SPEED SETTINGS (UPDATED) ---
+// Default (Normal)
+let speed = 6; 
+let baseSpeed = 6;
+
 let groundY = 0; 
 let shakeAmount = 0;
 let zoomLevel = 3.5; 
@@ -141,16 +144,16 @@ function setDifficulty(mode) {
     document.getElementById('diff-'+mode).classList.add('selected');
     let label = "DIFFICULTY: BRING 'EM ON";
     
-    // APPLY SPEED UPDATE
+    // --- UPDATE SPEED LOGIC HERE ---
     if(mode === 'baby') { 
         label = "DIFFICULTY: CAN I PLAY, DADDY?";
-        baseSpeed = 10;
+        baseSpeed = 3;  // Slower
     } else if(mode === 'death') {
         label = "DIFFICULTY: DEATH INCARNATE";
-        baseSpeed = 20;
+        baseSpeed = 9;  // Faster
     } else {
         // Normal
-        baseSpeed = 15;
+        baseSpeed = 6;  // Normal
     }
     
     // Force update speed now
@@ -176,10 +179,10 @@ function resetGameLogic() {
 function resetLevelState() {
     obstacles=[]; sticks=[]; bones=[]; floatTexts=[]; 
     
-    // Ensure correct speed on level reset
-    if (difficulty === 'baby') baseSpeed = 10;
-    else if (difficulty === 'death') baseSpeed = 20;
-    else baseSpeed = 15;
+    // --- ENSURE CORRECT SPEED ON RESET ---
+    if (difficulty === 'baby') baseSpeed = 3;
+    else if (difficulty === 'death') baseSpeed = 9;
+    else baseSpeed = 6;
     speed = baseSpeed;
     
     levelDistance=0; levelFinished=false; levelVictoryAnim=false; finishLine=null; isDead = false;
@@ -420,15 +423,20 @@ function loop() {
             if(Math.random() < 0.05) { 
                 let r = Math.random(); 
                 let obj = {x: canvas.width, type: 'poo', stack: 1, y: groundY};
-                let cooldownSet = 40; 
-                // Adjust spawn spacing based on speed so they don't bunch up at high speeds
-                let speedFactor = speed / 15;
                 
-                if(currentLevel >= 3 && r > 0.92) { obj.type = 'pond'; cooldownSet = 60 * speedFactor; } 
-                else if(currentLevel >= 2 && r > 0.85) { obj.type = 'stack'; obj.stack = 3; cooldownSet = 120 * speedFactor; } 
-                else if(r > 0.75) { obj.type = 'hydrant'; cooldownSet = 50 * speedFactor; }
-                else if (r > 0.60) { obj.type = 'bird'; obj.y = (Math.random() > 0.5) ? groundY - 40 : groundY - 110; cooldownSet = 50 * speedFactor; if(Math.random() > 0.3) bones.push({x: canvas.width, y: (obj.y < groundY-80 ? groundY-40 : groundY-150), type: 'white'}); }
-                else { obj.type = 'poo'; obj.stack = Math.floor(Math.random()*2)+1; cooldownSet = 40 * speedFactor; if(Math.random() > 0.5) bones.push({x: canvas.width, y: groundY - 120, type: 'white'}); }
+                // --- FIXED SPAWN LOGIC (Distance based on pixels, not frames) ---
+                // We want a gap of roughly 400-500 pixels regardless of speed.
+                // Frames to wait = Desired_Pixels / Speed
+                
+                let basePixels = 400; // Minimum gap
+                let cooldownSet = basePixels / speed;
+                
+                if(currentLevel >= 3 && r > 0.92) { obj.type = 'pond'; cooldownSet = (basePixels + 100) / speed; } 
+                else if(currentLevel >= 2 && r > 0.85) { obj.type = 'stack'; obj.stack = 3; cooldownSet = (basePixels + 200) / speed; } 
+                else if(r > 0.75) { obj.type = 'hydrant'; cooldownSet = basePixels / speed; }
+                else if (r > 0.60) { obj.type = 'bird'; obj.y = (Math.random() > 0.5) ? groundY - 40 : groundY - 110; cooldownSet = basePixels / speed; if(Math.random() > 0.3) bones.push({x: canvas.width, y: (obj.y < groundY-80 ? groundY-40 : groundY-150), type: 'white'}); }
+                else { obj.type = 'poo'; obj.stack = Math.floor(Math.random()*2)+1; cooldownSet = basePixels / speed; if(Math.random() > 0.5) bones.push({x: canvas.width, y: groundY - 120, type: 'white'}); }
+                
                 obstacles.push(obj); globalSpawnCooldown = cooldownSet;
             }
         }
