@@ -129,7 +129,15 @@ body {
 
 #start-screen { background: none; backdrop-filter: none; z-index: 50; gap: 20px; }
 
-.title-box { animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2; pointer-events: none; margin-bottom: 80px; }
+/* Fixed Start Dog Canvas */
+#start-dog-canvas {
+    margin-bottom: 20px;
+    filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+    animation: float 3s ease-in-out infinite;
+}
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+.title-box { animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2; pointer-events: none; margin-bottom: 30px; }
 h1 { 
     color: #fff; font-size: 50px; margin: 0; line-height: 0.9; font-weight: 900; 
     letter-spacing: -3px; text-transform: uppercase;
@@ -160,4 +168,89 @@ h1 {
 }
 #start-diff-btn:hover { background: rgba(255,255,255,0.25); }
 
-/* P
+/* POKEMON MART SHOP DESIGN */
+#shop-screen {
+    background: #70a2c2; /* Wall color */
+    justify-content: flex-start;
+    padding-top: 0;
+}
+
+#shop-counter-area {
+    width: 100%; height: 35%; 
+    background: #e8e8e8;
+    border-bottom: 8px solid #5a5a5a;
+    display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+    padding-bottom: 20px;
+    position: relative;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+#shop-keeper {
+    position: absolute; bottom: 20px; right: 20%;
+}
+
+#shop-floor {
+    width: 100%; height: 65%;
+    background-color: #f8f8f8;
+    background-image: 
+        linear-gradient(45deg, #ccc 25%, transparent 25%), 
+        linear-gradient(-45deg, #ccc 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #ccc 75%), 
+        linear-gradient(-45deg, transparent 75%, #ccc 75%);
+    background-size: 40px 40px;
+    background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center;
+}
+
+#shop-text-box {
+    width: 90%; max-width: 600px;
+    background: white; border: 4px solid #333; border-radius: 8px;
+    padding: 15px; margin-bottom: 20px; text-align: left;
+    font-family: 'Press Start 2P', monospace; font-size: 12px; color: #333;
+    line-height: 1.8;
+    box-shadow: 5px 5px 0px rgba(0,0,0,0.2);
+}
+
+.shop-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; width: 100%; }
+.shop-item {
+    background: white; border: 4px solid #5a5a5a; border-radius: 4px;
+    padding: 10px; width: 110px; text-align: center; cursor: pointer; 
+    display: flex; flex-direction: column; align-items: center;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+    position: relative;
+}
+.shop-item.selected { border-color: #00fbff; background: #e0fbfc; transform: translateY(-5px); }
+.shop-item.locked { opacity: 0.6; cursor: not-allowed; background: #ddd; }
+
+.shop-icon { margin-bottom: 10px; font-size: 30px; }
+.shop-name { color: #333; font-weight: 900; font-size: 12px; margin-bottom: 5px; font-family: 'Montserrat'; }
+.shop-perk { color: #0984e3; font-size: 9px; margin-bottom: 5px; font-weight: 700; }
+.shop-cost { color: #d63031; font-weight: 900; font-size: 12px; }
+
+/* Difficulty Cards - UPDATED FOR READABILITY */
+.diff-container { display: flex; flex-direction: column; gap: 15px; width: 95%; max-height: 85vh; overflow-y: auto; align-items: center; }
+.diff-card { 
+    background: rgba(255,255,255,0.1); border: 2px solid transparent; border-radius: 12px; 
+    padding: 15px; width: 100%; max-width: 380px; text-align: left; display: flex; align-items: center; gap: 15px;
+    cursor: pointer; transition: all 0.2s;
+}
+.diff-card.selected { border-color: #00fbff; background: rgba(0,251,255,0.1); }
+.diff-info h3 { margin: 0 0 5px 0; font-size: 18px; color: #ffeaa7; text-transform: uppercase; letter-spacing: 1px;}
+.diff-info p { margin: 0; font-size: 12px; color: #ffffff; line-height: 1.4; } /* FORCED WHITE */
+
+/* Countdown Overlay */
+#countdown-layer {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    display: none; align-items: center; justify-content: center;
+    z-index: 150; pointer-events: none;
+}
+#countdown-text {
+    font-size: 100px; font-weight: 900; color: white; 
+    text-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes slideUp { 0% { transform: translateY(50px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+@keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
