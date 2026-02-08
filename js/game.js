@@ -162,9 +162,6 @@ function setDifficulty(mode) {
     if(mode === 'death') megaText.innerText = "NO MEGA MODE!";
     else megaText.innerText = "COLLECT 50 🦴";
     
-    if(!gameActive) {
-        requestAnimationFrame(loop);
-    }
 }
 
 function resetGameLogic() {
