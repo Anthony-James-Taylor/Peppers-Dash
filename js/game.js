@@ -145,10 +145,7 @@ function setDifficulty(mode) {
     if(mode === 'death') megaText.innerText = "NO MEGA MODE!";
     else megaText.innerText = "COLLECT 50 🦴";
     
-    // Refresh start screen rendering when difficulty changes
-    if(!gameActive) {
-        requestAnimationFrame(loop);
-    }
+    // REMOVED THE BUGGY LINE HERE (requestAnimationFrame) to stop speed glitch
 }
 
 function resetGameLogic() {
@@ -377,8 +374,8 @@ function loop() {
 
     // RENDER CHARACTER
     if(!gameActive && !isCountingDown && !levelVictoryAnim) {
-        // DRAW START SCREEN DOG (Big & Front Facing, positioned on top of grass)
-        drawFrontFacingHusky(ctx, 150, groundY - 130, 2.0, difficulty); 
+        // DRAW START SCREEN DOG (Big & Front Facing, positioned ON TOP of grass)
+        drawFrontFacingHusky(ctx, 150, groundY - 140, 2.0, difficulty); 
         drawSteamDooDoo(ctx, canvas.width * 0.75, groundY-15, frame); 
     } else {
         // DRAW IN-GAME DOG (Normal Runner - Side View)
