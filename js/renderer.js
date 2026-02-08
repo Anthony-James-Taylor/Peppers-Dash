@@ -174,4 +174,51 @@ function drawHeadPreview(c, x, y, mode) {
     c.fillStyle = bodyC; c.beginPath(); c.arc(0, 0, 30, 0, Math.PI*2); c.fill();
     c.fillStyle = "white"; c.beginPath(); c.arc(0, 8, 22, 0, Math.PI*2); c.fill();
     c.fillStyle = bodyC; c.beginPath(); c.moveTo(-20, -10); c.lineTo(-25, -40); c.lineTo(-5, -20); c.fill(); c.beginPath(); c.moveTo(20, -10); c.lineTo(25, -40); c.lineTo(5, -20); c.fill();
-    c.fillStyle = "pink"; c.beginPath(); c.moveTo(-18, -15); c.lineTo(-22, -30); c.lineTo(-10, -20);
+    c.fillStyle = "pink"; c.beginPath(); c.moveTo(-18, -15); c.lineTo(-22, -30); c.lineTo(-10, -20); c.fill(); c.beginPath(); c.moveTo(18, -15); c.lineTo(22, -30); c.lineTo(10, -20); c.fill();
+    c.fillStyle = "black"; c.beginPath(); c.arc(0, 5, 5, 0, Math.PI*2); c.fill(); 
+    c.fillStyle = eyeC; c.beginPath(); c.arc(-10, -5, 6, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(10, -5, 6, 0, Math.PI*2); c.fill(); 
+    c.fillStyle = "white"; c.beginPath(); c.arc(-12, -7, 2, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(8, -7, 2, 0, Math.PI*2); c.fill();
+    if(mode === 'normal') { drawAviators(c, 0, 0); }
+    if(mode === 'baby') { c.strokeStyle = "pink"; c.lineWidth = 6; c.beginPath(); c.arc(0, -5, 32, Math.PI, 0); c.stroke(); c.fillStyle = "#FFD700"; c.beginPath(); c.arc(0, 18, 6, 0, Math.PI*2); c.fill(); } 
+    else { c.strokeStyle = "black"; c.lineWidth = 2; c.beginPath(); c.arc(0, 12, 10, 0, Math.PI); c.stroke(); }
+    c.restore();
+}
+
+function drawStickIcon() {
+    const c = document.getElementById('stick-canvas');
+    if(!c) return;
+    const x = c.getContext('2d'); x.clearRect(0,0,40,40); x.save();
+    x.translate(20,20); x.rotate(Math.PI/4);
+    x.strokeStyle = "#8B4513"; x.lineWidth = 5; x.lineCap="round";
+    x.beginPath(); x.moveTo(-12, 0); x.lineTo(12, 0); x.stroke(); 
+    x.beginPath(); x.moveTo(-3, 0); x.lineTo(6, -6); x.stroke(); 
+    x.fillStyle = "#00b894"; x.beginPath(); x.arc(7, -7, 2.5, 0, Math.PI*2); x.fill();
+    x.restore();
+}
+
+// Sky Color Interpolation
+let envStyles = [
+    { c1: "#81ecec", c2: "#74b9ff", grass: "#00b894", ground: "#5D4037" }, // Day
+    { c1: "#ff9f43", c2: "#ee5253", grass: "#e17055", ground: "#3E2723" }, // Sunset
+    { c1: "#2c3e50", c2: "#000000", grass: "#192a56", ground: "#2d3436" }, // Night
+    { c1: "#81ecec", c2: "#74b9ff", grass: "#00b894", ground: "#5D4037" }  // Loop back
+];
+
+function lerpColor(c1, c2, t) {
+    let r1 = parseInt(c1.substring(1,3),16), g1 = parseInt(c1.substring(3,5),16), b1 = parseInt(c1.substring(5,7),16);
+    let r2 = parseInt(c2.substring(1,3),16), g2 = parseInt(c2.substring(3,5),16), b2 = parseInt(c2.substring(5,7),16);
+    let r = Math.round(r1 + (r2-r1)*t), g = Math.round(g1 + (g2-g1)*t), b = Math.round(b1 + (b2-b1)*t);
+    return `rgb(${r},${g},${b})`;
+}
+
+function getSkyColor(levelDistance, levelMaxDistance, currentLevel) {
+    let t = Math.min(levelDistance / levelMaxDistance, 1);
+    let s = envStyles[(currentLevel-1) % envStyles.length];
+    let e = envStyles[currentLevel % envStyles.length];
+    return { 
+        c1: lerpColor(s.c1, e.c1, t), 
+        c2: lerpColor(s.c2, e.c2, t), 
+        grass: lerpColor(s.grass, e.grass, t), 
+        ground: lerpColor(s.ground, e.ground, t) 
+    };
+}
