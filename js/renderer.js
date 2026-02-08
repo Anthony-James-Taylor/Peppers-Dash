@@ -77,7 +77,7 @@ function drawHusky(ctx, x, y, isMega, hasShield, pepper, difficulty, frame) {
     ctx.fillStyle = white; ctx.beginPath(); ctx.moveTo(5, -8); ctx.lineTo(18, 2); ctx.lineTo(12, 12); ctx.lineTo(0, 10); ctx.lineTo(-5, 0); ctx.fill();
     ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(18, 1, 3.5, 0, Math.PI*2); ctx.fill();
 
-    if(difficulty === 'normal') { drawAviators(ctx, 0, 0); } 
+    if(difficulty === 'normal') { drawAviators(ctx, 0, 0, true); } // Side mode = true
     else if (difficulty === 'baby') { ctx.fillStyle = "white"; ctx.beginPath(); ctx.ellipse(6, -4, 5, 8, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = eyeC; ctx.beginPath(); ctx.ellipse(8, -2, 2.5, 4, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(8.5, -3, 1, 0, Math.PI*2); ctx.fill(); }
     else { /* Death Mode Eyes */ ctx.fillStyle = "white"; ctx.beginPath(); ctx.ellipse(6, -4, 5, 8, 0, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = eyeC; ctx.beginPath(); ctx.ellipse(8, -2, 2.5, 4, 0, 0, Math.PI*2); ctx.fill(); }
 
@@ -86,7 +86,7 @@ function drawHusky(ctx, x, y, isMega, hasShield, pepper, difficulty, frame) {
     ctx.restore(); ctx.restore();
 }
 
-// Side Profile Head for Difficulty Cards (Matching Game Sprite)
+// Side Profile Head for Difficulty Cards
 function drawHeadPreview(c, x, y, mode) {
     c.save(); c.translate(x, y); c.scale(1.2, 1.2);
     let bodyC = (mode==='death') ? "#2d3436" : "#1a1a1a";
@@ -101,15 +101,14 @@ function drawHeadPreview(c, x, y, mode) {
     c.fillStyle = bodyC; c.beginPath(); c.moveTo(-5, -5); c.lineTo(-8, -22); c.lineTo(2, -12); c.fill();
     c.fillStyle = "pink"; c.beginPath(); c.moveTo(-4, -6); c.lineTo(-7, -18); c.lineTo(0, -10); c.fill();
 
-    // Eyes
-    if(mode === 'normal') { drawAviators(c, 0, 0); }
+    // Eyes & Glasses
+    if(mode === 'normal') { drawAviators(c, 0, 0, true); } // SIDE MODE = TRUE
     else if(mode === 'baby') {
         c.fillStyle = "white"; c.beginPath(); c.ellipse(6, -4, 5, 8, 0, 0, Math.PI*2); c.fill(); 
         c.fillStyle = eyeC; c.beginPath(); c.ellipse(8, -2, 2.5, 4, 0, 0, Math.PI*2); c.fill(); 
         c.fillStyle = "white"; c.beginPath(); c.arc(8.5, -3, 1, 0, Math.PI*2); c.fill();
-        // Bonnet
         c.strokeStyle = "pink"; c.lineWidth = 3; c.beginPath(); c.arc(-2, -5, 14, Math.PI, 0); c.stroke(); 
-        c.fillStyle = "#FFD700"; c.beginPath(); c.arc(0, 12, 4, 0, Math.PI*2); c.fill(); // Pacifier hint
+        c.fillStyle = "#FFD700"; c.beginPath(); c.arc(0, 12, 4, 0, Math.PI*2); c.fill();
     } else {
         c.fillStyle = "white"; c.beginPath(); c.ellipse(6, -4, 5, 8, 0, 0, Math.PI*2); c.fill(); 
         c.fillStyle = eyeC; c.beginPath(); c.ellipse(8, -2, 2.5, 4, 0, 0, Math.PI*2); c.fill();
@@ -117,9 +116,14 @@ function drawHeadPreview(c, x, y, mode) {
     c.restore();
 }
 
-// CUTE BIG FRONT FACING DOG (For Start Screen)
-function drawFrontFacingHusky(ctx, x, y) {
-    ctx.save(); ctx.translate(x, y);
+// CUTE BIG FRONT FACING DOG (Now with Scale!)
+function drawFrontFacingHusky(ctx, x, y, scale=1.0) {
+    ctx.save(); ctx.translate(x, y); ctx.scale(scale, scale);
+    
+    // Float Animation
+    let float = Math.sin(Date.now() / 500) * 2;
+    ctx.translate(0, float);
+
     // Body
     ctx.fillStyle = "#1a1a1a"; ctx.beginPath(); ctx.ellipse(0, 40, 35, 30, 0, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = "white"; ctx.beginPath(); ctx.ellipse(0, 40, 20, 25, 0, 0, Math.PI*2); ctx.fill();
@@ -147,12 +151,29 @@ function drawFrontFacingHusky(ctx, x, y) {
     ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(10, -10, 2, 0, Math.PI*2); ctx.fill();
     
     // Aviators (Front Facing)
-    ctx.save(); ctx.translate(0, -8);
-    ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(2, -2); ctx.bezierCurveTo(15, -2, 25, 10, 10, 15); ctx.bezierCurveTo(2, 15, 2, -2, 2, -2); ctx.fill(); ctx.stroke(); // Right Lens
-    ctx.beginPath(); ctx.moveTo(-2, -2); ctx.bezierCurveTo(-15, -2, -25, 10, -10, 15); ctx.bezierCurveTo(-2, 15, -2, -2, -2, -2); ctx.fill(); ctx.stroke(); // Left Lens
-    ctx.beginPath(); ctx.moveTo(-2, -2); ctx.lineTo(2, -2); ctx.stroke(); // Bridge
+    drawAviators(ctx, 0, -8, false); 
+    
     ctx.restore();
+}
+
+// Updated Aviators to support Side View
+function drawAviators(ctx, x, y, isSide=false) {
+    ctx.save(); ctx.translate(x, y);
+    ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 1.5;
+    
+    if(isSide) {
+        // Side view: Single lens + arm
+        ctx.beginPath(); ctx.moveTo(2, -3); ctx.lineTo(12, -5); ctx.stroke(); // Arm
+        ctx.beginPath(); 
+        ctx.moveTo(4, -6); ctx.lineTo(14, -6); ctx.lineTo(12, 4); ctx.quadraticCurveTo(6, 6, 4, 4); 
+        ctx.fill(); ctx.stroke();
+    } else {
+        // Front view
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(2, -2); ctx.bezierCurveTo(15, -2, 25, 10, 10, 15); ctx.bezierCurveTo(2, 15, 2, -2, 2, -2); ctx.fill(); ctx.stroke(); // Right Lens
+        ctx.beginPath(); ctx.moveTo(-2, -2); ctx.bezierCurveTo(-15, -2, -25, 10, -10, 15); ctx.bezierCurveTo(-2, 15, -2, -2, -2, -2); ctx.fill(); ctx.stroke(); // Left Lens
+        ctx.beginPath(); ctx.moveTo(-2, -2); ctx.lineTo(2, -2); ctx.stroke(); // Bridge
+    }
     ctx.restore();
 }
 
@@ -164,15 +185,6 @@ function drawStick(ctx, x, y, frame=0) {
     ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(5, 5); ctx.stroke(); 
     ctx.fillStyle = "#00b894"; ctx.beginPath(); ctx.arc(10, -5, 3, 0, Math.PI*2); ctx.fill(); 
     ctx.restore(); 
-}
-
-function drawAviators(ctx, x, y) {
-    ctx.save(); ctx.translate(x, y);
-    ctx.fillStyle = "rgba(0,0,0,0.8)"; ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(-2, -5); ctx.bezierCurveTo(-15, -5, -18, 5, -10, 10); ctx.bezierCurveTo(-2, 10, -2, -5, -2, -5); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(2, -5); ctx.bezierCurveTo(15, -5, 18, 5, 10, 10); ctx.bezierCurveTo(2, 10, 2, -5, 2, -5); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-2, -5); ctx.lineTo(2, -5); ctx.stroke(); ctx.beginPath(); ctx.moveTo(-2, -8); ctx.lineTo(2, -8); ctx.stroke();
-    ctx.restore();
 }
 
 function drawBone(ctx, x, y, type, frame) { 
@@ -230,22 +242,6 @@ function drawFlies(ctx, x, y, frame) {
     ctx.restore(); 
 }
 
-function drawHeadPreview(c, x, y, mode) {
-    // Legacy function, kept for safety, but logic moved to side profile version above
-    c.save(); c.translate(x, y); 
-    let bodyC = (mode==='death') ? "#2d3436" : "#1a1a1a";
-    let eyeC = (mode==='death') ? "red" : "#00fbff";
-    c.fillStyle = bodyC; c.beginPath(); c.arc(0, 0, 30, 0, Math.PI*2); c.fill();
-    c.fillStyle = "white"; c.beginPath(); c.arc(0, 8, 22, 0, Math.PI*2); c.fill();
-    c.fillStyle = bodyC; c.beginPath(); c.moveTo(-20, -10); c.lineTo(-25, -40); c.lineTo(-5, -20); c.fill(); c.beginPath(); c.moveTo(20, -10); c.lineTo(25, -40); c.lineTo(5, -20); c.fill();
-    c.fillStyle = "pink"; c.beginPath(); c.moveTo(-18, -15); c.lineTo(-22, -30); c.lineTo(-10, -20); c.fill(); c.beginPath(); c.moveTo(18, -15); c.lineTo(22, -30); c.lineTo(10, -20); c.fill();
-    c.fillStyle = "black"; c.beginPath(); c.arc(0, 5, 5, 0, Math.PI*2); c.fill(); 
-    c.fillStyle = eyeC; c.beginPath(); c.arc(-10, -5, 6, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(10, -5, 6, 0, Math.PI*2); c.fill(); 
-    c.fillStyle = "white"; c.beginPath(); c.arc(-12, -7, 2, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(8, -7, 2, 0, Math.PI*2); c.fill();
-    if(mode === 'normal') { drawAviators(c, 0, 0); }
-    c.restore();
-}
-
 function drawStickIcon() {
     const c = document.getElementById('stick-canvas');
     if(!c) return;
@@ -258,7 +254,6 @@ function drawStickIcon() {
     x.restore();
 }
 
-// Sky Color Interpolation
 let envStyles = [
     { c1: "#81ecec", c2: "#74b9ff", grass: "#00b894", ground: "#5D4037" }, // Day
     { c1: "#ff9f43", c2: "#ee5253", grass: "#e17055", ground: "#3E2723" }, // Sunset
