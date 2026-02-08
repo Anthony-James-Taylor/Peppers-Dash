@@ -67,8 +67,8 @@ let score = 0;
 let levelStartScore = 0;
 
 // --- GLOBAL DEFAULT SPEED ---
-let speed = 2;     // Default (Normal)
-let baseSpeed = 2; // Default (Normal)
+let speed = 8;     // Default (Normal)
+let baseSpeed = 8; // Default (Normal)
 
 let groundY = 0; 
 let shakeAmount = 0;
@@ -143,16 +143,16 @@ function setDifficulty(mode) {
     document.getElementById('diff-'+mode).classList.add('selected');
     let label = "DIFFICULTY: BRING 'EM ON";
     
-    // --- UPDATED SPEED LOGIC ---
+    // --- UPDATED SPEED LOGIC (BALANCED) ---
     if(mode === 'baby') { 
         label = "DIFFICULTY: CAN I PLAY, DADDY?";
-        baseSpeed = 1; // Baby
+        baseSpeed = 5; // Slow but engaging
     } else if(mode === 'death') {
         label = "DIFFICULTY: DEATH INCARNATE";
-        baseSpeed = 3; // Death
+        baseSpeed = 12; // Fast but reaction-possible
     } else {
         // Normal
-        baseSpeed = 2; // Bring 'em on
+        baseSpeed = 8; // Standard platformer speed
     }
     
     // Force update speed now
@@ -179,9 +179,9 @@ function resetLevelState() {
     obstacles=[]; sticks=[]; bones=[]; floatTexts=[]; 
     
     // --- ENSURE CORRECT SPEED ON RESET ---
-    if (difficulty === 'baby') baseSpeed = 1;
-    else if (difficulty === 'death') baseSpeed = 3;
-    else baseSpeed = 2; // Normal
+    if (difficulty === 'baby') baseSpeed = 5;
+    else if (difficulty === 'death') baseSpeed = 12;
+    else baseSpeed = 8; // Normal
     speed = baseSpeed;
     
     levelDistance=0; levelFinished=false; levelVictoryAnim=false; finishLine=null; isDead = false;
@@ -313,238 +313,4 @@ function startSequence(isFullReset = false) {
     let interval = setInterval(() => {
         count--;
         if(count > 0) { countdownText.innerText = count; countdownText.style.animation = 'none'; countdownText.offsetHeight; countdownText.style.animation = 'popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; playSnare(); } 
-        else { clearInterval(interval); countdownText.innerText = "GO!"; playBark(); setTimeout(() => { countdownLayer.style.display = 'none'; isCountingDown = false; gameActive = true; startMusic(currentLevel, difficulty, pepper); }, 500); }
-    }, 800);
-}
-
-function loop() {
-    if((gameActive && !isPaused && !isCountingDown)) { frame++; } 
-    if(levelVictoryAnim) { frame++; pepper.x += speed * 1.5; }
-
-    groundY = canvas.height - GROUND_H;
-    ctx.save();
-    
-    let targetZoom = (gameActive && pepper.isMega) ? 1.05 : 1.0;
-    zoomLevel += (targetZoom - zoomLevel) * 0.05;
-    
-    ctx.translate(canvas.width/2, canvas.height/2); ctx.scale(zoomLevel, zoomLevel); ctx.translate(-canvas.width/2, -canvas.height/2);
-    if(shakeAmount > 0) { ctx.translate((Math.floor(Math.random()*shakeAmount)-shakeAmount/2), (Math.floor(Math.random()*shakeAmount)-shakeAmount/2)); shakeAmount*=0.9; }
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    let sky = getSkyColor(levelDistance, levelMaxDistance, currentLevel);
-    let grad = ctx.createLinearGradient(0, 0, 0, canvas.height); grad.addColorStop(0, sky.c1); grad.addColorStop(1, sky.c2); ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Backgrounds
-    ctx.fillStyle = "rgba(255,255,255,0.2)"; let celestialY = (currentLevel%3===2) ? canvas.height*0.8 : 100; ctx.beginPath(); ctx.arc(canvas.width*0.8, celestialY, 60, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = "rgba(255,255,255,0.1)"; bgMountains.forEach(m => { if(!levelFinished && gameActive && !isPaused && !isCountingDown) m.x -= speed * 0.05; if(m.x < -300) m.x = canvas.width + 100; ctx.beginPath(); ctx.moveTo(Math.floor(m.x), groundY); ctx.lineTo(Math.floor(m.x+150), groundY-300); ctx.lineTo(Math.floor(m.x+300), groundY); ctx.fill(); });
-    bgTrees.forEach(t => { if(!levelFinished && gameActive && !isPaused && !isCountingDown) t.x -= speed * 0.2; if(t.x < -50) t.x = canvas.width + Math.random()*300; ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.beginPath(); ctx.moveTo(Math.floor(t.x), groundY); ctx.lineTo(Math.floor(t.x+25), groundY-100); ctx.lineTo(Math.floor(t.x+50), groundY); ctx.fill(); });
-    
-    ctx.fillStyle = "rgba(255,255,255,0.3)";
-    bgClouds.forEach(c => { if(!isPaused && !isCountingDown) c.x -= c.speed; if(c.x < -100) c.x = canvas.width + 100; ctx.beginPath(); ctx.ellipse(c.x, c.y, 40, 20, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(c.x+20, c.y-10, 30, 20, 0, 0, Math.PI*2); ctx.fill(); });
-    if(currentLevel % 3 === 0 || (frame % 3000 > 1500)) { ctx.fillStyle = "white"; stars.forEach(s => { let blink = Math.sin(frame*0.1 + s.x) > 0.8 ? 1 : 0.5; ctx.globalAlpha = blink; ctx.fillRect(s.x, s.y, s.size, s.size); }); ctx.globalAlpha = 1; }
-
-    ctx.fillStyle = sky.ground; ctx.fillRect(0, groundY, canvas.width, GROUND_H);
-    ctx.fillStyle = "rgba(255,255,255,0.05)"; let stripeOffset = Math.floor((frame * speed) % 100); for(let i = -100; i < canvas.width + 100; i+=100) { ctx.beginPath(); ctx.moveTo(i - stripeOffset, groundY); ctx.lineTo(i - stripeOffset + 40, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 90, groundY + GROUND_H); ctx.lineTo(i - stripeOffset + 50, groundY); ctx.fill(); }
-    if(!levelFinished && pepper.grounded && (gameActive || levelVictoryAnim)) { ctx.fillStyle = "rgba(255,255,255,0.3)"; ctx.beginPath(); ctx.arc(120 - (frame*speed)%20, groundY+2, 5 * Math.random(), 0, Math.PI*2); ctx.fill(); }
-    ctx.fillStyle = sky.grass; ctx.fillRect(0, groundY, canvas.width, 20);
-    if(currentLevel >= 3) { ctx.fillStyle = "rgba(255,255,255,0.5)"; weatherParticles.forEach(p => { if(!isPaused && !isCountingDown) { p.y += p.speed; p.x += p.wind; } if(p.y > canvas.height) p.y = 0; if(p.x > canvas.width) p.x = 0; ctx.fillRect(p.x, p.y, p.size, p.size); }); }
-
-    if (gameActive && !levelFinished && !isPaused && !isCountingDown) {
-        levelDistance += speed * 0.1;
-        let pct = Math.min((levelDistance / levelMaxDistance) * 100, 100); progressFill.style.width = pct + "%";
-        if(levelDistance >= levelMaxDistance && !finishLine) finishLine = {x: canvas.width, type: 'finish'};
-    }
-
-    [particles, floatTexts].forEach(arr => { for(let i=arr.length-1; i>=0; i--) { let p = arr[i]; if(p.text) { p.y-=2; p.life-=0.02; ctx.globalAlpha=p.life; ctx.fillStyle=p.color; ctx.font="900 30px 'Montserrat'"; ctx.fillText(p.text, p.x, p.y); } else { p.x+=p.vx; p.y+=p.vy; p.life-=0.03; ctx.globalAlpha=p.life; ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,5,0,Math.PI*2); ctx.fill(); } if(p.life<=0) arr.splice(i,1); } });
-    ctx.globalAlpha=1;
-
-    if(pepper.isMega && (gameActive || levelVictoryAnim)) {
-        ctx.save(); ctx.strokeStyle = "rgba(255, 255, 255, 0.5)"; ctx.lineWidth = 2;
-        for(let i=0; i<10; i++) { let ly = Math.random() * canvas.height; let lx = Math.random() * canvas.width; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 50 + Math.random()*50, ly); ctx.stroke(); }
-        ctx.restore();
-    }
-
-    if(difficulty !== 'death') {
-        if(pepper.isMega && gameActive && !isPaused && !isCountingDown) {
-            pepper.megaTimer--; 
-            megaMeter.classList.add('mega-active'); 
-            let pct = (pepper.megaTimer / 900) * 100;
-            megaBarFill.style.width = pct + "%";
-            megaText.innerText = "MEGA MODE!";
-            if(pepper.megaTimer<=0) { pepper.isMega=false; pepper.streak=0; megaMeter.classList.remove('mega-active'); megaBarFill.style.width = "0%"; updateMegaText(); }
-        } else if (!pepper.isMega) {
-            let target = (pepper.hat === 'cowboy') ? 25 : 50;
-            let remaining = Math.max(0, target - pepper.streak); 
-            let pct = (pepper.streak / target) * 100; 
-            megaBarFill.style.width = pct + "%"; 
-            megaText.innerText = "COLLECT " + remaining + " 🦴";
-        }
-    }
-
-    if(magnetCooldown > 0) magnetCooldown--;
-    if(pepper.magnetTimer > 0 && gameActive) {
-        pepper.magnetTimer--;
-        bones.forEach(b => {
-            let dx = 150 - b.x; let dy = pepper.y - b.y;
-            let dist = Math.sqrt(dx*dx + dy*dy);
-            if(dist < 400) { b.x += dx * 0.15; b.y += dy * 0.15; }
-        });
-    }
-
-    if(gameActive && !isPaused && !isCountingDown) { 
-        pepper.dy += GRAVITY; pepper.y += pepper.dy; 
-        if(pepper.y >= groundY) { pepper.y=groundY; pepper.dy=0; pepper.grounded=true; pepper.canDoubleJump = false; } 
-    } else if (!gameActive && !isCountingDown && !levelVictoryAnim) { pepper.y = groundY; }
-
-    // RENDER CHARACTER
-    if(!gameActive && !isCountingDown && !levelVictoryAnim) {
-        // DRAW START SCREEN DOG (Big & Front Facing, positioned ON TOP of grass)
-        drawFrontFacingHusky(ctx, 150, groundY - 140, 2.0, difficulty); 
-        drawSteamDooDoo(ctx, canvas.width * 0.75, groundY-15, frame); 
-    } else {
-        // DRAW IN-GAME DOG (Normal Runner - Side View)
-        let drawX = levelVictoryAnim ? pepper.x : 150; 
-        drawHusky(ctx, drawX, pepper.y, pepper.isMega, pepper.hasShield, pepper, difficulty, frame);
-    }
-
-    if(finishLine && !isDead) {
-        finishLine.x -= speed;
-        ctx.save(); ctx.translate(finishLine.x, groundY - 150); 
-        let wave = Math.sin(frame*0.2) * 10; ctx.fillStyle = "white"; ctx.fillRect(0, 0, 10, 150); 
-        for(let r=0; r<4; r++) { for(let c=0; c<6; c++) { ctx.fillStyle = (r+c)%2===0 ? "white" : "black"; ctx.fillRect(10 + c*20, r*20 + (c*wave*0.1), 20, 20); } } ctx.restore();
-        if(finishLine.x < 150 && !levelFinished) { levelFinished = true; levelVictoryAnim = true; pepper.x = 150; }
-    }
-    if(levelVictoryAnim && pepper.x > canvas.width + 100) { completeLevel(); levelVictoryAnim = false; }
-
-    if(!finishLine && gameActive && !isPaused && !isCountingDown) {
-        if (globalSpawnCooldown > 0) globalSpawnCooldown--;
-        else {
-            if(Math.random() < 0.05) { 
-                let r = Math.random(); 
-                let obj = {x: canvas.width, type: 'poo', stack: 1, y: groundY};
-                
-                // --- ROBUST SPAWN LOGIC (Distance based) ---
-                // basePixels / speed ensure the gap on screen is always same size
-                let basePixels = 400; 
-                let cooldownSet = basePixels / speed;
-                
-                if(currentLevel >= 3 && r > 0.92) { obj.type = 'pond'; cooldownSet = (basePixels + 100) / speed; } 
-                else if(currentLevel >= 2 && r > 0.85) { obj.type = 'stack'; obj.stack = 3; cooldownSet = (basePixels + 200) / speed; } 
-                else if(r > 0.75) { obj.type = 'hydrant'; cooldownSet = basePixels / speed; }
-                else if (r > 0.60) { obj.type = 'bird'; obj.y = (Math.random() > 0.5) ? groundY - 40 : groundY - 110; cooldownSet = basePixels / speed; if(Math.random() > 0.3) bones.push({x: canvas.width, y: (obj.y < groundY-80 ? groundY-40 : groundY-150), type: 'white'}); }
-                else { obj.type = 'poo'; obj.stack = Math.floor(Math.random()*2)+1; cooldownSet = basePixels / speed; if(Math.random() > 0.5) bones.push({x: canvas.width, y: groundY - 120, type: 'white'}); }
-                
-                obstacles.push(obj); globalSpawnCooldown = cooldownSet;
-            }
-        }
-        nextBoneTimer--;
-        if(nextBoneTimer <= 0) {
-             let h = Math.random(); let bY = groundY - 40; if(h > 0.5) bY = groundY - 100; if(h > 0.85) bY = groundY - 180; 
-             let bType = 'white'; if(Math.random() > 0.98 && magnetCooldown <= 0) { bType = 'magnet'; magnetCooldown = 2700; } else if(Math.random() > 0.9) bType = 'gold';
-             bones.push({x: canvas.width, y: bY, type: bType}); nextBoneTimer = 40 + Math.random() * 80; 
-        }
-        nextStickTimer--;
-        if(nextStickTimer <= 0) { if(Math.random() > 0.5) sticks.push({x: canvas.width, y: groundY - 120}); nextStickTimer = 150 + Math.random() * 200; }
-    }
-
-    for(let i=obstacles.length-1; i>=0; i--) {
-        let o = obstacles[i]; if(!levelFinished && gameActive && !isPaused && !isCountingDown) o.x -= speed;
-        if(o.type === 'poo') drawDooDoo(ctx, o.x, groundY, o.stack);
-        else if(o.type === 'stack') { drawDooDoo(ctx, o.x, groundY, 3); drawFlies(ctx, o.x, groundY, frame); }
-        else if(o.type === 'bird') { drawFlies(ctx, o.x, o.y, frame); } 
-        else if(o.type === 'hydrant') drawHydrant(ctx, o.x, groundY);
-        else if(o.type === 'pond') { ctx.fillStyle = "rgba(241, 196, 15, 0.8)"; ctx.beginPath(); ctx.ellipse(o.x, groundY+5, 100, 15, 0, 0, Math.PI*2); ctx.fill(); }
-        
-        let hit = false;
-        if(o.type === 'bird') { if(Math.abs(150-o.x) < 25 && Math.abs(pepper.y - o.y) < 25) hit = true; }
-        if(o.type === 'poo' && Math.abs(150-o.x)<20 && pepper.y > groundY-(o.stack*35)+15) hit=true;
-        if(o.type === 'hydrant' && Math.abs(150-o.x)<15 && pepper.y > groundY-35) hit=true; 
-        if(o.type === 'stack' && Math.abs(150-o.x)<20 && pepper.y > groundY-105) hit=true; 
-        if(o.type === 'pond' && o.x < 150+10 && o.x > 150-90 && pepper.y > groundY - 5) hit=true; 
-
-        if(hit && gameActive && !isPaused && !isCountingDown && !levelVictoryAnim) {
-            if(o.type === 'hydrant' || o.type === 'pond') {
-                if(o.type === 'hydrant' && pepper.isMega) { gameOver('mega-hydrant'); } 
-                else { let color = o.type==='hydrant' ? "#00fbff" : "#f1c40f"; spawnParticles(150, groundY, color, 40); playSfx('splash'); playSfx('crash'); flashScreen(color); gameOver('standard'); }
-                continue; 
-            }
-            if(pepper.isMega) { score += 5; spawnParticles(o.x, groundY, "#8B4513", 20); spawnPopup("SMASH!", o.x, o.y-50, "orange"); playSfx('smash'); shakeScreen(15); obstacles.splice(i, 1); continue; }
-            if(pepper.hasShield) { pepper.hasShield = false; pepper.sticks=0; stickText.innerText="0/5"; spawnParticles(o.x, groundY, "#8B4513", 25); playSfx('crash'); flashScreen('red'); spawnPopup("SHIELD BROKE!", 150, pepper.y-50, "red"); obstacles.splice(i, 1); continue; }
-            gameOver('standard');
-        }
-        if(o.x < -300) obstacles.splice(i, 1);
-    }
-
-    for(let i=sticks.length-1; i>=0; i--) {
-        let s = sticks[i]; if(!levelFinished && gameActive && !isPaused && !isCountingDown) s.x -= speed; drawStick(ctx, s.x, s.y, frame);
-        if(gameActive && !isPaused && Math.abs(150-s.x)<40 && Math.abs(pepper.y-25-s.y)<40) {
-            if(difficulty !== 'death') {
-                pepper.sticks++; playSfx('collect'); spawnParticles(s.x, s.y, "#00b894", 15);
-                if(pepper.sticks>=5) { pepper.hasShield=true; pepper.sticks=0; spawnPopup("STICK SHIELD!", 150, pepper.y-50, "#00b894"); flashScreen('#00b894'); }
-                stickText.innerText=pepper.sticks+"/5";
-            } else { spawnPopup("NO SHIELDS", s.x, s.y, "red"); }
-            sticks.splice(i,1);
-        } else if(s.x<-100) sticks.splice(i,1);
-    }
-
-    for(let i=bones.length-1; i>=0; i--) {
-        let b = bones[i]; if(!levelFinished && gameActive && !isPaused && !isCountingDown) b.x -= speed; drawBone(ctx, b.x, b.y, b.type, frame);
-        if(gameActive && !isPaused && Math.abs(150-b.x)<40 && Math.abs(pepper.y-25-b.y)<40) {
-            if(b.type === 'magnet') { pepper.magnetTimer = 600; playSfx('magnet'); spawnPopup("MAGNET!", b.x, b.y, "#e74c3c"); }
-            else {
-                let val = (b.type === 'gold') ? 5 : 1; let scoreVal = (pepper.hat === 'cap') ? val * 2 : val; 
-                score += scoreVal; scoreEl.innerText = score + " 🦴"; 
-                playSfx('collect'); spawnParticles(b.x, b.y, "gold", 15); spawnPopup("+"+scoreVal, b.x, b.y, "gold"); 
-                if(!pepper.isMega && difficulty !== 'death') { 
-                    let target = (pepper.hat === 'cowboy') ? 25 : 50; pepper.streak += val; 
-                    if(pepper.streak >= target){ pepper.isMega=true; pepper.megaTimer = 900; pepper.spinTimer = 40; spawnPopup("MEGA MODE!", canvas.width/2, canvas.height/3, "#ff00ff"); flashScreen('white'); shakeScreen(20); } 
-                }
-            }
-            bones.splice(i,1);
-        } else if(b.x<-100) bones.splice(i,1);
-    }
-    
-    if (gameActive && !isPaused) {
-        fgBushes.forEach(bush => {
-            bush.x -= speed * 1.5; if(bush.x < -150) { bush.x = canvas.width + Math.random()*500; }
-            ctx.fillStyle = "#0f1519"; ctx.beginPath();
-            ctx.arc(bush.x, canvas.height + 20, 60, 0, Math.PI*2);
-            ctx.arc(bush.x+50, canvas.height + 30, 50, 0, Math.PI*2);
-            ctx.arc(bush.x+30, canvas.height - 10, 40, 0, Math.PI*2);
-            ctx.fill();
-        });
-    }
-
-    ctx.restore();
-    requestAnimationFrame(loop);
-}
-
-function completeLevel() { 
-    if(isDead) return;
-    levelFinished = true; playSfx('levelup'); stopMusic(); setTimeout(openShop, 1500); 
-}
-
-function gameOver(reason) { 
-    isDead = true; gameActive = false; stopMusic(); endScoreEl.innerText = score; 
-    if(difficulty === 'baby') { retryBtn.innerText = "RETRY LEVEL (BABY MODE)"; } else { retryBtn.innerText = "TRY AGAIN"; }
-    if(reason === 'mega-hydrant') { goTitle.innerText = "STINKY!"; goMsg.innerText = "EVEN MEGA PEPPER HAS TO HOP A HYDRANT!"; goCanvas.style.display = 'block'; let gCtx = goCanvas.getContext('2d'); gCtx.clearRect(0,0,150,100); drawHydrant(gCtx, 75, 80); } else { goTitle.innerText = "GAME OVER!"; goMsg.innerText = ""; goCanvas.style.display = 'none'; } 
-    gameOverScreen.style.display = 'flex'; 
-}
-
-function handleInput() { 
-    if(!gameActive || isPaused || isCountingDown || levelVictoryAnim) return; 
-    initAudio(); 
-    if(pepper.grounded) { pepper.dy = JUMP_FORCE; pepper.grounded = false; playSfx('jump'); if(pepper.doubleJumpUnlocked) pepper.canDoubleJump = true; } 
-    else if (pepper.canDoubleJump) { pepper.dy = DOUBLE_JUMP_FORCE; pepper.canDoubleJump = false; playSfx('doublejump'); spawnParticles(150, pepper.y, "white", 5); } 
-}
-
-window.addEventListener('touchstart', (e) => { if(e.target.className.includes('btn') || e.target.className.includes('menu') || menuOpen || e.target.closest('.diff-card') || e.target.closest('.shop-item')) return; if(e.target !== menuBtn) { e.preventDefault(); handleInput(); } }, {passive: false});
-window.addEventListener('mousedown', (e) => { if(e.target.className.includes('btn') || e.target.className.includes('menu') || menuOpen || e.target.closest('.diff-card') || e.target.closest('.shop-item')) return; if(e.target !== menuBtn) handleInput(); });
-
-// Fix for Content Security Policy (Difficulty Buttons)
-document.getElementById('diff-baby').addEventListener('click', () => setDifficulty('baby'));
-document.getElementById('diff-normal').addEventListener('click', () => setDifficulty('normal'));
-document.getElementById('diff-death').addEventListener('click', () => setDifficulty('death'));
-
-// Start
-resize(); resetGameLogic(); renderDiffPreviews(); drawStickIcon(); requestAnimationFrame(loop);
+        else { clearInterval(interval); countdownText.innerText = "GO!"; playBark(); setTimeout(() => { countdownLayer.style.display = 'none'; isCountingDown = false; gameActive = true; startMusic(currentLevel, difficulty, pepper);
