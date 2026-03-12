@@ -76,7 +76,7 @@ let levelVictoryAnim = false; // The little run off screen at the end
 
 let groundY = 0;
 let shakeAmount = 0;
-let zoomLevel = 3.5;       // Starts zoomed in on title
+let zoomLevel = 1.15;       // Starts zoomed in on title
 
 let nextStickTimer = 0;
 let nextBoneTimer = 0;
@@ -238,9 +238,10 @@ function update() {
     if (gameState === 'PLAYING' && !isPaused) updateBackgrounds();
     
     // Zoom Logic
-    let targetZoom = (gameState === 'PLAYING' && pepper.isMega) ? 1.05 : 
-                     (gameState === 'START') ? 1.5 : 1.0; 
-    zoomLevel += (targetZoom - zoomLevel) * 0.05;
+    let startZoom = canvas.width < 768 ? 0.9 : 1.1;
+let targetZoom = (gameState === 'PLAYING' && pepper.isMega) ? 1.05 :
+                 (gameState === 'START') ? startZoom : 1.0;
+zoomLevel += (targetZoom - zoomLevel) * 0.05;
 
     // Shake Logic
     if (shakeAmount > 0) {
@@ -704,11 +705,20 @@ if (finishLine) {
 
     // Draw Pepper
     if (gameState === 'START') {
-        drawFrontFacingHusky(ctx, canvas.width/2, groundY - 140, 2.0, difficulty);
-        drawSteamDooDoo(ctx, canvas.width*0.8, groundY-20, frame);
-    } else {
-        drawHusky(ctx, pepper.x, pepper.y, pepper.isMega, pepper.hasShield, pepper, difficulty, frame);
-    }
+    const isMobile = canvas.width < 768;
+
+    const startDogX = isMobile ? canvas.width * 0.22 : canvas.width * 0.32;
+    const startDogY = isMobile ? groundY - 55 : groundY - 90;
+    const startDogScale = isMobile ? 1.0 : 1.45;
+
+    const startPooX = isMobile ? canvas.width * 0.78 : canvas.width * 0.74;
+    const startPooY = isMobile ? groundY - 8 : groundY - 14;
+
+    drawFrontFacingHusky(ctx, startDogX, startDogY, startDogScale, difficulty);
+    drawSteamDooDoo(ctx, startPooX, startPooY, frame);
+} else {
+    drawHusky(ctx, pepper.x, pepper.y, pepper.isMega, pepper.hasShield, pepper, difficulty, frame);
+}
 
     // Particles & Text
     particles.forEach(p => {
