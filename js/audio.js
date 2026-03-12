@@ -65,75 +65,126 @@ function playSnare() {
     g.gain.setValueAtTime(0.3, audioCtx.currentTime); 
     g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08); 
     
-    n.connect(f); f.connect(g); g.connect(audioCtx.destination); n.start(); 
+    n.connect(f); 
+    f.connect(g); 
+    g.connect(audioCtx.destination); 
+    n.start(); 
 }
 
 function playBark() { 
     if (!audioCtx || isMuted) return; 
-    const osc = audioCtx.createOscillator(); osc.type = 'triangle'; 
+    const osc = audioCtx.createOscillator(); 
+    osc.type = 'triangle'; 
     const gain = audioCtx.createGain(); 
     osc.frequency.setValueAtTime(300, audioCtx.currentTime); 
     osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.15); 
     gain.gain.setValueAtTime(0.3, audioCtx.currentTime); 
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15); 
-    osc.connect(gain); gain.connect(audioCtx.destination); 
-    osc.start(); osc.stop(audioCtx.currentTime + 0.2); 
+    osc.connect(gain); 
+    gain.connect(audioCtx.destination); 
+    osc.start(); 
+    osc.stop(audioCtx.currentTime + 0.2); 
 }
 
 function playClick() { 
     if (!audioCtx || isMuted) return; 
-    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); 
+    const osc = audioCtx.createOscillator(); 
+    const gain = audioCtx.createGain(); 
     osc.frequency.setValueAtTime(800, audioCtx.currentTime); 
     gain.gain.setValueAtTime(0.1, audioCtx.currentTime); 
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05); 
-    osc.connect(gain); gain.connect(audioCtx.destination); 
-    osc.start(); osc.stop(audioCtx.currentTime + 0.06); 
+    osc.connect(gain); 
+    gain.connect(audioCtx.destination); 
+    osc.start(); 
+    osc.stop(audioCtx.currentTime + 0.06); 
 }
 
 function startMusic(currentLevel, difficulty, pepper) { 
     if (musicInterval || isMuted) return; 
     let track = tracks[currentLevel] || tracks[3]; 
-    let ms = track.tempo; if(difficulty==='death') ms*=0.9; 
-    step=0; 
+    let ms = track.tempo; 
+    if (difficulty === 'death') ms *= 0.9; 
+    step = 0; 
     
     musicInterval = setInterval(() => { 
-        // Note: gameActive and isPaused checks will need to be passed or checked globally
-        if (window.isGamePaused()) return; // Helper function we will add to game.js
+        if (window.isGamePaused()) return;
 
         let tick = step % 16; 
         if (pepper.isMega) { 
-            let arp = [523, 659, 783, 1046]; synth(arp[step % 4], 'square', 0.08, 0.1); 
-            if(step % 2 === 0) synth(130, 'sawtooth', 0.15, 0.1); if(tick % 4 === 2) playSnare(); 
+            let arp = [523, 659, 783, 1046]; 
+            synth(arp[step % 4], 'square', 0.08, 0.1); 
+            if (step % 2 === 0) synth(130, 'sawtooth', 0.15, 0.1); 
+            if (tick % 4 === 2) playSnare(); 
         } else { 
-            let b = track.bass[tick]; if (b) synth(b, 'sawtooth', 0.25, 0.25, true); 
-            if (tick === 4 || tick === 12) playSnare(); if (tick % 2 === 0) synth(4000, 'square', 0.03, 0.02); 
-            if(window.getLevelDistance() > window.getLevelMaxDistance()/2) { // Helper function
-                let l = track.lead[tick]; if(l) synth(l*2, 'square', 0.1, 0.15); 
+            let b = track.bass[tick]; 
+            if (b) synth(b, 'sawtooth', 0.25, 0.25, true); 
+            if (tick === 4 || tick === 12) playSnare(); 
+            if (tick % 2 === 0) synth(4000, 'square', 0.03, 0.02); 
+            if (window.getLevelDistance() > window.getLevelMaxDistance() / 2) { 
+                let l = track.lead[tick]; 
+                if (l) synth(l * 2, 'square', 0.1, 0.15); 
             }
         } 
         step++; 
     }, ms); 
 }
 
-function stopMusic() { clearInterval(musicInterval); musicInterval = null; }
+function stopMusic() { 
+    clearInterval(musicInterval); 
+    musicInterval = null; 
+}
 
 function playSfx(type) { 
     if (!audioCtx || isMuted) return; 
-    if(type==='jump') synth(350, 'triangle', 0.1, 0.1); 
-    if(type==='doublejump') synth(600, 'square', 0.1, 0.1); 
-    if(type==='collect') synth(1400, 'sine', 0.1, 0.2); 
-    if(type==='smash') { synth(80, 'sawtooth', 0.3, 0.3); playSnare(); } 
-    if(type==='crash') synth(50, 'sawtooth', 0.4, 0.5); 
-    if(type==='levelup') { synth(440, 'triangle', 0.2, 0.5); setTimeout(()=>synth(880, 'triangle', 0.2, 0.5), 100); } 
-    if(type==='splash') { 
-        const o = audioCtx.createOscillator(); o.type = 'sawtooth'; 
+
+    if (type === 'jump') synth(350, 'triangle', 0.1, 0.1); 
+    if (type === 'doublejump') synth(600, 'square', 0.1, 0.1); 
+    if (type === 'collect') synth(1400, 'sine', 0.1, 0.2); 
+    if (type === 'smash') { 
+        synth(80, 'sawtooth', 0.3, 0.3); 
+        playSnare(); 
+    } 
+    if (type === 'crash') synth(50, 'sawtooth', 0.4, 0.5); 
+    if (type === 'levelup') { 
+        synth(440, 'triangle', 0.2, 0.5); 
+        setTimeout(() => synth(880, 'triangle', 0.2, 0.5), 100); 
+    } 
+
+    if (type === 'splash') { 
+        const o = audioCtx.createOscillator(); 
+        o.type = 'sawtooth'; 
         o.frequency.setValueAtTime(400, audioCtx.currentTime); 
-        o.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime+0.3); 
+        o.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3); 
         const g = audioCtx.createGain(); 
         g.gain.setValueAtTime(0.3, audioCtx.currentTime); 
-        g.gain.linearRampToValueAtTime(0, audioCtx.currentTime+0.3); 
-        o.connect(g); g.connect(audioCtx.destination); o.start(); 
+        g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3); 
+        o.connect(g); 
+        g.connect(audioCtx.destination); 
+        o.start(); 
+        o.stop(audioCtx.currentTime + 0.31); 
     } 
-    if(type==='spray') synth(1000, 'white', 0.1, 0.1); 
-    if(type==='magnet') synth(2000, 'sine', 0.1, 0.5, true); 
+
+    if (type === 'spray') {
+        const b = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.08, audioCtx.sampleRate);
+        const d = b.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+
+        const n = audioCtx.createBufferSource();
+        n.buffer = b;
+
+        const f = audioCtx.createBiquadFilter();
+        f.type = 'bandpass';
+        f.frequency.value = 1800;
+
+        const g = audioCtx.createGain();
+        g.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+
+        n.connect(f); 
+        f.connect(g); 
+        g.connect(audioCtx.destination); 
+        n.start();
+    } 
+
+    if (type === 'magnet') synth(2000, 'sine', 0.1, 0.5, true); 
 }
