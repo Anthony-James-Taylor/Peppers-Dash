@@ -624,30 +624,30 @@ function draw() {
     ctx.scale(zoomLevel, zoomLevel);
     ctx.translate(-canvas.width/2, -canvas.height/2);
 
-    // Draw Objects
-    obstacles.forEach(o => {
-        if (o.type === 'poo') drawDooDoo(ctx, o.x, groundY, o.stack);
-        else if (o.type === 'stack') { drawDooDoo(ctx, o.x, groundY, 3); drawFlies(ctx, o.x, groundY, frame); }
-        else if (o.type === 'bird') drawFlies(ctx, o.x, o.y, frame);
-        else if (o.type === 'hydrant') drawHydrant(ctx, o.x, groundY);
-        else if (o.type === 'pond') {
-            ctx.fillStyle = "rgba(100, 200, 255, 0.8)";
-            ctx.beginPath(); ctx.ellipse(o.x, groundY+5, 100, 15, 0, 0, Math.PI*2); ctx.fill();
-        }
-    });
+// Draw Objects
+sticks.forEach(s => drawStick(ctx, s.x, s.y, frame));
+bones.forEach(b => drawBone(ctx, b.x, b.y, b.type, frame));
 
-    sticks.forEach(s => drawStick(ctx, s.x, s.y, frame));
-    bones.forEach(b => drawBone(ctx, b.x, b.y, b.type, frame));
+obstacles.forEach(o => {
+    if (o.type === 'poo') drawDooDoo(ctx, o.x, groundY, o.stack);
+    else if (o.type === 'stack') { drawDooDoo(ctx, o.x, groundY, 3); drawFlies(ctx, o.x, groundY, frame); }
+    else if (o.type === 'bird') drawFlies(ctx, o.x, o.y, frame);
+    else if (o.type === 'hydrant') drawHydrant(ctx, o.x, groundY);
+    else if (o.type === 'pond') {
+        ctx.fillStyle = "rgba(100, 200, 255, 0.8)";
+        ctx.beginPath(); ctx.ellipse(o.x, groundY + 5, 100, 15, 0, 0, Math.PI * 2); ctx.fill();
+    }
+});
 
-    if (finishLine) {
-        ctx.fillStyle = "white"; 
-        for(let r=0; r<8; r++) { 
-            for(let c=0; c<2; c++) { 
-                ctx.fillStyle = (r+c)%2===0 ? "white" : "black"; 
-                ctx.fillRect(finishLine.x + c*20, groundY-160 + r*20, 20, 20); 
-            } 
+if (finishLine) {
+    ctx.fillStyle = "white";
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 2; c++) {
+            ctx.fillStyle = (r + c) % 2 === 0 ? "white" : "black";
+            ctx.fillRect(finishLine.x + c * 20, groundY - 160 + r * 20, 20, 20);
         }
     }
+}
 
     // Draw Pepper
     if (gameState === 'START') {
