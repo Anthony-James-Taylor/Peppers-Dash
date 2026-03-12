@@ -237,7 +237,7 @@ h1 {
 }
 .diff-card.selected { border-color: #00fbff; background: rgba(0,251,255,0.1); }
 .diff-info h3 { margin: 0 0 5px 0; font-size: 18px; color: #ffeaa7; text-transform: uppercase; letter-spacing: 1px;}
-.diff-info p { margin: 0; font-size: 12px; color: #ffffff; line-height: 1.4; } /* FORCED WHITE */
+.diff-info p { margin: 0; font-size: 12px; color: #ffffff; line-height: 1.4; }
 
 /* Countdown Overlay */
 #countdown-layer {
