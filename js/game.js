@@ -337,64 +337,61 @@ function spawnManager() {
     if (levelFinished) return;
 
     // Obstacles
-    if (globalSpawnCooldown > 0) globalSpawnCooldown--;
-    else {
-        if (Math.random() < 0.04) { // 4% chance per frame
+    if (globalSpawnCooldown > 0) {
+        globalSpawnCooldown--;
+    } else {
+        if (Math.random() < 0.04) {
             spawnObstacle();
-            // Reset cooldown based on pixels (roughly 300px gap minimum)
-            globalSpawnCooldown = 300 / PHYSICS.SPEED; 
+            globalSpawnCooldown = 300 / PHYSICS.SPEED;
         }
     }
 
-// Sticks
-nextStickTimer--;
-if (nextStickTimer <= 0) {
-    if (Math.random() > 0.5) {
-        let placed = false;
+    // Sticks
+    nextStickTimer--;
+    if (nextStickTimer <= 0) {
+        if (Math.random() > 0.5) {
+            for (let attempt = 0; attempt < 4; attempt++) {
+                const sx = canvas.width + (attempt * 140);
+                const sy = groundY - 120;
+
+                if (canSpawnCollectible(sx, sy, 140, 140)) {
+                    sticks.push({ x: sx, y: sy });
+                    break;
+                }
+            }
+        }
+
+        nextStickTimer = 200 + Math.random() * 300;
+    }
+
+    // Bones
+    nextBoneTimer--;
+    if (nextBoneTimer <= 0) {
+        let h = Math.random();
+        let yPos = groundY - 40;
+        if (h > 0.6) yPos = groundY - 100;
+        if (h > 0.9) yPos = groundY - 180;
+
+        let type = 'white';
+        if (Math.random() > 0.95 && magnetCooldown <= 0) {
+            type = 'magnet';
+        } else if (Math.random() > 0.9) {
+            type = 'gold';
+        }
 
         for (let attempt = 0; attempt < 4; attempt++) {
-            const sx = canvas.width + (attempt * 140);
-            const sy = groundY - 120;
+            const bx = canvas.width + (attempt * 110);
 
-            if (canSpawnCollectible(sx, sy, 140, 140)) {
-                sticks.push({ x: sx, y: sy });
-                placed = true;
+            if (canSpawnCollectible(bx, yPos, 120, 120)) {
+                bones.push({ x: bx, y: yPos, type: type });
                 break;
             }
         }
+
+        nextBoneTimer = 50 + Math.random() * 100;
     }
 
-    nextStickTimer = 200 + Math.random() * 300;
-}
-
-    // Bones
-nextBoneTimer--;
-if (nextBoneTimer <= 0) {
-    let h = Math.random();
-    let yPos = groundY - 40;
-    if (h > 0.6) yPos = groundY - 100;
-    if (h > 0.9) yPos = groundY - 180;
-
-    let type = 'white';
-    if (Math.random() > 0.95 && magnetCooldown <= 0) {
-        type = 'magnet';
-    } else if (Math.random() > 0.9) {
-        type = 'gold';
-    }
-
-    let placed = false;
-
-    for (let attempt = 0; attempt < 4; attempt++) {
-        const bx = canvas.width + (attempt * 110);
-
-        if (canSpawnCollectible(bx, yPos, 120, 120)) {
-            bones.push({ x: bx, y: yPos, type: type });
-            placed = true;
-            break;
-        }
-    }
-
-    nextBoneTimer = 50 + Math.random() * 100;
+    if (magnetCooldown > 0) magnetCooldown--;
 }
 
 function spawnObstacle() {
