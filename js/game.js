@@ -346,30 +346,55 @@ function spawnManager() {
         }
     }
 
-    // Sticks
-    nextStickTimer--;
-    if (nextStickTimer <= 0) {
-        if (Math.random() > 0.5) sticks.push({x: canvas.width, y: groundY - 120});
-        nextStickTimer = 200 + Math.random() * 300;
+// Sticks
+nextStickTimer--;
+if (nextStickTimer <= 0) {
+    if (Math.random() > 0.5) {
+        let placed = false;
+
+        for (let attempt = 0; attempt < 4; attempt++) {
+            const sx = canvas.width + (attempt * 140);
+            const sy = groundY - 120;
+
+            if (canSpawnCollectible(sx, sy, 140, 140)) {
+                sticks.push({ x: sx, y: sy });
+                placed = true;
+                break;
+            }
+        }
     }
+
+    nextStickTimer = 200 + Math.random() * 300;
+}
 
     // Bones
-    nextBoneTimer--;
-    if (nextBoneTimer <= 0) {
-        let h = Math.random();
-        let yPos = groundY - 40;
-        if (h > 0.6) yPos = groundY - 100;
-        if (h > 0.9) yPos = groundY - 180;
-        
-        let type = 'white';
-        if (Math.random() > 0.95 && magnetCooldown <= 0) { type = 'magnet'; }
-        else if (Math.random() > 0.9) { type = 'gold'; }
+nextBoneTimer--;
+if (nextBoneTimer <= 0) {
+    let h = Math.random();
+    let yPos = groundY - 40;
+    if (h > 0.6) yPos = groundY - 100;
+    if (h > 0.9) yPos = groundY - 180;
 
-        bones.push({x: canvas.width, y: yPos, type: type});
-        nextBoneTimer = 50 + Math.random() * 100;
+    let type = 'white';
+    if (Math.random() > 0.95 && magnetCooldown <= 0) {
+        type = 'magnet';
+    } else if (Math.random() > 0.9) {
+        type = 'gold';
     }
-    
-    if (magnetCooldown > 0) magnetCooldown--;
+
+    let placed = false;
+
+    for (let attempt = 0; attempt < 4; attempt++) {
+        const bx = canvas.width + (attempt * 110);
+
+        if (canSpawnCollectible(bx, yPos, 120, 120)) {
+            bones.push({ x: bx, y: yPos, type: type });
+            placed = true;
+            break;
+        }
+    }
+
+    nextBoneTimer = 50 + Math.random() * 100;
 }
 
 function spawnObstacle() {
@@ -388,6 +413,37 @@ function spawnObstacle() {
         obj.stack = Math.floor(Math.random() * 2) + 1; 
     }
     obstacles.push(obj);
+}
+
+function canSpawnCollectible(x, y, xPadding = 140, yPadding = 120) {
+    // Don't spawn collectibles right on top of the finish line area
+    if (finishLine && finishLine.x > canvas.width - 250) return false;
+
+    for (let i = 0; i < obstacles.length; i++) {
+        const o = obstacles[i];
+
+        let ox = o.x;
+        let oy = groundY;
+        let oHeightCenter = groundY - 20;
+
+        if (o.type === 'bird') {
+            oHeightCenter = o.y;
+        } else if (o.type === 'hydrant') {
+            oHeightCenter = groundY - 35;
+        } else if (o.type === 'stack') {
+            oHeightCenter = groundY - 70;
+        } else if (o.type === 'pond') {
+            oHeightCenter = groundY;
+        } else {
+            oHeightCenter = groundY - 20;
+        }
+
+        if (Math.abs(x - ox) < xPadding && Math.abs(y - oHeightCenter) < yPadding) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 function updateBackgrounds() {
