@@ -172,21 +172,25 @@ h1 {
 }
 #start-diff-btn:hover { background: rgba(255,255,255,0.25); }
 
-/* ================================================================
-   CANINE COUTURE SHOP — Full boutique redesign
-   ================================================================ */
+/* ==========================================================
+   PEPPER'S PET BOUTIQUE - Shopkeeper & Interior Redesign
+   ========================================================== */
 
 #shop-screen {
-    /* Create an indoor shop look */
+    /* Create an indoor shop look with wooden planks */
     background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.9)), 
                 repeating-linear-gradient(0deg, #3d2b1f 0px, #3d2b1f 40px, #4d3b2f 41px);
     background-size: cover;
-    border-top: 10px solid #5d4037; /* Wooden top border */
+    border-top: 10px solid #5d4037; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 50px; /* Room for the decorative bar */
 }
 
-/* Decorative top bar */
+/* Updated Decorative top bar with new shop name */
 #shop-screen::before {
-    content: '✦ CANINE COUTURE ✦ EST. 2025 ✦ CANINE COUTURE ✦ EST. 2025 ✦';
+    content: '✦ PEPPER\'S PET BOUTIQUE ✦ EST. 2026 ✦ PEPPER\'S PET BOUTIQUE ✦';
     position: absolute; top: 0; left: 0; right: 0;
     background: linear-gradient(90deg, #ff00de, #00fbff, #FFD700, #ff00de);
     background-size: 200%;
@@ -194,6 +198,44 @@ h1 {
     color: #1a0533; font-size: 10px; font-weight: 900;
     letter-spacing: 2px; padding: 6px 0; text-align: center;
     z-index: 10;
+}
+
+/* --- THE SHOPKEEPER AREA --- */
+#shopkeeper-wrapper {
+    position: relative;
+    width: 200px;
+    height: 150px;
+    margin: 10px auto;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+#shopkeeper-canvas {
+    position: absolute;
+    bottom: 0;
+    z-index: 1; /* Cat sits in the back */
+}
+
+/* THE WOODEN COUNTER (The Desk) */
+#shop-counter-desk {
+    position: absolute;
+    bottom: 0;
+    width: 240px; 
+    height: 45px; /* Cuts off the cat's bottom to look like he's sitting */
+    background: #5d4037;
+    border-top: 6px solid #8d6e63;
+    border-radius: 12px 12px 0 0;
+    z-index: 2; /* Forces the desk to appear IN FRONT of the cat */
+    box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+}
+
+#shop-counter-area h1 {
+    font-size: 28px;
+    color: #f39c12;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    margin-bottom: 5px;
+    text-align: center;
 }
 
 #shop-counter-area {
@@ -252,6 +294,43 @@ h1 {
     box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
     position: relative;
     margin-top: 20px;
+}
+
+/* --- SHOPKEEPER & COUNTER POSITIONING --- */
+#shopkeeper-wrapper {
+    position: relative;
+    width: 200px;
+    height: 150px;
+    margin: 20px auto 10px; /* Moves the cat down and centers it */
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+#shopkeeper-canvas {
+    position: absolute;
+    bottom: 0;
+    z-index: 1; /* This keeps the cat in the back */
+}
+
+/* --- THE WOODEN COUNTER (The Desk) --- */
+#shop-counter-desk {
+    position: absolute;
+    bottom: 0;
+    width: 240px; /* Wider than the cat to look like a desk */
+    height: 45px; /* High enough to cover the bottom of the cat's body */
+    background: #5d4037; /* Same wood color as your shelves */
+    border-top: 6px solid #8d6e63; /* Adds a highlighted edge to the desk */
+    border-radius: 8px 8px 0 0;
+    z-index: 2; /* CRITICAL: This forces the desk to sit IN FRONT of the cat */
+    box-shadow: 0 -10px 20px rgba(0,0,0,0.3);
+}
+
+#shop-counter-area h1 {
+    margin-top: 20px;
+    font-size: 28px;
+    color: #f39c12;
+    text-align: center;
 }
 
 /* --- STEP 1: SHOP ITEM REDESIGN (WOODEN SHELVES) --- */
