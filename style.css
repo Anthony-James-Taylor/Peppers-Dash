@@ -75,7 +75,7 @@ body {
 
 #progress-wrapper {
     position: absolute; 
-    top: 160px; /* Changed from 100px to 160px to stay below the HUD boxes */
+    top: 220px; /* Changed from 100px to 160px to stay below the HUD boxes */
     width: 70%; 
     height: 8px;
     background: rgba(0,0,0,0.6); 
@@ -85,7 +85,7 @@ body {
 #progress-fill { height: 100%; width: 0%; background: #00fbff; box-shadow: 0 0 10px #00fbff; transition: width 0.1s linear; border-radius: 4px; }
 
 #finish-icon { 
-    position: absolute; right: -25px; top: -25px; 
+    position: absolute; right: -25px; top: -35px; 
     font-size: 40px; filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5));
     animation: wave 1s infinite ease-in-out alternate;
 }
