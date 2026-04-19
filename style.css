@@ -173,39 +173,44 @@ h1 {
 #start-diff-btn:hover { background: rgba(255,255,255,0.25); }
 
 /* ==========================================================
-   PEPPER'S PET BOUTIQUE - Shopkeeper & Interior Redesign
+   PEPPER'S PET BOUTIQUE - 3D Layout (Wall & Floor)
    ========================================================== */
 
 #shop-screen {
-    /* Create an indoor shop look with wooden planks */
-    background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.9)), 
-                repeating-linear-gradient(0deg, #3d2b1f 0px, #3d2b1f 40px, #4d3b2f 41px);
-    background-size: cover;
-    border-top: 10px solid #5d4037; 
+    background: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden; /* Stops the whole screen from scrolling */
+    padding-top: 30px; /* Space for the rainbow bar */
+}
+
+/* THE BACK WALL: Vertical wood planks behind the cat */
+#shop-counter-area {
+    width: 100%;
+    background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), 
+                repeating-linear-gradient(90deg, #4d3b2f 0px, #4d3b2f 60px, #3d2b1f 61px);
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-top: 50px; /* Room for the decorative bar */
+    padding: 40px 20px 20px;
+    border-bottom: 15px solid #2d1e14; /* Shadow edge where wall meets floor */
+    position: relative;
 }
 
-/* Updated Decorative top bar with new shop name */
-#shop-screen::before {
-    content: '✦ PEPPER\'S PET BOUTIQUE ✦ EST. 2026 ✦ PEPPER\'S PET BOUTIQUE ✦';
-    position: absolute; top: 0; left: 0; right: 0;
-    background: linear-gradient(90deg, #ff00de, #00fbff, #FFD700, #ff00de);
-    background-size: 200%;
-    animation: rainbowMove 2s linear infinite;
-    color: #1a0533; font-size: 10px; font-weight: 900;
-    letter-spacing: 2px; padding: 6px 0; text-align: center;
-    z-index: 10;
+#shop-counter-area h1 {
+    font-size: 24px;
+    color: #f39c12;
+    text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    margin-bottom: 15px;
+    font-weight: 900;
 }
 
-/* --- THE SHOPKEEPER AREA --- */
+/* SHOPKEEPER POSITIONING */
 #shopkeeper-wrapper {
     position: relative;
     width: 200px;
-    height: 150px;
-    margin: 10px auto;
+    height: 120px;
     display: flex;
     justify-content: center;
     align-items: flex-end;
@@ -214,156 +219,66 @@ h1 {
 #shopkeeper-canvas {
     position: absolute;
     bottom: 0;
-    z-index: 1; /* Cat sits in the back */
+    z-index: 1;
 }
 
-/* THE WOODEN COUNTER (The Desk) */
 #shop-counter-desk {
     position: absolute;
     bottom: 0;
     width: 240px; 
-    height: 45px; /* Cuts off the cat's bottom to look like he's sitting */
+    height: 45px;
     background: #5d4037;
     border-top: 6px solid #8d6e63;
     border-radius: 12px 12px 0 0;
-    z-index: 2; /* Forces the desk to appear IN FRONT of the cat */
+    z-index: 2; /* Desk in front of cat */
     box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
 }
 
-#shop-counter-area h1 {
-    font-size: 28px;
-    color: #f39c12;
-    text-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    margin-bottom: 5px;
-    text-align: center;
-}
-
-#shop-counter-area {
-    width: 100%; 
-    background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
-    border-bottom: 2px solid rgba(255,255,255,0.1);
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
-    padding: 28px 20px 20px;
-    position: relative;
-}
-
-#shop-counter-area h1 {
-    font-family: 'Press Start 2P', monospace;
-    font-size: 18px; letter-spacing: 3px;
-    background: linear-gradient(90deg, #ff00de, #00fbff, #FFD700);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 12px; text-shadow: none; letter-spacing: 4px;
-}
-
-#shop-balance-row {
-    display: flex; align-items: center; gap: 10px;
-    background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.4);
-    border-radius: 12px; padding: 8px 20px;
-}
-#shop-balance-label { color: rgba(255,255,255,0.6); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
-#shop-balance { font-size: 22px; font-weight: 900; color: #FFD700; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
-
-#shopkeeper-canvas { 
-    position: absolute; bottom: -8px; right: 12%;
-    filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
-}
-
+/* THE FLOOR: Dark floor where hats sit side-by-side */
 #shop-floor {
-    flex: 1; width: 100%;
-    display: flex; flex-direction: column; align-items: center;
-    padding: 20px 0 10px;
-    overflow-y: auto;
-}
-
-#shop-text-box {
-    width: 88%; max-width: 520px;
-    background: rgba(0,0,0,0.5); 
-    border: 2px solid rgba(0,251,255,0.3); 
-    border-radius: 12px;
-    padding: 14px 18px; margin-bottom: 20px; text-align: left;
-    font-family: 'Press Start 2P', monospace; font-size: 10px; color: #00fbff;
-    line-height: 2; box-shadow: 0 0 20px rgba(0,251,255,0.1);
+    flex: 1;
+    width: 100%;
+    background: linear-gradient(to bottom, #2d1e14, #1a1a1a);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+    overflow-y: auto; /* Only the items scroll */
 }
 
 .shop-container {
-    background: rgba(255, 255, 255, 0.05);
-    border: 3px solid #f39c12; /* Gold trim */
-    border-radius: 20px;
-    padding: 20px;
-    box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
-    position: relative;
-    margin-top: 20px;
-}
-
-/* --- SHOPKEEPER & COUNTER POSITIONING --- */
-#shopkeeper-wrapper {
-    position: relative;
-    width: 200px;
-    height: 150px;
-    margin: 20px auto 10px; /* Moves the cat down and centers it */
     display: flex;
-    justify-content: center;
-    align-items: flex-end;
+    flex-direction: row; /* MAGIC COMMAND: FORCES HORIZONTAL LAYOUT */
+    flex-wrap: wrap;     /* Wraps to next line if needed */
+    justify-content: center; 
+    gap: 20px;
+    padding: 10px 20px 100px; /* Space for the bottom button */
+    width: 95%;
 }
 
-#shopkeeper-canvas {
-    position: absolute;
-    bottom: 0;
-    z-index: 1; /* This keeps the cat in the back */
-}
-
-/* --- THE WOODEN COUNTER (The Desk) --- */
-#shop-counter-desk {
-    position: absolute;
-    bottom: 0;
-    width: 240px; /* Wider than the cat to look like a desk */
-    height: 45px; /* High enough to cover the bottom of the cat's body */
-    background: #5d4037; /* Same wood color as your shelves */
-    border-top: 6px solid #8d6e63; /* Adds a highlighted edge to the desk */
-    border-radius: 8px 8px 0 0;
-    z-index: 2; /* CRITICAL: This forces the desk to sit IN FRONT of the cat */
-    box-shadow: 0 -10px 20px rgba(0,0,0,0.3);
-}
-
-#shop-counter-area h1 {
-    margin-top: 20px;
-    font-size: 28px;
-    color: #f39c12;
-    text-align: center;
-}
-
-/* --- STEP 1: SHOP ITEM REDESIGN (WOODEN SHELVES) --- */
 .shop-item {
-    background: #5d4037; /* Warm wooden brown */
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    border-bottom: 8px solid #3d2b1f; /* This creates the "shelf" look */
+    background: #5d4037;
+    border-bottom: 8px solid #3d2b1f; 
     border-radius: 12px;
-    padding: 16px 12px; 
-    width: 130px; 
-    text-align: center; 
-    cursor: pointer; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    gap: 6px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    padding: 12px;
+    width: 115px; /* Sized for horizontal rows */
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.4);
     transition: transform 0.2s, background 0.2s;
     position: relative;
-    /* Removed backdrop-filter to prevent mobile lag */
 }
 
-.shop-item:hover { 
-    transform: translateY(-5px) scale(1.02); 
-    background: #6d4c41; 
-}
+.shop-item:hover { transform: translateY(-5px); background: #6d4c41; }
 
-/* Update the selected state to glow against the wood */
 .shop-item.selected { 
-    border-color: #00fbff; 
-    background: #4e342e; 
-    transform: translateY(-6px);
-    box-shadow: 0 0 20px rgba(0,251,255,0.4), 0 8px 24px rgba(0,0,0,0.6);
+    border: 2px solid #00fbff; 
+    background: #4e342e;
+    box-shadow: 0 0 20px rgba(0,251,255,0.4);
+    transform: translateY(-5px);
 }
 .shop-item.locked { opacity: 0.5; cursor: not-allowed; }
 .shop-item.locked:hover { transform: none; }
