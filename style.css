@@ -51,27 +51,44 @@ body {
 .menu-item:active { background: rgba(255,255,255,0.3); }
 
 /* HUD */
+/* --- NEW HUD SYSTEM --- */
 .hud-top { 
     display: flex; 
     justify-content: space-between; 
-    width: 90%; 
-    margin-top: 80px; /* Changed from 20px to 80px to clear the menu */
-    align-items: flex-start; 
+    width: 94%; 
+    margin: 80px auto 0; /* Keeps it clear of the menu button */
+    align-items: flex-start;
+    pointer-events: none; /* Allows taps to pass through to the game */
 }
 
-.glass-pill {
-    background: rgba(0, 0, 0, 0.8); 
-    border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 16px; padding: 8px 20px; 
-    color: white; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+/* Base style for all three boxes */
+.hud-box {
+    background: rgba(45, 52, 54, 0.9);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 8px;
+    min-width: 80px; 
+    display: flex;
+    flex-direction: column; /* Icon/Label on top, number on bottom */
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 900;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 }
 
-/* FIX: Score bone icon - use inline flex with bone emoji rendered natively */
-#score { font-size: 22px; font-weight: 900; line-height: 1; color: #fff; display: flex; align-items: center; gap: 6px; }
-#level-indicator { color: #00fbff; font-weight: 900; font-size: 12px; margin-bottom: 2px; }
+.hud-icon { font-size: 20px; margin-bottom: 2px; }
 
-#stick-canvas { width: 40px; height: 40px; } 
-#stick-text { font-size: 20px; font-weight: 900; margin-top: -5px; } 
+/* Special styling for the center box */
+#center-box {
+    min-width: 120px; 
+    background: rgba(108, 92, 231, 0.9); /* Purple tint */
+}
+
+#points-counter { font-size: 14px; opacity: 0.9; }
+
+/* Keep these small canvas adjustments */
+#stick-canvas { width: 30px; height: 30px; }
 
 #progress-wrapper {
     position: absolute; 
