@@ -50,7 +50,8 @@ body {
     box-shadow: 0 4px 10px rgba(0,0,0,0.5);
 }
 
-#score { font-size: 24px; font-weight: 900; line-height: 1; color: #fff; }
+/* FIX: Score bone icon - use inline flex with bone emoji rendered natively */
+#score { font-size: 22px; font-weight: 900; line-height: 1; color: #fff; display: flex; align-items: center; gap: 6px; }
 #level-indicator { color: #00fbff; font-weight: 900; font-size: 12px; margin-bottom: 2px; }
 
 #stick-canvas { width: 40px; height: 40px; } 
@@ -78,41 +79,15 @@ body {
     padding: 10px 30px; 
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-    min-width: 220px;
-    transition: all 0.3s;
+    min-width: 220px; transition: all 0.3s;
 }
+#mega-label { color: #00fbff; font-size: 12px; font-weight: 900; letter-spacing: 2px; margin-bottom: 5px; text-transform: uppercase; }
+#mega-bar-container { width: 100%; height: 12px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; margin-bottom: 5px; border: 1px solid rgba(255,255,255,0.1); }
+#mega-bar-fill { height: 100%; width: 0%; background: #ff00ff; transition: width 0.2s; box-shadow: 0 0 10px #ff00ff; }
+#mega-text { color: #fff; font-size: 18px; font-weight: 900; letter-spacing: 1px; }
 
-#mega-label {
-    color: #00fbff; font-size: 12px; font-weight: 900; letter-spacing: 2px; margin-bottom: 5px;
-    text-transform: uppercase;
-}
-
-#mega-bar-container {
-    width: 100%; height: 12px; background: rgba(255,255,255,0.1); 
-    border-radius: 6px; overflow: hidden; margin-bottom: 5px;
-    border: 1px solid rgba(255,255,255,0.1);
-}
-
-#mega-bar-fill {
-    height: 100%; width: 0%; background: #ff00ff; 
-    transition: width 0.2s; box-shadow: 0 0 10px #ff00ff;
-}
-
-#mega-text {
-    color: #fff; font-size: 18px; font-weight: 900; letter-spacing: 1px;
-}
-
-.mega-active {
-    border-color: transparent !important;
-    background: linear-gradient(135deg, rgba(20,0,20,0.9), rgba(50,0,50,0.9));
-    box-shadow: 0 0 20px #ff00de, 0 0 40px #00ffff;
-    animation: shake 0.5s infinite;
-}
-.mega-active #mega-bar-fill {
-    background: linear-gradient(90deg, #ff00de, #00ffff, #ffff00, #ff00de); 
-    background-size: 200%;
-    animation: rainbowMove 0.3s linear infinite;
-}
+.mega-active { border-color: transparent !important; background: linear-gradient(135deg, rgba(20,0,20,0.9), rgba(50,0,50,0.9)); box-shadow: 0 0 20px #ff00de, 0 0 40px #00ffff; animation: shake 0.5s infinite; }
+.mega-active #mega-bar-fill { background: linear-gradient(90deg, #ff00de, #00ffff, #ffff00, #ff00de); background-size: 200%; animation: rainbowMove 0.3s linear infinite; }
 .mega-active #mega-label { color: #ffff00; text-shadow: 0 0 5px #ff00de; }
 
 @keyframes rainbowMove { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
@@ -129,7 +104,7 @@ body {
 
 #start-screen { background: none; backdrop-filter: none; z-index: 50; gap: 20px; }
 
-.title-box { animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2; pointer-events: none; margin-bottom: 80px; }
+.title-box { animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 2; pointer-events: none; margin-bottom: 30px; }
 h1 { 
     color: #fff; font-size: 50px; margin: 0; line-height: 0.9; font-weight: 900; 
     letter-spacing: -3px; text-transform: uppercase;
@@ -160,4 +135,182 @@ h1 {
 }
 #start-diff-btn:hover { background: rgba(255,255,255,0.25); }
 
-/* P
+/* ================================================================
+   CANINE COUTURE SHOP — Full boutique redesign
+   ================================================================ */
+
+#shop-screen {
+    background: linear-gradient(160deg, #1a0533 0%, #2d0060 40%, #0d1b3e 100%);
+    justify-content: flex-start;
+    padding-top: 0;
+    overflow: hidden;
+}
+
+/* Decorative top bar */
+#shop-screen::before {
+    content: '✦ CANINE COUTURE ✦ EST. 2025 ✦ CANINE COUTURE ✦ EST. 2025 ✦';
+    position: absolute; top: 0; left: 0; right: 0;
+    background: linear-gradient(90deg, #ff00de, #00fbff, #FFD700, #ff00de);
+    background-size: 200%;
+    animation: rainbowMove 2s linear infinite;
+    color: #1a0533; font-size: 10px; font-weight: 900;
+    letter-spacing: 2px; padding: 6px 0; text-align: center;
+    z-index: 10;
+}
+
+#shop-counter-area {
+    width: 100%; 
+    background: linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%);
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    padding: 28px 20px 20px;
+    position: relative;
+}
+
+#shop-counter-area h1 {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 18px; letter-spacing: 3px;
+    background: linear-gradient(90deg, #ff00de, #00fbff, #FFD700);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 12px; text-shadow: none; letter-spacing: 4px;
+}
+
+#shop-balance-row {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.4);
+    border-radius: 12px; padding: 8px 20px;
+}
+#shop-balance-label { color: rgba(255,255,255,0.6); font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+#shop-balance { font-size: 22px; font-weight: 900; color: #FFD700; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+
+#shopkeeper-canvas { 
+    position: absolute; bottom: -8px; right: 12%;
+    filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5));
+}
+
+#shop-floor {
+    flex: 1; width: 100%;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px 0 10px;
+    overflow-y: auto;
+}
+
+#shop-text-box {
+    width: 88%; max-width: 520px;
+    background: rgba(0,0,0,0.5); 
+    border: 2px solid rgba(0,251,255,0.3); 
+    border-radius: 12px;
+    padding: 14px 18px; margin-bottom: 20px; text-align: left;
+    font-family: 'Press Start 2P', monospace; font-size: 10px; color: #00fbff;
+    line-height: 2; box-shadow: 0 0 20px rgba(0,251,255,0.1);
+}
+
+.shop-container { 
+    display: flex; gap: 14px; flex-wrap: wrap; 
+    justify-content: center; width: 100%; 
+    padding: 0 16px; box-sizing: border-box;
+}
+
+.shop-item {
+    background: rgba(255,255,255,0.04); 
+    border: 2px solid rgba(255,255,255,0.12); 
+    border-radius: 16px;
+    padding: 16px 12px; width: 130px; text-align: center; cursor: pointer; 
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+    position: relative; backdrop-filter: blur(4px);
+}
+.shop-item:hover { transform: translateY(-4px); border-color: rgba(255,255,255,0.3); }
+.shop-item.selected { 
+    border-color: #00fbff; 
+    background: rgba(0,251,255,0.08); 
+    transform: translateY(-6px);
+    box-shadow: 0 0 20px rgba(0,251,255,0.3), 0 8px 24px rgba(0,0,0,0.4);
+}
+.shop-item.locked { opacity: 0.5; cursor: not-allowed; }
+.shop-item.locked:hover { transform: none; }
+
+.shop-hat-preview { width: 80px; height: 80px; margin: 0 auto; }
+
+.shop-name { 
+    color: #fff; font-weight: 900; font-size: 11px; 
+    font-family: 'Montserrat', sans-serif; letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+.shop-perk { 
+    color: #00fbff; font-size: 9px; font-weight: 700; 
+    background: rgba(0,251,255,0.1); border-radius: 6px; padding: 3px 6px;
+    letter-spacing: 0.3px;
+}
+.shop-desc { 
+    color: rgba(255,255,255,0.55); font-size: 9px; line-height: 1.5;
+}
+
+.shop-cost-row { margin-top: 4px; width: 100%; }
+
+.shop-buy-btn {
+    background: linear-gradient(135deg, #ff00de, #7400ff);
+    color: white; border: none; border-radius: 8px;
+    padding: 8px 10px; font-size: 10px; font-weight: 900;
+    cursor: pointer; width: 100%; pointer-events: auto;
+    letter-spacing: 0.5px; transition: opacity 0.2s, transform 0.1s;
+    box-shadow: 0 4px 12px rgba(255,0,222,0.4);
+}
+.shop-buy-btn:hover { opacity: 0.9; transform: scale(1.03); }
+.shop-buy-btn:active { transform: scale(0.97); }
+
+.shop-badge {
+    display: inline-block; border-radius: 8px; padding: 6px 10px;
+    font-size: 10px; font-weight: 900; width: 100%; box-sizing: border-box;
+}
+.shop-badge.owned { 
+    background: rgba(0,251,255,0.15); color: #00fbff; 
+    border: 1px solid rgba(0,251,255,0.4);
+}
+.shop-badge.locked-badge { 
+    background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.4);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+#shop-next-btn {
+    margin-top: 16px; margin-bottom: 8px;
+    background: linear-gradient(135deg, #00fbff, #0984e3);
+    color: #1a0533; border: none; padding: 14px 40px; border-radius: 12px;
+    font-size: 16px; font-weight: 900; cursor: pointer; pointer-events: auto;
+    box-shadow: 0 0 20px rgba(0,251,255,0.4); transition: transform 0.2s;
+    letter-spacing: 1px; text-transform: uppercase;
+    animation: breathe 2s infinite ease-in-out;
+}
+#shop-next-btn:hover { transform: scale(1.05); }
+
+/* Difficulty Cards */
+.diff-container { display: flex; flex-direction: column; gap: 15px; width: 95%; max-height: 85vh; overflow-y: auto; align-items: center; }
+.diff-card { 
+    background: rgba(255,255,255,0.1); border: 2px solid transparent; border-radius: 12px; 
+    padding: 15px; width: 100%; max-width: 380px; text-align: left; display: flex; align-items: center; gap: 15px;
+    cursor: pointer; transition: all 0.2s;
+}
+.diff-card.selected { border-color: #00fbff; background: rgba(0,251,255,0.1); }
+.diff-info h3 { margin: 0 0 5px 0; font-size: 18px; color: #ffeaa7; text-transform: uppercase; letter-spacing: 1px;}
+.diff-info p { margin: 0; font-size: 12px; color: #ffffff; line-height: 1.4; }
+
+/* Countdown Overlay */
+#countdown-layer {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    display: none; align-items: center; justify-content: center;
+    z-index: 150; pointer-events: none;
+}
+#countdown-text {
+    font-size: 100px; font-weight: 900; color: white; 
+    text-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* How To Screen */
+#how-to-screen { z-index: 250; display: none; }
+
+@keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes slideUp { 0% { transform: translateY(50px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+@keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
