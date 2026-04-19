@@ -285,7 +285,7 @@ function drawSteamDooDoo(ctx, x, y, frame) {
     ctx.restore();
 }
 
-function drawFlies(ctx, x, y, frame) { 
+function drawBird(ctx, x, y, frame) { 
     ctx.save(); ctx.translate(x, y); 
     let flap = Math.sin(frame*0.4) * 8;
     ctx.scale(1.5, 1.5); ctx.fillStyle = "#2d3436"; 
@@ -296,6 +296,26 @@ function drawFlies(ctx, x, y, frame) {
     ctx.fillStyle = "#ff9f43"; ctx.beginPath(); ctx.moveTo(-14, -5); ctx.lineTo(-20, -2); ctx.lineTo(-14, 1); ctx.fill();
     ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(-10, -7, 2, 0, Math.PI*2); ctx.fill();
     ctx.restore(); 
+}
+
+function drawFlies(ctx, x, y, frame) {
+    ctx.save();
+    ctx.translate(x, y + 10);
+    ctx.fillStyle = "rgba(20, 20, 20, 0.8)"; 
+    
+    let f1x = Math.sin(frame * 0.2) * 12;
+    let f1y = Math.cos(frame * 0.15) * 8;
+    ctx.beginPath(); ctx.arc(f1x, f1y, 2, 0, Math.PI*2); ctx.fill();
+
+    let f2x = Math.sin(frame * 0.3 + 2) * 8;
+    let f2y = Math.cos(frame * 0.25 + 1) * 12;
+    ctx.beginPath(); ctx.arc(f2x, f2y, 1.5, 0, Math.PI*2); ctx.fill();
+
+    let f3x = Math.cos(frame * 0.1) * 15;
+    let f3y = Math.sin(frame * 0.2 + 3) * 6;
+    ctx.beginPath(); ctx.arc(f3x, f3y, 2.5, 0, Math.PI*2); ctx.fill();
+
+    ctx.restore();
 }
 
 function drawStickIcon() {
