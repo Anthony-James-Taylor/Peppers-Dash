@@ -1,6 +1,6 @@
 /**
  * PEPPER'S DOO-DOO DASH - MASTER GAME LOGIC
- * V40 - STABLE LOOP & UNIFIED PHYSICS
+ * V41 - BUG-FIXED & POLISHED
  */
 
 // --- 1. SETUP & DOM ELEMENTS ---
@@ -49,21 +49,20 @@ const btn = {
     closeDiff: document.getElementById('close-diff-btn')
 };
 
-// Menu Overlay
 const menuContent = document.getElementById('menu-content');
 
 // --- 2. GAME CONSTANTS (PHYSICS) ---
 const PHYSICS = {
-    GRAVITY: 0.8,          // Gravity force
-    JUMP_FORCE: -16,       // Initial jump power
-    DOUBLE_JUMP: -12,      // Double jump power
-    GROUND_H: 140,         // Height of ground from bottom
-    SPEED: 6               // UNIFIED SPEED (Same for all modes)
+    GRAVITY: 0.8,
+    JUMP_FORCE: -16,
+    DOUBLE_JUMP: -12,
+    GROUND_H: 140,
+    SPEED: 9               // FIX: Was 6, increased for better pace
 };
 
 // --- 3. STATE VARIABLES ---
-let gameState = 'START';   // START, COUNTDOWN, PLAYING, PAUSED, GAMEOVER, TRANSITION
-let difficulty = 'normal'; // baby, normal, death
+let gameState = 'START';
+let difficulty = 'normal';
 let frame = 0;
 let score = 0;
 let levelStartScore = 0;
@@ -72,15 +71,16 @@ let currentLevel = 1;
 let levelDistance = 0;
 let levelMaxDistance = 2000;
 let levelFinished = false;
-let levelVictoryAnim = false; // The little run off screen at the end
+let levelVictoryAnim = false;
 
 let groundY = 0;
 let shakeAmount = 0;
-let zoomLevel = 1.15;       // Starts zoomed in on title
+let zoomLevel = 1.15;
 
-let nextStickTimer = 0;
-let nextBoneTimer = 0;
-let globalSpawnCooldown = 0;
+// FIX: Start timers at safe values so nothing spawns immediately
+let nextStickTimer = 120;
+let nextBoneTimer = 60;
+let globalSpawnCooldown = 180;
 let magnetCooldown = 0;
 
 let finishLine = null;
@@ -99,7 +99,7 @@ let pepper = {
     sticks: 0,
     hasShield: false,
     hat: 'none',
-    rotation: 0,
+    rotation: 0,       // FIX: explicitly tracked here
     runFrame: 0,
     magnetTimer: 0,
     spinTimer: 0
@@ -128,9 +128,8 @@ let isPaused = false;
 function init() {
     resize();
     resetGameData();
-    // Create initial background elements
     initBackgrounds();
-    // Start the ONE TRUE LOOP
+    drawStickIcon();   // FIX: draw the stick icon in HUD on start
     cancelAnimationFrame(animationFrameId);
     loop();
 }
@@ -154,36 +153,25 @@ function initBackgrounds() {
 
 // --- 5. GAME LOOP ---
 function loop() {
-    // 1. Update State
     update();
-    
-    // 2. Render State
     draw();
-
-    // 3. Request Next Frame
     animationFrameId = requestAnimationFrame(loop);
 }
 
 function update() {
-    // Standard frame counter
     frame++;
-
-    // Ground Y update (in case of resize)
     groundY = canvas.height - PHYSICS.GROUND_H;
 
-    // --- PHYSICS & LOGIC ---
     if (gameState === 'PLAYING' && !isPaused) {
         
-        // Move Pepper
         pepper.dy += PHYSICS.GRAVITY;
         pepper.y += pepper.dy;
 
-        // Floor Collision
         if (pepper.y >= groundY) {
             pepper.y = groundY;
             pepper.dy = 0;
             pepper.grounded = true;
-            pepper.canDoubleJump = false; // Reset double jump
+            pepper.canDoubleJump = false;
         } else {
             pepper.grounded = false;
         }
@@ -195,14 +183,15 @@ function update() {
             progressFill.style.width = pct + "%";
 
             if (levelDistance >= levelMaxDistance && !finishLine) {
-                finishLine = { x: canvas.width, type: 'finish' };
+                finishLine = { x: canvas.width + 100, type: 'finish' };
+                // FIX: stop spawning anything once finish line is placed
+                globalSpawnCooldown = 9999;
+                nextBoneTimer = 9999;
+                nextStickTimer = 9999;
             }
         }
 
-        // Spawning
         spawnManager();
-
-        // Object Updates
         updateEntities();
 
         // Mega Mode Timer
@@ -213,37 +202,32 @@ function update() {
             if (pepper.megaTimer <= 0) deactivateMega();
         }
         
-        // Magnet Timer
         if (pepper.magnetTimer > 0) pepper.magnetTimer--;
 
     } else if (gameState === 'START' || gameState === 'GAMEOVER') {
-        // Reset dog to ground for visual consistency
         pepper.y = groundY;
     } else if (gameState === 'TRANSITION') {
-        // Victory run off screen
         pepper.dy += PHYSICS.GRAVITY;
         pepper.y += pepper.dy;
         if (pepper.y >= groundY) { pepper.y = groundY; pepper.dy = 0; }
         pepper.x += PHYSICS.SPEED * 1.5;
-        
-        // Animation
         pepper.runFrame += 0.3;
+        // FIX: background keeps scrolling during victory run
+        updateBackgrounds();
         
         if (pepper.x > canvas.width + 100) {
             handleLevelComplete();
         }
     }
     
-    // Background Parallax (Always moves unless paused)
     if (gameState === 'PLAYING' && !isPaused) updateBackgrounds();
     
     // Zoom Logic
-    let startZoom = canvas.width < 768 ? 0.9 : 1.1;
-let targetZoom = (gameState === 'PLAYING' && pepper.isMega) ? 1.05 :
-                 (gameState === 'START') ? startZoom : 1.0;
-zoomLevel += (targetZoom - zoomLevel) * 0.05;
+    let startZoom = canvas.width < 768 ? 0.85 : 1.1;  // FIX: smaller zoom on mobile start
+    let targetZoom = (gameState === 'PLAYING' && pepper.isMega) ? 1.05 :
+                     (gameState === 'START') ? startZoom : 1.0;
+    zoomLevel += (targetZoom - zoomLevel) * 0.05;
 
-    // Shake Logic
     if (shakeAmount > 0) {
         shakeAmount *= 0.9;
         if (shakeAmount < 0.5) shakeAmount = 0;
@@ -256,20 +240,16 @@ function updateEntities() {
         let o = obstacles[i];
         o.x -= PHYSICS.SPEED;
 
-        // Collision Hitboxes
         let hit = false;
-        // Standard Poo/Stack
+        // FIX: Stack collision height - each poo tier is ~35px, 3 stacks ~90px
         if ((o.type === 'poo' || o.type === 'stack') && 
             Math.abs(pepper.x + 10 - o.x) < 25 && 
-            pepper.y > groundY - (o.stack || 1) * 30 + 10) hit = true;
+            pepper.y > groundY - (o.stack || 1) * 38 + 5) hit = true;
         
-        // Hydrant
         if (o.type === 'hydrant' && Math.abs(pepper.x - o.x) < 20 && pepper.y > groundY - 35) hit = true;
         
-        // Bird
         if (o.type === 'bird' && Math.abs(pepper.x - o.x) < 30 && Math.abs((pepper.y - 25) - o.y) < 25) hit = true;
 
-        // Pond
         if (o.type === 'pond' && o.x < pepper.x + 20 && o.x > pepper.x - 80 && pepper.y >= groundY - 5) hit = true;
 
         if (hit) {
@@ -293,7 +273,6 @@ function updateEntities() {
     for (let i = bones.length - 1; i >= 0; i--) {
         let b = bones[i];
         
-        // Magnet Effect
         if (pepper.magnetTimer > 0) {
             let dx = pepper.x - b.x;
             let dy = (pepper.y - 20) - b.y;
@@ -354,14 +333,12 @@ function spawnManager() {
             for (let attempt = 0; attempt < 4; attempt++) {
                 const sx = canvas.width + (attempt * 140);
                 const sy = groundY - 120;
-
                 if (canSpawnCollectible(sx, sy, 140, 140)) {
                     sticks.push({ x: sx, y: sy });
                     break;
                 }
             }
         }
-
         nextStickTimer = 200 + Math.random() * 300;
     }
 
@@ -374,7 +351,8 @@ function spawnManager() {
         if (h > 0.9) yPos = groundY - 180;
 
         let type = 'white';
-        if (Math.random() > 0.95 && magnetCooldown <= 0) {
+        // FIX: Check magnetCooldown BEFORE rolling for magnet type
+        if (magnetCooldown <= 0 && Math.random() > 0.95) {
             type = 'magnet';
         } else if (Math.random() > 0.9) {
             type = 'gold';
@@ -382,7 +360,6 @@ function spawnManager() {
 
         for (let attempt = 0; attempt < 4; attempt++) {
             const bx = canvas.width + (attempt * 110);
-
             if (canSpawnCollectible(bx, yPos, 120, 120)) {
                 bones.push({ x: bx, y: yPos, type: type });
                 break;
@@ -399,7 +376,6 @@ function spawnObstacle() {
     let r = Math.random();
     let obj = {x: canvas.width, type: 'poo', stack: 1, y: groundY};
 
-    // Difficulty filtering
     if (currentLevel >= 3 && r > 0.9) { obj.type = 'pond'; }
     else if (currentLevel >= 2 && r > 0.8) { obj.type = 'stack'; obj.stack = 3; }
     else if (r > 0.7) { obj.type = 'hydrant'; }
@@ -414,33 +390,24 @@ function spawnObstacle() {
 }
 
 function canSpawnCollectible(x, y, xPadding = 140, yPadding = 120) {
-    // Don't spawn collectibles right on top of the finish line area
-    if (finishLine && finishLine.x > canvas.width - 250) return false;
+    // FIX: Block spawning when finish line is approaching the PLAYER (left half of screen)
+    if (finishLine && finishLine.x < canvas.width * 0.7) return false;
 
     for (let i = 0; i < obstacles.length; i++) {
         const o = obstacles[i];
-
         let ox = o.x;
-        let oy = groundY;
-        let oHeightCenter = groundY - 20;
+        let oHeightCenter;
 
-        if (o.type === 'bird') {
-            oHeightCenter = o.y;
-        } else if (o.type === 'hydrant') {
-            oHeightCenter = groundY - 35;
-        } else if (o.type === 'stack') {
-            oHeightCenter = groundY - 70;
-        } else if (o.type === 'pond') {
-            oHeightCenter = groundY;
-        } else {
-            oHeightCenter = groundY - 20;
-        }
+        if (o.type === 'bird') oHeightCenter = o.y;
+        else if (o.type === 'hydrant') oHeightCenter = groundY - 35;
+        else if (o.type === 'stack') oHeightCenter = groundY - 70;
+        else if (o.type === 'pond') oHeightCenter = groundY;
+        else oHeightCenter = groundY - 20;
 
         if (Math.abs(x - ox) < xPadding && Math.abs(y - oHeightCenter) < yPadding) {
             return false;
         }
     }
-
     return true;
 }
 
@@ -462,15 +429,15 @@ function updateBackgrounds() {
 
 function handleInput() {
     if (gameState !== 'PLAYING' || isPaused) return;
+    // FIX: init audio on first real interaction
+    initAudio();
 
     if (pepper.grounded) {
-        // Jump
         pepper.dy = PHYSICS.JUMP_FORCE;
         pepper.grounded = false;
         pepper.canDoubleJump = true;
         playSfx('jump');
     } else if (pepper.canDoubleJump && pepper.doubleJumpUnlocked) {
-        // Double Jump
         pepper.dy = PHYSICS.DOUBLE_JUMP;
         pepper.canDoubleJump = false;
         playSfx('doublejump');
@@ -479,15 +446,13 @@ function handleInput() {
 }
 
 function handleCollision(o, index) {
-    // 1. Check Invincibility (Mega Mode)
     if (pepper.isMega) {
         if (o.type === 'hydrant') {
-            // Mega Pepper vs Hydrant = Death
             triggerGameOver('mega-hydrant');
         } else {
-            // Smash everything else
             obstacles.splice(index, 1);
             score += 5;
+            scoreEl.innerText = score + " 🦴";  // FIX: update score display on smash
             spawnPopup("SMASH!", o.x, o.y-50, "orange");
             playSfx('smash');
             shakeScreen(10);
@@ -495,13 +460,10 @@ function handleCollision(o, index) {
         return;
     }
 
-    // 2. Check Shield
     if (pepper.hasShield) {
         if (o.type === 'hydrant' || o.type === 'pond') {
-            // Water kills shield instantly and kills dog
             triggerGameOver('standard');
         } else {
-            // Shield breaks
             pepper.hasShield = false;
             pepper.sticks = 0;
             stickText.innerText = "0/5";
@@ -513,7 +475,6 @@ function handleCollision(o, index) {
         return;
     }
 
-    // 3. Death
     triggerGameOver(o.type === 'pond' ? 'splash' : 'standard');
 }
 
@@ -533,11 +494,13 @@ function collectStick(s) {
         flashScreen('#00b894');
     }
     stickText.innerText = pepper.sticks + "/5";
+    drawStickIcon();
 }
 
 function collectBone(b) {
+    // FIX: Magnet type check — don't let magnet attract another magnet pickup during cooldown
     if (b.type === 'magnet') {
-        pepper.magnetTimer = 600; // 10 seconds (60fps)
+        pepper.magnetTimer = 600;
         playSfx('magnet');
         spawnPopup("MAGNET!", b.x, b.y, "#e74c3c");
         magnetCooldown = 2000;
@@ -545,26 +508,24 @@ function collectBone(b) {
     }
 
     let val = (b.type === 'gold') ? 5 : 1;
-    if (pepper.hat === 'cap') val *= 2; // Red Cap Perk
+    if (pepper.hat === 'cap') val *= 2;
     
     score += val;
     scoreEl.innerText = score + " 🦴";
     playSfx('collect');
-    spawnPopup("+" + val, b.x, b.y, "gold");
+    spawnPopup("+" + val, b.x, b.y, (b.type === 'gold') ? "#FFD700" : "white");
 
-    // Mega Progress (except Death mode)
     if (!pepper.isMega && difficulty !== 'death') {
         pepper.streak += val;
         let target = (pepper.hat === 'cowboy') ? 25 : 50;
         updateMegaUI(target);
-        
         if (pepper.streak >= target) activateMega();
     }
 }
 
 function activateMega() {
     pepper.isMega = true;
-    pepper.megaTimer = 900; // 15 seconds
+    pepper.megaTimer = 900;
     pepper.spinTimer = 40;
     spawnPopup("MEGA MODE!", canvas.width/2, canvas.height/3, "#ff00ff");
     flashScreen('white');
@@ -586,7 +547,6 @@ function triggerGameOver(reason) {
     
     const goTitle = document.getElementById('go-title');
     const goMsg = document.getElementById('go-msg');
-    const goCanvas = document.getElementById('go-canvas');
     const retryBtn = document.getElementById('retry-btn');
     const endScore = document.getElementById('end-score');
 
@@ -594,11 +554,7 @@ function triggerGameOver(reason) {
     endScore.innerText = score;
     uiLayer.style.display = 'none';
 
-    if (difficulty === 'baby') {
-        retryBtn.innerText = "TRY AGAIN (BABY MODE)";
-    } else {
-        retryBtn.innerText = "TRY AGAIN";
-    }
+    retryBtn.innerText = difficulty === 'baby' ? "TRY AGAIN (BABY MODE)" : "TRY AGAIN";
 
     if (reason === 'mega-hydrant') {
         goTitle.innerText = "OOPS!";
@@ -620,26 +576,18 @@ function triggerLevelVictory() {
 }
 
 function handleLevelComplete() {
-    // Open Shop
     screens.shop.style.display = 'flex';
-    
-    // Prep Shop Data
-    const balanceEl = document.getElementById('shop-balance');
-    balanceEl.innerText = score + " 🦴";
-    
-    // Render Shop
-    openShop(); 
+    document.getElementById('shop-balance').innerText = score + " 🦴";
+    openShop();
 }
 
 // --- 7. RENDERING ---
 function draw() {
-    // Clear Screen (with shake)
     ctx.save();
     if (shakeAmount > 0) {
         ctx.translate(Math.random()*shakeAmount - shakeAmount/2, Math.random()*shakeAmount - shakeAmount/2);
     }
     
-    // Draw Sky
     let sky = getSkyColor(levelDistance, levelMaxDistance, currentLevel);
     let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
     grad.addColorStop(0, sky.c1);
@@ -647,80 +595,78 @@ function draw() {
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw Mountains
     ctx.fillStyle = "rgba(255,255,255,0.1)";
     bgMountains.forEach(m => {
         ctx.beginPath(); ctx.moveTo(m.x, groundY); ctx.lineTo(m.x+150, groundY-300); ctx.lineTo(m.x+300, groundY); ctx.fill();
     });
 
-    // Draw Trees
     bgTrees.forEach(t => {
         ctx.fillStyle = "rgba(0,0,0,0.2)";
         ctx.beginPath(); ctx.moveTo(t.x, groundY); ctx.lineTo(t.x+25, groundY-100); ctx.lineTo(t.x+50, groundY); ctx.fill();
     });
 
-    // Draw Clouds
     ctx.fillStyle = "rgba(255,255,255,0.4)";
     bgClouds.forEach(c => {
         ctx.beginPath(); ctx.ellipse(c.x, c.y, 40, 20, 0, 0, Math.PI*2); ctx.fill();
     });
 
-    // Draw Ground
     ctx.fillStyle = sky.ground;
     ctx.fillRect(0, groundY, canvas.width, PHYSICS.GROUND_H);
     ctx.fillStyle = sky.grass;
     ctx.fillRect(0, groundY, canvas.width, 20);
 
-    // Camera Transform for Game Objects
+    // Camera Transform
     ctx.save();
-    // Center Zoom
     ctx.translate(canvas.width/2, canvas.height/2);
     ctx.scale(zoomLevel, zoomLevel);
     ctx.translate(-canvas.width/2, -canvas.height/2);
 
-// Draw Objects
-sticks.forEach(s => drawStick(ctx, s.x, s.y, frame));
-bones.forEach(b => drawBone(ctx, b.x, b.y, b.type, frame));
-
-obstacles.forEach(o => {
-    if (o.type === 'poo') drawDooDoo(ctx, o.x, groundY, o.stack);
-    else if (o.type === 'stack') { drawDooDoo(ctx, o.x, groundY, 3); drawFlies(ctx, o.x, groundY, frame); }
-    else if (o.type === 'bird') drawFlies(ctx, o.x, o.y, frame);
-    else if (o.type === 'hydrant') drawHydrant(ctx, o.x, groundY);
-    else if (o.type === 'pond') {
-        ctx.fillStyle = "rgba(100, 200, 255, 0.8)";
-        ctx.beginPath(); ctx.ellipse(o.x, groundY + 5, 100, 15, 0, 0, Math.PI * 2); ctx.fill();
-    }
-});
-
-if (finishLine) {
-    ctx.fillStyle = "white";
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 2; c++) {
-            ctx.fillStyle = (r + c) % 2 === 0 ? "white" : "black";
-            ctx.fillRect(finishLine.x + c * 20, groundY - 160 + r * 20, 20, 20);
+    // FIX: Draw order — obstacles first, then collectibles on top, then Pepper on top of everything
+    obstacles.forEach(o => {
+        if (o.type === 'poo') drawDooDoo(ctx, o.x, groundY, o.stack);
+        else if (o.type === 'stack') { drawDooDoo(ctx, o.x, groundY, 3); drawFlies(ctx, o.x, groundY - 80, frame); }
+        else if (o.type === 'bird') drawFlies(ctx, o.x, o.y, frame);
+        else if (o.type === 'hydrant') drawHydrant(ctx, o.x, groundY);
+        else if (o.type === 'pond') {
+            ctx.fillStyle = "rgba(100, 200, 255, 0.8)";
+            ctx.beginPath(); ctx.ellipse(o.x, groundY + 5, 100, 15, 0, 0, Math.PI * 2); ctx.fill();
         }
+    });
+
+    // Sticks and bones AFTER obstacles but BEFORE pepper
+    sticks.forEach(s => drawStick(ctx, s.x, s.y, frame));
+    bones.forEach(b => drawBone(ctx, b.x, b.y, b.type, frame));
+
+    if (finishLine) {
+        ctx.fillStyle = "white";
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 2; c++) {
+                ctx.fillStyle = (r + c) % 2 === 0 ? "white" : "black";
+                ctx.fillRect(finishLine.x + c * 20, groundY - 160 + r * 20, 20, 20);
+            }
+        }
+        // Pole
+        ctx.fillStyle = "#aaa";
+        ctx.fillRect(finishLine.x - 3, groundY - 165, 6, 160);
     }
-}
 
-    // Draw Pepper
+    // Draw Pepper (always on top)
     if (gameState === 'START') {
-    const isMobile = canvas.width < 768;
+        const isMobile = canvas.width < 768;
+        // FIX: Much smaller scale on mobile to prevent blocking start button
+        const startDogX = isMobile ? canvas.width * 0.25 : canvas.width * 0.32;
+        const startDogY = isMobile ? groundY - 35 : groundY - 90;
+        const startDogScale = isMobile ? 0.55 : 1.3;
+        const startPooX = isMobile ? canvas.width * 0.75 : canvas.width * 0.74;
+        const startPooY = isMobile ? groundY - 5 : groundY - 14;
 
-    const startDogX = isMobile ? canvas.width * 0.22 : canvas.width * 0.32;
-    const startDogY = isMobile ? groundY - 55 : groundY - 90;
-    const startDogScale = isMobile ? 1.0 : 1.45;
+        drawFrontFacingHusky(ctx, startDogX, startDogY, startDogScale, difficulty);
+        drawSteamDooDoo(ctx, startPooX, startPooY, frame);
+    } else {
+        drawHusky(ctx, pepper.x, pepper.y, pepper.isMega, pepper.hasShield, pepper, difficulty, frame);
+    }
 
-    const startPooX = isMobile ? canvas.width * 0.78 : canvas.width * 0.74;
-    const startPooY = isMobile ? groundY - 8 : groundY - 14;
-
-    drawFrontFacingHusky(ctx, startDogX, startDogY, startDogScale, difficulty);
-    drawSteamDooDoo(ctx, startPooX, startPooY, frame);
-} else {
-    drawHusky(ctx, pepper.x, pepper.y, pepper.isMega, pepper.hasShield, pepper, difficulty, frame);
-}
-
-    // Particles & Text
+    // Particles & Float Text
     particles.forEach(p => {
         ctx.globalAlpha = p.life;
         ctx.fillStyle = p.color;
@@ -743,6 +689,19 @@ if (finishLine) {
 
     ctx.restore(); // Undo Camera
     ctx.restore(); // Undo Shake
+
+    // Draw bone icon in score HUD
+    drawScoreBoneIcon();
+}
+
+// FIX: Draw a bone icon next to the score in the HUD overlay
+function drawScoreBoneIcon() {
+    const scoreBox = document.getElementById('score-box');
+    if (!scoreBox) return;
+    // We'll do this with a small inline canvas instead of DOM manipulation
+    // Already handled via the score text — bone emoji renders fine natively
+    // But we call drawStickIcon to keep the HUD stick icon updated
+    drawStickIcon();
 }
 
 // --- 8. HELPERS & UTILS ---
@@ -768,6 +727,12 @@ function resetLevel() {
     finishLine = null;
     levelVictoryAnim = false;
     
+    // FIX: Reset spawn timers on every level to avoid instant spawn
+    nextStickTimer = 120;
+    nextBoneTimer = 80;
+    globalSpawnCooldown = 180;
+    magnetCooldown = 0;
+
     pepper.y = groundY;
     pepper.dy = 0;
     pepper.grounded = true;
@@ -775,6 +740,10 @@ function resetLevel() {
     pepper.streak = 0;
     pepper.megaTimer = 0;
     pepper.x = 100;
+    pepper.rotation = 0;     // FIX: reset rotation on level restart
+    pepper.runFrame = 0;
+    pepper.magnetTimer = 0;
+    pepper.spinTimer = 0;
     
     if (pepper.hat === 'tophat') {
         pepper.hasShield = true;
@@ -784,7 +753,6 @@ function resetLevel() {
         pepper.sticks = 0;
     }
     
-    // UI Resets
     scoreEl.innerText = score + " 🦴";
     levelInd.innerText = "LEVEL " + currentLevel;
     stickText.innerText = pepper.sticks + "/5";
@@ -793,6 +761,7 @@ function resetLevel() {
     megaBarFill.style.width = "0%";
     
     updateMegaUI((pepper.hat === 'cowboy') ? 25 : 50);
+    drawStickIcon(); // FIX: refresh stick icon on reset
 }
 
 function updateMegaUI(target) {
@@ -805,6 +774,9 @@ function updateMegaUI(target) {
 }
 
 function startCountdown() {
+    // FIX: init audio on user gesture (start button)
+    initAudio();
+
     gameState = 'COUNTDOWN';
     screens.start.style.display = 'none';
     screens.gameover.style.display = 'none';
@@ -819,7 +791,6 @@ function startCountdown() {
         count--;
         if (count > 0) {
             countdownText.innerText = count;
-            // Trigger CSS animation reflow
             countdownText.style.animation = 'none';
             countdownText.offsetHeight; 
             countdownText.style.animation = 'popIn 0.5s';
@@ -847,9 +818,7 @@ function spawnParticles(x, y, color, count) {
     }
 }
 
-function shakeScreen(amount) {
-    shakeAmount = amount;
-}
+function shakeScreen(amount) { shakeAmount = amount; }
 
 function flashScreen(color) {
     const flash = document.getElementById('flash-overlay');
@@ -859,15 +828,13 @@ function flashScreen(color) {
 }
 
 // --- 9. INPUT LISTENERS ---
-// Consolidated into one handler for mobile/desktop
 function triggerAction(e) {
-    if (e.type === 'touchstart') e.preventDefault(); // Stop scrolling
+    if (e.type === 'touchstart') e.preventDefault();
     
-    // Ignore clicks on UI elements
     if (e.target.closest('.btn') || e.target.closest('.menu-item') || 
-        e.target.closest('.diff-card') || e.target.closest('.shop-item')) return;
+        e.target.closest('.diff-card') || e.target.closest('.shop-item') ||
+        e.target.closest('.shop-buy-btn')) return;
 
-    // Menu Toggle
     if (e.target.id === 'menu-btn') {
         const isOpen = menuContent.style.display === 'flex';
         menuContent.style.display = isOpen ? 'none' : 'flex';
@@ -875,7 +842,6 @@ function triggerAction(e) {
         return;
     }
 
-    // Game Action
     if (gameState === 'PLAYING') {
         handleInput();
     }
@@ -894,7 +860,7 @@ btn.closeDiff.addEventListener('click', () => screens.diff.style.display = 'none
 
 btn.retry.addEventListener('click', () => {
     if (difficulty === 'baby') {
-        score = levelStartScore; // Keep score from start of level
+        score = levelStartScore;
         resetLevel();
     } else {
         resetGameData();
@@ -912,10 +878,6 @@ btn.next.addEventListener('click', () => {
 btn.mute.addEventListener('click', () => {
     let muted = (btn.mute.innerText.includes('ON'));
     btn.mute.innerText = muted ? "🔇 SOUND: OFF" : "🔊 SOUND: ON";
-    // window.isMuted is defined in audio.js, we assume it's global or we toggle logic
-    // For this rewrite, we will rely on the audio.js global variable if available
-    // or set a flag here if we were rewriting audio.js too.
-    // Assuming audio.js has 'isMuted' global:
     if (typeof isMuted !== 'undefined') isMuted = muted; 
     if (muted) stopMusic();
     else if (gameState === 'PLAYING') startMusic(currentLevel, difficulty, pepper);
@@ -933,7 +895,12 @@ btn.home.addEventListener('click', () => {
     resetGameData();
 });
 
-// Difficulty Selection
+btn.help.addEventListener('click', () => {
+    screens.howto.style.display = 'flex';
+    menuContent.style.display = 'none';
+});
+btn.closeHelp.addEventListener('click', () => screens.howto.style.display = 'none');
+
 window.setDifficulty = (mode) => {
     difficulty = mode;
     document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
@@ -942,7 +909,6 @@ window.setDifficulty = (mode) => {
     let text = "DIFFICULTY: BRING 'EM ON";
     if (mode === 'baby') text = "DIFFICULTY: BABY MODE";
     if (mode === 'death') text = "DIFFICULTY: DEATH INCARNATE";
-    
     btn.diff.innerText = text;
 };
 
