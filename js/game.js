@@ -655,12 +655,21 @@ function draw() {
     ctx.scale(zoomLevel, zoomLevel);
     ctx.translate(-canvas.width/2, -canvas.height/2);
 
-    // FIX: Draw order — obstacles first, then collectibles on top, then Pepper on top of everything
+// FIX: Draw order — obstacles first, then collectibles on top, then Pepper on top of everything
     obstacles.forEach(o => {
-        if (o.type === 'poo') drawDooDoo(ctx, o.x, groundY, o.stack);
-        else if (o.type === 'stack') { drawDooDoo(ctx, o.x, groundY, 3); drawFlies(ctx, o.x, groundY - 80, frame); }
-        else if (o.type === 'bird') drawFlies(ctx, o.x, o.y, frame);
-        else if (o.type === 'hydrant') drawHydrant(ctx, o.x, groundY);
+        if (o.type === 'poo' || o.type === 'stack') {
+            // Draw the poo stack
+            drawDooDoo(ctx, o.x, groundY, o.stack);
+            // Draw flies hovering right at the top based on how many poos there are!
+            drawFlies(ctx, o.x, groundY - (o.stack * 35), frame);
+        }
+        else if (o.type === 'bird') {
+            // FIX: Ensure birds actually use the bird graphic now!
+            drawBird(ctx, o.x, o.y, frame); 
+        }
+        else if (o.type === 'hydrant') {
+            drawHydrant(ctx, o.x, groundY);
+        }
         else if (o.type === 'pond') {
             ctx.fillStyle = "rgba(100, 200, 255, 0.8)";
             ctx.beginPath(); ctx.ellipse(o.x, groundY + 5, 100, 15, 0, 0, Math.PI * 2); ctx.fill();
