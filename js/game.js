@@ -576,6 +576,7 @@ function triggerLevelVictory() {
 }
 
 function handleLevelComplete() {
+    gameState = 'SHOP';
     screens.shop.style.display = 'flex';
     document.getElementById('shop-balance').innerText = score + " 🦴";
     openShop();
