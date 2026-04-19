@@ -321,13 +321,24 @@ function updateEntities() {
 function spawnManager() {
     if (levelFinished) return;
 
-    // Obstacles
+// Obstacles
     if (globalSpawnCooldown > 0) {
         globalSpawnCooldown--;
     } else {
         if (Math.random() < 0.04) {
-            spawnObstacle();
-            globalSpawnCooldown = 300 / PHYSICS.SPEED;
+            // FIX: Make sure the coast is clear of scrolling items before dropping an obstacle
+            let clearToSpawn = true;
+            for (let i = 0; i < sticks.length; i++) {
+                if (Math.abs(canvas.width - sticks[i].x) < 140) clearToSpawn = false;
+            }
+            for (let i = 0; i < bones.length; i++) {
+                if (Math.abs(canvas.width - bones[i].x) < 120) clearToSpawn = false;
+            }
+
+            if (clearToSpawn) {
+                spawnObstacle();
+                globalSpawnCooldown = 300 / PHYSICS.SPEED;
+            }
         }
     }
 
