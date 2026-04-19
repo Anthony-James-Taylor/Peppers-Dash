@@ -549,7 +549,7 @@ function collectBone(b) {
 
     if (!pepper.isMega && difficulty !== 'death') {
         pepper.streak += val;
-        let target = (pepper.hat === 'cowboy') ? 25 : 50;
+        let target = (pepper.hat === 'cowboy') = 50;
         updateMegaUI(target);
         if (pepper.streak >= target) activateMega();
     }
@@ -571,7 +571,7 @@ function deactivateMega() {
     pepper.isMega = false;
     pepper.streak = 0;
     megaMeter.classList.remove('mega-active');
-    updateMegaUI((pepper.hat === 'cowboy') ? 25 : 50);
+    updateMegaUI(50);
 }
 
 function triggerGameOver(reason) {
@@ -803,7 +803,7 @@ function resetLevel() {
     megaMeter.classList.remove('mega-active');
     megaBarFill.style.width = "0%";
     
-    updateMegaUI((pepper.hat === 'cowboy') ? 25 : 50);
+    updateMegaUI(50);
     drawStickIcon(); // FIX: refresh stick icon on reset
 }
 
@@ -831,6 +831,9 @@ function startCountdown() {
     countdownText.innerText = count;
     
     let interval = setInterval(() => {
+        // FIX: If the user clicked "Return to Home", kill the countdown immediately!
+        if (gameState !== 'COUNTDOWN') { clearInterval(interval); return; }
+
         count--;
         if (count > 0) {
             countdownText.innerText = count;
@@ -882,6 +885,11 @@ function triggerAction(e) {
         const isOpen = menuContent.style.display === 'flex';
         menuContent.style.display = isOpen ? 'none' : 'flex';
         btn.menu.innerText = isOpen ? "☰" : "✕";
+        
+        // FIX: Actually pause the game loop when the menu is open!
+        if (gameState === 'PLAYING') {
+            isPaused = !isOpen;
+        }
         return;
     }
 
@@ -928,6 +936,7 @@ btn.mute.addEventListener('click', () => {
 
 btn.home.addEventListener('click', () => {
     gameState = 'START';
+    isPaused = false; // FIX: Unpause the game!
     stopMusic();
     screens.gameover.style.display = 'none';
     screens.shop.style.display = 'none';
