@@ -269,17 +269,22 @@ function updateEntities() {
         } else if (s.x < -100) sticks.splice(i, 1);
     }
 
-    // 3. Bones
+// 3. Bones
     for (let i = bones.length - 1; i >= 0; i--) {
         let b = bones[i];
         
-        if (pepper.magnetTimer > 0) {
+        // Check if magnet buff is active OR if this specific bone is already mid-flight
+        if (pepper.magnetTimer > 0 || b.isMagnetized) {
             let dx = pepper.x - b.x;
             let dy = (pepper.y - 20) - b.y;
             let dist = Math.sqrt(dx*dx + dy*dy);
-            if (dist < 400) {
-                b.x += dx * 0.15;
-                b.y += dy * 0.15;
+            
+            // Trigger pull if close enough, or continue pulling if already flagged
+            if (dist < 400 || b.isMagnetized) {
+                b.isMagnetized = true; // Lock it in so it doesn't stop if the timer expires!
+                b.x -= PHYSICS.SPEED;  // Keep the world scroll
+                b.x += dx * 0.3;       // Stronger pull
+                b.y += dy * 0.3;
             } else {
                 b.x -= PHYSICS.SPEED;
             }
