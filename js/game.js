@@ -649,11 +649,12 @@ function draw() {
     ctx.fillStyle = sky.grass;
     ctx.fillRect(0, groundY, canvas.width, 20);
 
-    // Camera Transform
+// Camera Transform
     ctx.save();
-    ctx.translate(canvas.width/2, canvas.height/2);
+    // FIX: Anchor the zoom effect to the ground line so objects don't float or sink!
+    ctx.translate(canvas.width/2, groundY);
     ctx.scale(zoomLevel, zoomLevel);
-    ctx.translate(-canvas.width/2, -canvas.height/2);
+    ctx.translate(-canvas.width/2, -groundY);
 
 // FIX: Draw order — obstacles first, then collectibles on top, then Pepper on top of everything
     obstacles.forEach(o => {
@@ -727,7 +728,8 @@ function draw() {
     // Foreground Bushes
     fgBushes.forEach(b => {
         ctx.fillStyle = "#2d3436";
-        ctx.beginPath(); ctx.arc(b.x, canvas.height, 60, 0, Math.PI*2); ctx.fill();
+        // FIX: Increased size and shifted them to overlap the dirt line properly
+        ctx.beginPath(); ctx.arc(b.x, canvas.height, 100, 0, Math.PI*2); ctx.fill();
     });
 
     ctx.restore(); // Undo Camera
@@ -875,11 +877,15 @@ function flashScreen(color) {
 
 // --- 9. INPUT LISTENERS ---
 function triggerAction(e) {
-    if (e.type === 'touchstart') e.preventDefault();
-    
+    // FIX: Check if we are tapping a UI element FIRST, and let it pass through!
     if (e.target.closest('.btn') || e.target.closest('.menu-item') || 
         e.target.closest('.diff-card') || e.target.closest('.shop-item') ||
-        e.target.closest('.shop-buy-btn')) return;
+        e.target.closest('.shop-buy-btn')) {
+        return;
+    }
+
+    // Now prevent scrolling/zooming ONLY if we are tapping the actual game canvas
+    if (e.type === 'touchstart') e.preventDefault();
 
     if (e.target.id === 'menu-btn') {
         const isOpen = menuContent.style.display === 'flex';
