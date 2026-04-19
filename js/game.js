@@ -557,7 +557,8 @@ function collectBone(b) {
 
 function activateMega() {
     pepper.isMega = true;
-    pepper.megaTimer = 900;
+    // FIX: Cowboy Hat now extends Mega Mode from 900 frames (~15s) to 1500 frames (~25s)
+    pepper.megaTimer = (pepper.hat === 'cowboy') ? 1500 : 900; 
     pepper.spinTimer = 40;
     spawnPopup("MEGA MODE!", canvas.width/2, canvas.height/3, "#ff00ff");
     flashScreen('white');
