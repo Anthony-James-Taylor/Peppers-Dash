@@ -881,28 +881,29 @@ function flashScreen(color) {
 
 // --- 9. INPUT LISTENERS ---
 function triggerAction(e) {
-    // 1. If the user tapped a UI element, let the browser handle it
-    // FIX: Added #shop-next-btn to the list so it is clickable!
-    if (e.target.closest('.btn, .menu-item, .diff-card, .shop-item, .shop-buy-btn, #shop-next-btn')) {
+    // 1. Identify all UI elements that should NOT trigger a jump
+    const isUI = e.target.closest('.btn, .menu-item, .diff-card, .shop-item, .shop-buy-btn, #menu-btn, #start-diff-btn, #shop-next-btn');
+    
+    // 2. If it's a UI element, stop everything else and let the button work
+    if (isUI) {
+        // Handle the menu button toggle specifically here
+        if (e.target.id === 'menu-btn') {
+            e.preventDefault(); // Stop double-firing on mobile
+            const isOpen = menuContent.style.display === 'flex';
+            menuContent.style.display = isOpen ? 'none' : 'flex';
+            btn.menu.innerText = isOpen ? "☰" : "✕";
+            
+            if (gameState === 'PLAYING') {
+                isPaused = !isOpen;
+            }
+        }
         return; 
     }
 
-    // 2. Handle the Menu Button separately
-    if (e.target.id === 'menu-btn') {
-        const isOpen = menuContent.style.display === 'flex';
-        menuContent.style.display = isOpen ? 'none' : 'flex';
-        btn.menu.innerText = isOpen ? "☰" : "✕";
-        
-        if (gameState === 'PLAYING') {
-            isPaused = !isOpen;
-        }
-        return;
-    }
-
-    // 3. Prevent zooming/scrolling only for world taps
+    // 3. For world taps (jumping), prevent default mobile behavior (zoom/scroll)
     if (e.type === 'touchstart') e.preventDefault();
 
-    // 4. Trigger jump
+    // 4. Only jump if the game is active and not paused
     if (gameState === 'PLAYING' && !isPaused) {
         handleInput();
     }
