@@ -877,12 +877,20 @@ function flashScreen(color) {
 
 // --- 9. INPUT LISTENERS ---
 function triggerAction(e) {
-    // FIX: Check if we are tapping a UI element FIRST, and let it pass through!
-    if (e.target.closest('.btn') || e.target.closest('.menu-item') || 
-        e.target.closest('.diff-card') || e.target.closest('.shop-item') ||
-        e.target.closest('.shop-buy-btn')) {
-        return;
+    // 1. If the user tapped a button or menu, STOP here and let the browser handle the button click
+    if (e.target.closest('.btn, .menu-item, .diff-card, .shop-item, .shop-buy-btn, #menu-btn')) {
+        return; 
     }
+
+    // 2. If we got here, they tapped the GAME WORLD. 
+    // Prevent zooming/scrolling only for world taps.
+    if (e.type === 'touchstart') e.preventDefault();
+
+    // 3. Trigger a jump if the game is running
+    if (gameState === 'PLAYING') {
+        handleInput();
+    }
+}
 
     // Now prevent scrolling/zooming ONLY if we are tapping the actual game canvas
     if (e.type === 'touchstart') e.preventDefault();
