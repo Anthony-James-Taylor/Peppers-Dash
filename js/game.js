@@ -398,6 +398,7 @@ function canSpawnCollectible(x, y, xPadding = 140, yPadding = 120) {
     // FIX: Block spawning when finish line is approaching the PLAYER (left half of screen)
     if (finishLine && finishLine.x < canvas.width * 0.7) return false;
 
+    // 1. Check for overlapping obstacles
     for (let i = 0; i < obstacles.length; i++) {
         const o = obstacles[i];
         let ox = o.x;
@@ -413,6 +414,21 @@ function canSpawnCollectible(x, y, xPadding = 140, yPadding = 120) {
             return false;
         }
     }
+
+    // 2. Check for overlapping sticks
+    for (let i = 0; i < sticks.length; i++) {
+        if (Math.abs(x - sticks[i].x) < xPadding && Math.abs(y - sticks[i].y) < yPadding) {
+            return false;
+        }
+    }
+
+    // 3. Check for overlapping bones
+    for (let i = 0; i < bones.length; i++) {
+        if (Math.abs(x - bones[i].x) < xPadding && Math.abs(y - bones[i].y) < yPadding) {
+            return false;
+        }
+    }
+
     return true;
 }
 
