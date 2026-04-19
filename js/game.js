@@ -147,8 +147,10 @@ function initBackgrounds() {
     bgTrees = []; for(let i=0; i<5; i++) bgTrees.push({x: i*200});
     bgClouds = []; for(let i=0; i<5; i++) bgClouds.push({x: Math.random()*canvas.width, y: Math.random()*150, speed: 0.2 + Math.random()*0.3});
     fgBushes = []; for(let i=0; i<3; i++) fgBushes.push({x: Math.random()*canvas.width});
-    weatherParticles = []; for(let i=0; i<50; i++) weatherParticles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, speed:2+Math.random()*2, wind:-1+Math.random()*2, size:2+Math.random()*2});
-    stars = []; for(let i=0; i<50; i++) stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height/2, size:Math.random()*3});
+    
+    // FIX: Reduced from 50 to 20 for better mobile performance
+    weatherParticles = []; for(let i=0; i<20; i++) weatherParticles.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, speed:2+Math.random()*2, wind:-1+Math.random()*2, size:2+Math.random()*2});
+    stars = []; for(let i=0; i<20; i++) stars.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height/2, size:Math.random()*3});
 }
 
 // --- 5. GAME LOOP ---
@@ -880,11 +882,12 @@ function flashScreen(color) {
 // --- 9. INPUT LISTENERS ---
 function triggerAction(e) {
     // 1. If the user tapped a UI element, let the browser handle it
-    if (e.target.closest('.btn, .menu-item, .diff-card, .shop-item, .shop-buy-btn')) {
+    // FIX: Added #shop-next-btn to the list so it is clickable!
+    if (e.target.closest('.btn, .menu-item, .diff-card, .shop-item, .shop-buy-btn, #shop-next-btn')) {
         return; 
     }
 
-    // 2. Handle the Menu Button separately so it can pause the game
+    // 2. Handle the Menu Button separately
     if (e.target.id === 'menu-btn') {
         const isOpen = menuContent.style.display === 'flex';
         menuContent.style.display = isOpen ? 'none' : 'flex';
@@ -896,11 +899,10 @@ function triggerAction(e) {
         return;
     }
 
-    // 3. If we got here, they tapped the GAME WORLD. 
-    // Prevent zooming/scrolling only for world taps.
+    // 3. Prevent zooming/scrolling only for world taps
     if (e.type === 'touchstart') e.preventDefault();
 
-    // 4. Trigger a jump if the game is running
+    // 4. Trigger jump
     if (gameState === 'PLAYING' && !isPaused) {
         handleInput();
     }
