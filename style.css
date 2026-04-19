@@ -88,7 +88,19 @@ body {
 #points-counter { font-size: 14px; opacity: 0.9; }
 
 /* Keep these small canvas adjustments */
-#stick-canvas { width: 30px; height: 30px; }
+#stick-canvas { 
+    width: 40px; 
+    height: 40px; 
+    display: block;
+    margin: 0 auto; /* Ensures the canvas itself is centered */
+}
+
+#stick-text { 
+    font-size: 18px; 
+    font-weight: 900; 
+    margin-top: 0; /* Resetting this to prevent it from pushing the icon */
+    line-height: 1;
+}
 
 #progress-wrapper {
     position: absolute; 
