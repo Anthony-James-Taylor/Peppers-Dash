@@ -651,10 +651,12 @@ function draw() {
 
 // Camera Transform
     ctx.save();
-    // FIX: Anchor the zoom effect to the ground line so objects don't float or sink!
-    ctx.translate(canvas.width/2, groundY);
+    // 1. Move the 'center' of the world to the ground line
+    ctx.translate(canvas.width / 2, groundY);
+    // 2. Zoom in/out FROM that ground line
     ctx.scale(zoomLevel, zoomLevel);
-    ctx.translate(-canvas.width/2, -groundY);
+    // 3. Move the coordinates back
+    ctx.translate(-canvas.width / 2, -groundY);
 
 // FIX: Draw order — obstacles first, then collectibles on top, then Pepper on top of everything
     obstacles.forEach(o => {
