@@ -67,7 +67,8 @@ let difficulty = 'normal';
 let frame = 0;
 let score = 0;
 let levelStartScore = 0;
-let totalPoints = 0; //
+let totalPoints = 0;
+let levelStartPoints = 0; // FIX: New variable to "save" your score at checkpoints //
 
 let currentLevel = 1;
 let levelDistance = 0;
@@ -955,9 +956,12 @@ btn.closeDiff.addEventListener('click', () => screens.diff.style.display = 'none
 
 btn.retry.addEventListener('click', () => {
     if (difficulty === 'baby') {
+        // FIX: Roll back both currency and score to the last checkpoint
         score = levelStartScore;
+        totalPoints = levelStartPoints;
         resetLevel();
     } else {
+        // Normal/Death mode resets everything to zero
         resetGameData();
     }
     startCountdown();
@@ -965,7 +969,8 @@ btn.retry.addEventListener('click', () => {
 
 btn.next.addEventListener('click', () => {
     currentLevel++;
-    levelStartScore = score;
+    levelStartScore = score;      // Saves currency checkpoint
+    levelStartPoints = totalPoints; // FIX: Saves points checkpoint
     resetLevel();
     startCountdown();
 });
