@@ -173,44 +173,49 @@ h1 {
 #start-diff-btn:hover { background: rgba(255,255,255,0.25); }
 
 /* ==========================================================
-   PEPPER'S PET BOUTIQUE - 3D Layout (Wall & Floor)
+   PEPPER'S PET BOUTIQUE - THE CLEAN FIX
    ========================================================== */
 
 #shop-screen {
     background: #1a1a1a;
-    display: flex;
+    display: none; /* FIX: Changed from flex to none so it stays hidden on launch */
     flex-direction: column;
     height: 100vh;
-    overflow: hidden; /* Stops the whole screen from scrolling */
-    padding-top: 30px; /* Space for the rainbow bar */
+    width: 100vw;
+    position: absolute;
+    top: 0; left: 0;
+    z-index: 500; /* Ensures it sits on top of everything else when active */
+    overflow: hidden;
 }
 
-/* THE BACK WALL: Vertical wood planks behind the cat */
+/* THE BACK WALL (Where the cat is) */
 #shop-counter-area {
     width: 100%;
-    background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6)), 
+    min-height: 220px;
+    background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), 
                 repeating-linear-gradient(90deg, #4d3b2f 0px, #4d3b2f 60px, #3d2b1f 61px);
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 40px 20px 20px;
-    border-bottom: 15px solid #2d1e14; /* Shadow edge where wall meets floor */
+    padding: 50px 20px 20px;
+    border-bottom: 10px solid #2d1e14;
     position: relative;
+    box-sizing: border-box;
 }
 
 #shop-counter-area h1 {
-    font-size: 24px;
+    font-size: 22px;
     color: #f39c12;
-    text-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    margin-bottom: 15px;
+    margin: 0 0 10px 0;
     font-weight: 900;
+    text-transform: uppercase;
 }
 
-/* SHOPKEEPER POSITIONING */
+/* THE BENGAL CAT & DESK */
 #shopkeeper-wrapper {
     position: relative;
     width: 200px;
-    height: 120px;
+    height: 110px;
     display: flex;
     justify-content: center;
     align-items: flex-end;
@@ -226,15 +231,15 @@ h1 {
     position: absolute;
     bottom: 0;
     width: 240px; 
-    height: 45px;
+    height: 40px;
     background: #5d4037;
     border-top: 6px solid #8d6e63;
     border-radius: 12px 12px 0 0;
-    z-index: 2; /* Desk in front of cat */
+    z-index: 2; /* Desk covers cat's bottom */
     box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
 }
 
-/* THE FLOOR: Dark floor where hats sit side-by-side */
+/* THE FLOOR (Where the hats sit) */
 #shop-floor {
     flex: 1;
     width: 100%;
@@ -243,125 +248,36 @@ h1 {
     flex-direction: column;
     align-items: center;
     padding: 20px 0;
-    overflow-y: auto; /* Only the items scroll */
+    overflow-y: auto; /* Only this part scrolls */
 }
 
 .shop-container {
     display: flex;
-    flex-direction: row; /* MAGIC COMMAND: FORCES HORIZONTAL LAYOUT */
-    flex-wrap: wrap;     /* Wraps to next line if needed */
+    flex-direction: row; /* FIX: Hats are now horizontal */
+    flex-wrap: wrap;     /* They wrap to the next line on mobile */
     justify-content: center; 
-    gap: 20px;
-    padding: 10px 20px 100px; /* Space for the bottom button */
-    width: 95%;
+    gap: 15px;
+    padding: 10px 20px 120px; /* Space for the bottom button */
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .shop-item {
     background: #5d4037;
-    border-bottom: 8px solid #3d2b1f; 
+    border-bottom: 6px solid #3d2b1f; 
     border-radius: 12px;
-    padding: 12px;
-    width: 115px; /* Sized for horizontal rows */
+    padding: 10px;
+    width: 105px; /* Compact size for horizontal rows */
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
     box-shadow: 0 10px 20px rgba(0,0,0,0.4);
-    transition: transform 0.2s, background 0.2s;
-    position: relative;
+    transition: transform 0.2s;
 }
-
-.shop-item:hover { transform: translateY(-5px); background: #6d4c41; }
 
 .shop-item.selected { 
     border: 2px solid #00fbff; 
     background: #4e342e;
-    box-shadow: 0 0 20px rgba(0,251,255,0.4);
     transform: translateY(-5px);
 }
-.shop-item.locked { opacity: 0.5; cursor: not-allowed; }
-.shop-item.locked:hover { transform: none; }
-
-.shop-hat-preview { width: 80px; height: 80px; margin: 0 auto; }
-
-.shop-name { 
-    color: #fff; font-weight: 900; font-size: 11px; 
-    font-family: 'Montserrat', sans-serif; letter-spacing: 0.5px;
-    text-transform: uppercase;
-}
-.shop-perk { 
-    color: #00fbff; font-size: 9px; font-weight: 700; 
-    background: rgba(0,251,255,0.1); border-radius: 6px; padding: 3px 6px;
-    letter-spacing: 0.3px;
-}
-.shop-desc { 
-    color: rgba(255,255,255,0.55); font-size: 9px; line-height: 1.5;
-}
-
-.shop-cost-row { margin-top: 4px; width: 100%; }
-
-.shop-buy-btn {
-    background: linear-gradient(135deg, #ff00de, #7400ff);
-    color: white; border: none; border-radius: 8px;
-    padding: 8px 10px; font-size: 10px; font-weight: 900;
-    cursor: pointer; width: 100%; pointer-events: auto;
-    letter-spacing: 0.5px; transition: opacity 0.2s, transform 0.1s;
-    box-shadow: 0 4px 12px rgba(255,0,222,0.4);
-}
-.shop-buy-btn:hover { opacity: 0.9; transform: scale(1.03); }
-.shop-buy-btn:active { transform: scale(0.97); }
-
-.shop-badge {
-    display: inline-block; border-radius: 8px; padding: 6px 10px;
-    font-size: 10px; font-weight: 900; width: 100%; box-sizing: border-box;
-}
-.shop-badge.owned { 
-    background: rgba(0,251,255,0.15); color: #00fbff; 
-    border: 1px solid rgba(0,251,255,0.4);
-}
-.shop-badge.locked-badge { 
-    background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.4);
-    border: 1px solid rgba(255,255,255,0.1);
-}
-
-#shop-next-btn {
-    margin-top: 16px; margin-bottom: 8px;
-    background: linear-gradient(135deg, #00fbff, #0984e3);
-    color: #1a0533; border: none; padding: 14px 40px; border-radius: 12px;
-    font-size: 16px; font-weight: 900; cursor: pointer; pointer-events: auto;
-    box-shadow: 0 0 20px rgba(0,251,255,0.4); transition: transform 0.2s;
-    letter-spacing: 1px; text-transform: uppercase;
-    animation: breathe 2s infinite ease-in-out;
-}
-#shop-next-btn:hover { transform: scale(1.05); }
-
-/* Difficulty Cards */
-.diff-container { display: flex; flex-direction: column; gap: 15px; width: 95%; max-height: 85vh; overflow-y: auto; align-items: center; }
-.diff-card { 
-    background: rgba(255,255,255,0.1); border: 2px solid transparent; border-radius: 12px; 
-    padding: 15px; width: 100%; max-width: 380px; text-align: left; display: flex; align-items: center; gap: 15px;
-    cursor: pointer; transition: all 0.2s;
-}
-.diff-card.selected { border-color: #00fbff; background: rgba(0,251,255,0.1); }
-.diff-info h3 { margin: 0 0 5px 0; font-size: 18px; color: #ffeaa7; text-transform: uppercase; letter-spacing: 1px;}
-.diff-info p { margin: 0; font-size: 12px; color: #ffffff; line-height: 1.4; }
-
-/* Countdown Overlay */
-#countdown-layer {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    display: none; align-items: center; justify-content: center;
-    z-index: 150; pointer-events: none;
-}
-#countdown-text {
-    font-size: 100px; font-weight: 900; color: white; 
-    text-shadow: 0 10px 20px rgba(0,0,0,0.5);
-    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* How To Screen */
-#how-to-screen { z-index: 250; display: none; }
-
-@keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-@keyframes slideUp { 0% { transform: translateY(50px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
-@keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
