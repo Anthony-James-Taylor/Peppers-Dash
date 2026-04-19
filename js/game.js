@@ -879,37 +879,29 @@ function flashScreen(color) {
 
 // --- 9. INPUT LISTENERS ---
 function triggerAction(e) {
-    // 1. If the user tapped a button or menu, STOP here and let the browser handle the button click
-    if (e.target.closest('.btn, .menu-item, .diff-card, .shop-item, .shop-buy-btn, #menu-btn')) {
+    // 1. If the user tapped a UI element, let the browser handle it
+    if (e.target.closest('.btn, .menu-item, .diff-card, .shop-item, .shop-buy-btn')) {
         return; 
     }
 
-    // 2. If we got here, they tapped the GAME WORLD. 
-    // Prevent zooming/scrolling only for world taps.
-    if (e.type === 'touchstart') e.preventDefault();
-
-    // 3. Trigger a jump if the game is running
-    if (gameState === 'PLAYING') {
-        handleInput();
-    }
-}
-
-    // Now prevent scrolling/zooming ONLY if we are tapping the actual game canvas
-    if (e.type === 'touchstart') e.preventDefault();
-
+    // 2. Handle the Menu Button separately so it can pause the game
     if (e.target.id === 'menu-btn') {
         const isOpen = menuContent.style.display === 'flex';
         menuContent.style.display = isOpen ? 'none' : 'flex';
         btn.menu.innerText = isOpen ? "☰" : "✕";
         
-        // FIX: Actually pause the game loop when the menu is open!
         if (gameState === 'PLAYING') {
             isPaused = !isOpen;
         }
         return;
     }
 
-    if (gameState === 'PLAYING') {
+    // 3. If we got here, they tapped the GAME WORLD. 
+    // Prevent zooming/scrolling only for world taps.
+    if (e.type === 'touchstart') e.preventDefault();
+
+    // 4. Trigger a jump if the game is running
+    if (gameState === 'PLAYING' && !isPaused) {
         handleInput();
     }
 }
