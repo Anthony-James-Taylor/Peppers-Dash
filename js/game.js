@@ -645,8 +645,14 @@ function triggerLevelVictory() {
 function handleLevelComplete() {
     gameState = 'SHOP';
     screens.shop.style.display = 'flex';
+    
+    // Update the currency display
     document.getElementById('shop-balance').innerText = score + " 🦴";
-    openShop();
+    
+    // FIX: This is the command that starts the Bengal Cat drawing!
+    drawBengalShopkeeper(); 
+    
+    if (typeof openShop === 'function') openShop();
 }
 
 // --- 7. RENDERING ---
@@ -1012,6 +1018,66 @@ window.setDifficulty = (mode) => {
     if (mode === 'death') text = "DIFFICULTY: DEATH INCARNATE";
     btn.diff.innerText = text;
 };
+
+function drawBengalShopkeeper() {
+    const skCanvas = document.getElementById('shopkeeper-canvas');
+    if (!skCanvas) return;
+    const sctx = skCanvas.getContext('2d');
+    const time = Date.now() * 0.002; // Used for blinking animation
+    
+    sctx.clearRect(0, 0, skCanvas.width, skCanvas.height);
+    sctx.save();
+    sctx.translate(100, 130); // Center the cat on the canvas
+
+    // 1. Body & Tail
+    sctx.fillStyle = "#e67e22"; // Bengal Orange
+    sctx.beginPath();
+    sctx.ellipse(0, -30, 40, 50, 0, 0, Math.PI * 2);
+    sctx.fill();
+
+    // 2. Bengal Rosettes (Spots)
+    sctx.fillStyle = "#6e3a07"; // Dark brown
+    const spots = [[-20, -50], [15, -40], [-10, -20], [20, -60], [0, -40]];
+    spots.forEach(pos => {
+        sctx.beginPath();
+        sctx.arc(pos[0], pos[1], 6, 0, Math.PI * 2);
+        sctx.fill();
+    });
+
+    // 3. Head & Ears
+    sctx.fillStyle = "#e67e22";
+    sctx.beginPath();
+    sctx.arc(0, -85, 35, 0, Math.PI * 2);
+    sctx.fill();
+
+    // Pointy Ears
+    sctx.beginPath();
+    sctx.moveTo(-30, -100); sctx.lineTo(-20, -130); sctx.lineTo(-5, -115);
+    sctx.fill();
+    sctx.beginPath();
+    sctx.moveTo(30, -100); sctx.lineTo(20, -130); sctx.lineTo(5, -115);
+    sctx.fill();
+
+    // 4. Emerald Eyes (Blinking)
+    sctx.fillStyle = "#2ecc71"; 
+    const blink = Math.sin(time) > 0.98 ? 0.1 : 1; 
+    sctx.beginPath(); sctx.ellipse(-12, -90, 6, 8 * blink, 0, 0, Math.PI * 2); sctx.fill();
+    sctx.beginPath(); sctx.ellipse(12, -90, 6, 8 * blink, 0, 0, Math.PI * 2); sctx.fill();
+    
+    // Pupils
+    sctx.fillStyle = "black";
+    sctx.fillRect(-13, -93, 2, 6 * blink);
+    sctx.fillRect(11, -93, 2, 6 * blink);
+
+    // 5. Pink Nose
+    sctx.fillStyle = "#ff8a80";
+    sctx.beginPath(); sctx.arc(0, -80, 4, 0, Math.PI * 2); sctx.fill();
+
+    sctx.restore();
+    
+    // Keep animating the cat while the player is in the shop
+    if (gameState === 'SHOP') requestAnimationFrame(drawBengalShopkeeper);
+}
 
 // Start the engine
 init();
