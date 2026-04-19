@@ -553,6 +553,35 @@ function collectStick(s) {
     drawStickIcon();
 }
 
+function drawStickIcon() {
+    const canvas = document.getElementById('stick-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    // Match the internal resolution to the 40x40 CSS size
+    canvas.width = 40;
+    canvas.height = 40;
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    
+    // Center the drawing in the 40x40 box
+    ctx.translate(20, 20); 
+    ctx.rotate(Math.PI / 4);
+    
+    // Draw the stick
+    ctx.fillStyle = '#8b4513';
+    ctx.fillRect(-10, -2, 20, 4);
+    
+    // Draw the small leaf
+    ctx.fillStyle = '#00b894';
+    ctx.beginPath();
+    ctx.ellipse(8, -2, 5, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
+}
+
 function collectBone(b) {
     // 1. Magnet logic stays the same
     if (b.type === 'magnet') {
