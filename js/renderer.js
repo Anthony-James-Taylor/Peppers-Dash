@@ -15,20 +15,47 @@ function drawHusky(ctx, x, y, isMega, hasShield, pepper, difficulty, frame) {
     if(difficulty === 'death') { bodyC = "#2d3436"; eyeC = "#ff0000"; }
     if(isMega) { let hue = (Date.now() / 5) % 360; bodyC = `hsl(${hue}, 80%, 40%)`; white = `hsl(${(hue+180)%360}, 90%, 80%)`; }
 
-    // Internal Hat Helper (Side View)
+// Internal Hat Helper (Side View)
     function drawHat(ctx) {
         ctx.save(); 
         if(pepper.hat === 'cowboy') { 
             ctx.translate(5, -28); 
-            ctx.fillStyle = "#8B4513"; ctx.beginPath(); ctx.ellipse(0, 0, 20, 5, 0, 0, Math.PI*2); ctx.fill(); ctx.fillRect(-10, -15, 20, 15); 
+            // Upgraded Cowboy Hat
+            ctx.fillStyle = "#654321"; // Darker trim shadow
+            ctx.beginPath(); ctx.ellipse(0, 2, 24, 6, 0, 0, Math.PI*2); ctx.fill(); 
+            ctx.fillStyle = "#8B4513"; // Main brown
+            ctx.beginPath(); ctx.ellipse(0, 0, 22, 5, 0, 0, Math.PI*2); ctx.fill(); // Brim
+            ctx.beginPath(); ctx.moveTo(-12, 0); ctx.quadraticCurveTo(-10, -20, 0, -18); ctx.quadraticCurveTo(10, -20, 12, 0); ctx.fill(); // Crown
+            ctx.fillStyle = "#3e2723"; // Hat band
+            ctx.fillRect(-11, -4, 22, 4);
         } 
         else if (pepper.hat === 'tophat') { 
             ctx.translate(5, -28); 
-            ctx.fillStyle = "#2d3436"; ctx.fillRect(-12, -25, 24, 25); ctx.fillRect(-18, 0, 36, 4); ctx.fillStyle = "red"; ctx.fillRect(-12, -5, 24, 4); 
+            // Upgraded Top Hat
+            ctx.fillStyle = "#111111"; // Brim
+            ctx.beginPath(); ctx.ellipse(0, 0, 20, 4, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "#2d3436"; // Crown
+            ctx.fillRect(-13, -25, 26, 25); 
+            ctx.fillStyle = "#d63031"; // Red Ribbon
+            ctx.fillRect(-13, -6, 26, 6);
+            ctx.fillStyle = "#FFD700"; // Gold buckle
+            ctx.fillRect(-4, -6, 8, 6);
+            ctx.fillStyle = "#d63031"; // Center of buckle
+            ctx.fillRect(-2, -4, 4, 2);
         } 
         else if (pepper.hat === 'cap') { 
             ctx.translate(2, -25); 
-            ctx.fillStyle = "#d63031"; ctx.beginPath(); ctx.arc(0, 0, 13, Math.PI, 0); ctx.fill(); ctx.fillRect(-12, 0, 24, 3); ctx.fillRect(10, 0, 12, 4); 
+            // Upgraded Red Cap
+            ctx.fillStyle = "#b01c1c"; // Back shading
+            ctx.beginPath(); ctx.arc(-2, 0, 13, Math.PI, 0); ctx.fill();
+            ctx.fillStyle = "#d63031"; // Main dome
+            ctx.beginPath(); ctx.arc(0, 0, 13, Math.PI, 0); ctx.fill(); 
+            ctx.fillStyle = "#ffffff"; // Front white logo panel
+            ctx.beginPath(); ctx.arc(5, -5, 4, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "#b01c1c"; // Curved brim
+            ctx.beginPath(); ctx.ellipse(8, 0, 14, 3, 0, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = "#ff7675"; // Top squatchee (button)
+            ctx.beginPath(); ctx.arc(0, -13, 3, 0, Math.PI*2); ctx.fill();
         }
         ctx.restore();
     }
@@ -313,10 +340,10 @@ function getSkyColor(levelDistance, levelMaxDistance, currentLevel) {
 // SHOP: Canine Couture - Full boutique UI drawn on canvas
 // =====================================================================
 const SHOP_HATS = [
-    { 
+{ 
         id: 'cowboy', name: 'COWBOY HAT', cost: 30,
-        perk: 'MEGA at 25 bones', icon: '🤠',
-        desc: 'Yeehaw! Mega Mode activates faster — only 25 bones needed.',
+        perk: 'Extended Mega Mode', icon: '🤠',
+        desc: 'Yeehaw! Mega Mode lasts twice as long.',
         color: '#8B4513'
     },
     { 
