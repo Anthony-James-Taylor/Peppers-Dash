@@ -177,107 +177,66 @@ h1 {
    ========================================================== */
 
 #shop-screen {
-    background: #1a1a1a;
-    display: none; /* FIX: Changed from flex to none so it stays hidden on launch */
-    flex-direction: column;
-    height: 100vh;
-    width: 100vw;
-    position: absolute;
-    top: 0; left: 0;
-    z-index: 500; /* Ensures it sits on top of everything else when active */
-    overflow: hidden;
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: #1a1a1a; display: none; flex-direction: column; 
+    z-index: 500; overflow: hidden;
 }
 
-/* THE BACK WALL (Where the cat is) */
+/* WALL AREA: Dark wood paneling */
 #shop-counter-area {
-    width: 100%;
-    min-height: 220px;
-    background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), 
-                repeating-linear-gradient(90deg, #4d3b2f 0px, #4d3b2f 60px, #3d2b1f 61px);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 50px 20px 20px;
-    border-bottom: 10px solid #2d1e14;
-    position: relative;
-    box-sizing: border-box;
+    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+                repeating-linear-gradient(90deg, #3d2b1f 0px, #3d2b1f 40px, #2d1e14 41px);
+    padding: 60px 20px 0px; text-align: center;
+    border-bottom: 8px solid #1a1a1a;
 }
 
-#shop-counter-area h1 {
-    font-size: 22px;
-    color: #f39c12;
-    margin: 0 0 10px 0;
-    font-weight: 900;
-    text-transform: uppercase;
+#shop-title {
+    font-size: 24px; color: #f39c12; margin: 0; 
+    text-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
 }
 
-/* THE BENGAL CAT & DESK */
+#shop-balance-row {
+    margin: 10px 0; font-weight: 900; color: white; font-size: 14px;
+}
+
+/* CAT & DESK LAYERING */
 #shopkeeper-wrapper {
-    position: relative;
-    width: 200px;
-    height: 110px;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
+    position: relative; width: 240px; height: 130px; margin: 0 auto;
+    display: flex; justify-content: center; align-items: flex-end;
 }
 
 #shopkeeper-canvas {
-    position: absolute;
-    bottom: 0;
-    z-index: 1;
+    z-index: 1; margin-bottom: -5px; /* Tucks the cat slightly into the desk */
 }
 
 #shop-counter-desk {
-    position: absolute;
-    bottom: 0;
-    width: 240px; 
-    height: 40px;
-    background: #5d4037;
-    border-top: 6px solid #8d6e63;
-    border-radius: 12px 12px 0 0;
-    z-index: 2; /* Desk covers cat's bottom */
-    box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+    position: absolute; bottom: 0; width: 100%; height: 45px;
+    background: #5d4037; border-top: 5px solid #8d6e63;
+    border-radius: 12px 12px 0 0; z-index: 2; /* Sits in front of the cat */
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
 }
 
-/* THE FLOOR (Where the hats sit) */
+/* FLOOR AREA: Where the items are */
 #shop-floor {
-    flex: 1;
-    width: 100%;
+    flex: 1; padding: 20px; overflow-y: auto;
     background: linear-gradient(to bottom, #2d1e14, #1a1a1a);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px 0;
-    overflow-y: auto; /* Only this part scrolls */
 }
+
+.shop-welcome { color: #f39c12; font-size: 12px; margin-bottom: 20px; font-weight: bold; }
 
 .shop-container {
-    display: flex;
-    flex-direction: row; /* FIX: Hats are now horizontal */
-    flex-wrap: wrap;     /* They wrap to the next line on mobile */
-    justify-content: center; 
-    gap: 15px;
-    padding: 10px 20px 120px; /* Space for the bottom button */
-    width: 100%;
-    box-sizing: border-box;
+    display: flex; flex-direction: row; flex-wrap: wrap; 
+    justify-content: center; gap: 15px; padding-bottom: 100px;
 }
 
+/* Individual Hat Boxes */
 .shop-item {
-    background: #5d4037;
-    border-bottom: 6px solid #3d2b1f; 
-    border-radius: 12px;
-    padding: 10px;
-    width: 105px; /* Compact size for horizontal rows */
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.4);
-    transition: transform 0.2s;
+    background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 16px; padding: 15px; width: 110px;
+    transition: transform 0.2s; cursor: pointer;
 }
 
 .shop-item.selected { 
-    border: 2px solid #00fbff; 
-    background: #4e342e;
+    border-color: #00fbff; background: rgba(0,251,255,0.1);
     transform: translateY(-5px);
 }
