@@ -549,7 +549,7 @@ function collectBone(b) {
 
     if (!pepper.isMega && difficulty !== 'death') {
         pepper.streak += val;
-        let target = (pepper.hat === 'cowboy') = 50;
+        let target = 50;
         updateMegaUI(target);
         if (pepper.streak >= target) activateMega();
     }
