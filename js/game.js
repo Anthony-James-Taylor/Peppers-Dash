@@ -23,6 +23,7 @@ const countdownText = document.getElementById('countdown-text');
 const megaMeter = document.getElementById('mega-meter');
 const megaText = document.getElementById('mega-text');
 const megaBarFill = document.getElementById('mega-bar-fill');
+const pointsCounterEl = document.getElementById('points-counter');
 
 // Screens
 const screens = {
@@ -66,6 +67,7 @@ let difficulty = 'normal';
 let frame = 0;
 let score = 0;
 let levelStartScore = 0;
+let totalPoints = 0; //
 
 let currentLevel = 1;
 let levelDistance = 0;
@@ -485,9 +487,15 @@ function handleCollision(o, index) {
             triggerGameOver('mega-hydrant');
         } else {
             obstacles.splice(index, 1);
-            score += 5;
-            scoreEl.innerText = score + " 🦴";  // FIX: update score display on smash
-            spawnPopup("SMASH!", o.x, o.y-50, "orange");
+            
+            // 1. Give a big point boost for the smash
+            totalPoints += 10;
+            
+            // 2. Update the UI
+            pointsCounterEl.innerText = totalPoints + " PTS";
+            
+            // 3. Visual/Audio feedback
+            spawnPopup("SMASH +10!", o.x, o.y-50, "orange");
             playSfx('smash');
             shakeScreen(10);
         }
@@ -517,9 +525,21 @@ function collectStick(s) {
         spawnPopup("NO SHIELDS", s.x, s.y, "red");
         return;
     }
+    
+    // 1. Update Shield Progress
     pepper.sticks++;
+    
+    // 2. Add 5 points to the total score
+    totalPoints += 5;
+    
+    // 3. Update the UI
+    pointsCounterEl.innerText = totalPoints + " PTS";
+    
     playSfx('collect');
     spawnParticles(s.x, s.y, "#00b894", 10);
+    
+    // Change the popup to show the point gain
+    spawnPopup("+5 PTS", s.x, s.y, "#00b894");
     
     if (pepper.sticks >= 5) {
         pepper.hasShield = true;
@@ -527,12 +547,13 @@ function collectStick(s) {
         spawnPopup("SHIELD UP!", pepper.x, pepper.y-50, "#00b894");
         flashScreen('#00b894');
     }
+    
     stickText.innerText = pepper.sticks + "/5";
     drawStickIcon();
 }
 
 function collectBone(b) {
-    // FIX: Magnet type check — don't let magnet attract another magnet pickup during cooldown
+    // 1. Magnet logic stays the same
     if (b.type === 'magnet') {
         pepper.magnetTimer = 600;
         playSfx('magnet');
@@ -541,16 +562,26 @@ function collectBone(b) {
         return;
     }
 
-    let val = (b.type === 'gold') ? 5 : 1;
-    if (pepper.hat === 'cap') val *= 2;
-    
-    score += val;
-    scoreEl.innerText = score + " 🦴";
-    playSfx('collect');
-    spawnPopup("+" + val, b.x, b.y, (b.type === 'gold') ? "#FFD700" : "white");
+    // 2. Currency Calculation (Bones for the shop)
+    let boneVal = (b.type === 'gold') ? 5 : 1;
+    if (pepper.hat === 'cap') boneVal *= 2; // Red Cap doubles currency
+    score += boneVal;
 
+    // 3. Score Calculation (Total Points)
+    // Points are fixed: Gold = 5, White = 1 (not affected by the hat)
+    let pointGain = (b.type === 'gold') ? 5 : 1;
+    totalPoints += pointGain;
+
+    // 4. Update the UI
+    scoreEl.innerText = score; // Update Bone Box
+    pointsCounterEl.innerText = totalPoints + " PTS"; // Update Center Points Box
+    
+    playSfx('collect');
+    spawnPopup("+" + pointGain + " PTS", b.x, b.y, (b.type === 'gold') ? "#FFD700" : "white");
+
+    // 5. Mega Mode Streak Logic
     if (!pepper.isMega && difficulty !== 'death') {
-        pepper.streak += val;
+        pepper.streak += boneVal; 
         let target = 50;
         updateMegaUI(target);
         if (pepper.streak >= target) activateMega();
@@ -758,6 +789,7 @@ function drawScoreBoneIcon() {
 function resetGameData() {
     score = 0;
     levelStartScore = 0;
+    totalPoints = 0;
     currentLevel = 1;
     pepper.hat = 'none';
     resetLevel();
@@ -802,7 +834,8 @@ function resetLevel() {
         pepper.sticks = 0;
     }
     
-    scoreEl.innerText = score + " 🦴";
+    scoreEl.innerText = score; // FIX: Removed emoji text to keep the box clean
+    pointsCounterEl.innerText = totalPoints + " PTS"; // FIX: Updates the center box to 0
     levelInd.innerText = "LEVEL " + currentLevel;
     stickText.innerText = pepper.sticks + "/5";
     progressFill.style.width = "0%";
