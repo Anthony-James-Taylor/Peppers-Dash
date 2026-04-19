@@ -300,7 +300,7 @@ function drawBird(ctx, x, y, frame) {
 
 function drawFlies(ctx, x, y, frame) {
     ctx.save();
-    ctx.translate(x, y + 10);
+    ctx.translate(x, y - 15);
     ctx.fillStyle = "rgba(20, 20, 20, 0.8)"; 
     
     let f1x = Math.sin(frame * 0.2) * 12;
