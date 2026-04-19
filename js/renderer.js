@@ -422,7 +422,7 @@ function openShop() {
             pCtx.clearRect(0,0,80,80);
             // Draw small side-profile pepper with hat
             const fakePepper = { hat: hat.id, grounded: true, rotation: 0, runFrame: 0, magnetTimer: 0, hasShield: false, spinTimer: 0, isMega: false };
-            drawHusky(pCtx, 40, 60, false, false, fakePepper, 'normal', 0);
+            drawHusky(pCtx, 40, 75, false, false, fakePepper, 'normal', 0);
         }
     });
 
