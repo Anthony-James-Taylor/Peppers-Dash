@@ -621,7 +621,7 @@ function triggerGameOver(reason) {
     endScore.innerText = score;
     uiLayer.style.display = 'none';
 
-    retryBtn.innerText = difficulty === 'baby' ? "TRY AGAIN (BABY MODE)" : "TRY AGAIN";
+    retryBtn.innerText = "TRY AGAIN";
 
     if (reason === 'mega-hydrant') {
         goTitle.innerText = "OOPS!";
