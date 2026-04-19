@@ -22,7 +22,7 @@ body {
     background: rgba(0,0,0,0.8); border-radius: 12px; border: 2px solid rgba(255,255,255,0.3);
     display: flex; justify-content: center; align-items: center; cursor: pointer;
     pointer-events: auto; z-index: 300; font-size: 24px; color: white;
-    backdrop-filter: blur(5px); transition: transform 0.1s;
+    transition: transform 0.1s;
 }
 #menu-btn:active { transform: scale(0.9); }
 
@@ -100,7 +100,7 @@ body {
     display: flex; flex-direction: column; justify-content: center; align-items: center; 
     z-index: 200; text-align: center; 
 }
-#game-over, #shop-screen, #how-to-screen, #info-modal, #difficulty-screen { display: none; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); }
+#game-over, #shop-screen, #how-to-screen, #info-modal, #difficulty-screen { display: none; background: rgba(0,0,0,0.95); }
 
 #start-screen { background: none; backdrop-filter: none; z-index: 50; gap: 20px; }
 
