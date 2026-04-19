@@ -24,16 +24,21 @@
 
     <div id="ui-layer">
         <div class="hud-top">
-            <div class="glass-pill" id="score-box">
-                <div id="level-indicator">LEVEL 1</div>
-                <!-- FIX: bone emoji rendered natively in score text via JS -->
-                <span id="score">0 🦴</span>
-            </div>
-            <div class="glass-pill" id="stick-box">
-                <canvas id="stick-canvas" width="40" height="40"></canvas>
-                <span id="stick-text">0/5</span>
-            </div>
-        </div>
+    <div class="hud-box" id="bone-box">
+        <span class="hud-icon">🦴</span>
+        <span id="score">0</span>
+    </div>
+
+    <div class="hud-box" id="center-box">
+        <div id="level-indicator">LEVEL 1</div>
+        <div id="points-counter">0 PTS</div>
+    </div>
+
+    <div class="hud-box" id="stick-box">
+        <canvas id="stick-canvas" width="30" height="30"></canvas>
+        <span id="stick-text">0/5</span>
+    </div>
+</div>
         <div id="progress-wrapper">
             <div id="progress-fill"></div>
             <div id="finish-icon">🏁</div>
